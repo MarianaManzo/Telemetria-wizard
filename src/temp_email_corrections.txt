@@ -1,0 +1,9 @@
+Correcciones necesarias para el email personalizado:
+
+1. Línea 3510: Cambiar "const newText = (customEmailMessage + variable).slice(0, 120)" por solo agregar la variable
+2. Línea 3511: Cambiar para usar customEmailMessage + variable directamente
+3. Línea 3512: Eliminar setCustomEmailCharCount(newText.length)
+4. Línea 3522: Eliminar setCustomEmailCharCount(text.length)
+5. Línea 3526: Eliminar maxLength={120}
+6. Línea 3527: Cambiar min-h-[80px] por min-h-[120px]
+7. Líneas 3529-3531: Eliminar todo el div del contador de caracteres

@@ -1,0 +1,24 @@
+// Handle applying predefined filter
+const handleApplyPredefinedFilter = (field: keyof ColumnFilter, operator: string, value: string = '') => {
+  const newFilterStates = { ...filterStates }
+  
+  if (operator === 'none') {
+    // Remove filter entirely for "Ninguno"
+    delete newFilterStates[field]
+  } else {
+    newFilterStates[field] = {
+      mode: 'condition',
+      condition: {
+        field,
+        operator: operator as any,
+        value: value
+      }
+    }
+  }
+  
+  setFilterStates(newFilterStates)
+  setOpenFilterPopover(null)
+  
+  // Notify parent that table state changed
+  onTableStateChange?.()
+}

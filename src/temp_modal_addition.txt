@@ -1,0 +1,12 @@
+        {/* Save Rule Modal */}
+        <SaveRuleModal
+          isOpen={showSaveModal}
+          onClose={() => setShowSaveModal(false)}
+          onSave={handleSaveRule}
+          defaultData={{ name: ruleName, description: ruleDescription }}
+          isRenaming={isRenaming}
+        />
+      </div>
+    </TooltipProvider>
+  )
+}
