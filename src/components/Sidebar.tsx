@@ -1,87 +1,77 @@
-import { sidebarItems } from "../constants/data"
-import { AppView } from "../types"
+import type { MenuProps } from "antd";
+import { Flex, Menu, Typography } from "antd";
+import type { CSSProperties } from "react";
+import { spacing, toPx } from "../styles/tokens";
+import { AppView } from "../types";
 
 interface SidebarProps {
-  currentView: AppView
-  onViewChange: (view: AppView) => void
+  currentView: AppView;
+  onViewChange: (view: AppView) => void;
 }
 
-export function Sidebar({ currentView, onViewChange }: SidebarProps) {
-  return (
-    <div className="w-48 bg-[#fafafa] border-r border-border">
-      <div className="p-4">
-        {(currentView === 'rules' || currentView === 'tags-rules') && (
-          <>
-            <h2 className="text-foreground font-medium mb-4">Reglas</h2>
-            <nav className="space-y-1">
-              <div
-                className="px-3 py-2 rounded transition-colors cursor-pointer text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                onClick={() => {
-                  onViewChange('rules');
-                }}
-              >
-                Reglas
-              </div>
-              <div
-                className={`px-3 py-2 rounded transition-colors cursor-pointer ${
-                  currentView === 'tags-rules'
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-                onClick={() => {
-                  onViewChange('tags-rules');
-                }}
-              >
-                Etiquetas
-              </div>
-            </nav>
-          </>
-        )}
+const { Title } = Typography;
 
-        {(currentView === 'events' || currentView === 'my-events' || currentView === 'tags-events') && (
-          <>
-            <h2 className="text-foreground font-medium mb-4">Eventos</h2>
-            <nav className="space-y-1">
-              <div
-                className={`px-3 py-2 rounded transition-colors cursor-pointer ${
-                  currentView === 'events'
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-                onClick={() => {
-                  onViewChange('events');
-                }}
-              >
-                Eventos
-              </div>
-              <div
-                className={`px-3 py-2 rounded transition-colors cursor-pointer ${
-                  currentView === 'my-events'
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-                onClick={() => {
-                  onViewChange('my-events');
-                }}
-              >
-                Mis eventos
-              </div>
-              <div
-                className={`px-3 py-2 rounded transition-colors cursor-pointer ${
-                  currentView === 'tags-events'
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-                onClick={() => {
-                  onViewChange('tags-events');
-                }}
-              >
-                Etiquetas
-              </div>
-            </nav>
-          </>
-        )}
-      </div>
-    </div>
-  )
+const sectionSpacing: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: toPx(spacing.sm),
+};
+
+export function Sidebar({ currentView, onViewChange }: SidebarProps) {
+  const showRulesSection = currentView === "rules" || currentView === "tags-rules";
+  const showEventsSection =
+    currentView === "events" || currentView === "my-events" || currentView === "tags-events";
+
+  const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
+    onViewChange(key as AppView);
+  };
+
+  return (
+    <Flex
+      vertical
+      style={{
+        height: "100%",
+        background: "var(--color-bg-base)",
+        padding: `${toPx(spacing.md)} ${toPx(spacing.sm)}`,
+        gap: toPx(spacing.lg),
+      }}
+    >
+      {showRulesSection && (
+        <div style={sectionSpacing}>
+          <Title level={5} style={{ margin: 0 }}>
+            Reglas
+          </Title>
+          <Menu
+            mode="inline"
+            selectedKeys={[currentView === "rules" ? "rules" : "tags-rules"]}
+            onClick={handleMenuClick}
+            items={[
+              { key: "rules", label: "Reglas" },
+              { key: "tags-rules", label: "Etiquetas" },
+            ]}
+            style={{ borderInlineEnd: "none" }}
+          />
+        </div>
+      )}
+
+      {showEventsSection && (
+        <div style={sectionSpacing}>
+          <Title level={5} style={{ margin: 0 }}>
+            Eventos
+          </Title>
+          <Menu
+            mode="inline"
+            selectedKeys={[currentView]}
+            onClick={handleMenuClick}
+            items={[
+              { key: "events", label: "Eventos" },
+              { key: "my-events", label: "Mis eventos" },
+              { key: "tags-events", label: "Etiquetas" },
+            ]}
+            style={{ borderInlineEnd: "none" }}
+          />
+        </div>
+      )}
+    </Flex>
+  );
 }

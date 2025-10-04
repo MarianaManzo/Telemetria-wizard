@@ -1,47 +1,47 @@
-import { useState } from "react"
+import { useState } from "react";
+import { Flex, Menu, Typography } from "antd";
+import type { MenuProps } from "antd";
+import { spacing, toPx } from "../styles/tokens";
 
 interface RulesDetailSidebarProps {
-  onViewChange?: (view: string) => void
+  onViewChange?: (view: string) => void;
 }
 
+const sidebarItems = [
+  { id: "regla", label: "Regla" },
+  { id: "notas", label: "Notas" },
+  { id: "eventos", label: "Eventos" },
+  { id: "etiquetas", label: "Etiquetas" },
+];
+
 export function RulesDetailSidebar({ onViewChange }: RulesDetailSidebarProps) {
-  const [activeItem, setActiveItem] = useState('regla')
+  const [activeItem, setActiveItem] = useState<string>(sidebarItems[0].id);
 
-  const sidebarItems = [
-    { id: 'regla', label: 'Regla' },
-    { id: 'notas', label: 'Notas' },
-    { id: 'eventos', label: 'Eventos' },
-    { id: 'etiquetas', label: 'Etiquetas' }
-  ]
-
-  const handleItemClick = (itemId: string) => {
-    setActiveItem(itemId)
-    onViewChange?.(itemId)
-  }
+  const handleClick: MenuProps["onClick"] = ({ key }) => {
+    setActiveItem(key);
+    onViewChange?.(key);
+  };
 
   return (
-    <div className="w-48 bg-[#fafafa] border-r border-border">
-      <div className="p-4">
-        <h2 className="text-foreground font-medium mb-4">Contenido</h2>
-        <nav className="space-y-1">
-          {sidebarItems.map((item) => {
-            const isActive = item.id === activeItem
-            return (
-              <div
-                key={item.id}
-                className={`px-3 py-2 rounded transition-colors cursor-pointer ${
-                  isActive
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-                onClick={() => handleItemClick(item.id)}
-              >
-                {item.label}
-              </div>
-            )
-          })}
-        </nav>
-      </div>
-    </div>
-  )
+    <Flex
+      vertical
+      style={{
+        height: "100%",
+        background: "var(--color-bg-base)",
+        padding: `${toPx(spacing.md)} ${toPx(spacing.sm)}`,
+        gap: toPx(spacing.lg),
+      }}
+    >
+      <Typography.Title level={5} style={{ margin: 0 }}>
+        Contenido
+      </Typography.Title>
+      <Menu
+        mode="inline"
+        selectedKeys={[activeItem]}
+        onClick={handleClick}
+        items={sidebarItems.map(item => ({ key: item.id, label: item.label }))}
+        style={{ borderInlineEnd: "none" }}
+      />
+    </Flex>
+  );
 }

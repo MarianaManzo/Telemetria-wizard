@@ -87,8 +87,8 @@ export function ReportsList({
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                 <Check className="w-5 h-5 text-white" />
-              </div>
-            </div>
+              </Flex>
+            </Flex>
             <div className="flex-1 min-w-0">
               <p className="text-gray-900 font-medium">
                 El reporte se ha exportado con éxito.
@@ -96,7 +96,7 @@ export function ReportsList({
               <p className="text-gray-700">
                 En breve comenzará la descarga del archivo solicitado.
               </p>
-            </div>
+            </Flex>
             <button
               onClick={() => toast.dismiss(t)}
               className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
@@ -115,7 +115,7 @@ export function ReportsList({
                 />
               </svg>
             </button>
-          </div>
+          </Flex>
         ))
         break
       case 'export-csv':
@@ -126,8 +126,8 @@ export function ReportsList({
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                 <Check className="w-5 h-5 text-white" />
-              </div>
-            </div>
+              </Flex>
+            </Flex>
             <div className="flex-1 min-w-0">
               <p className="text-gray-900 font-medium">
                 El reporte se ha exportado con éxito.
@@ -135,7 +135,7 @@ export function ReportsList({
               <p className="text-gray-700">
                 En breve comenzará la descarga del archivo solicitado.
               </p>
-            </div>
+            </Flex>
             <button
               onClick={() => toast.dismiss(t)}
               className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
@@ -154,7 +154,7 @@ export function ReportsList({
                 />
               </svg>
             </button>
-          </div>
+          </Flex>
         ))
         break
       case 'schedule':
@@ -293,7 +293,7 @@ export function ReportsList({
                   <X className="h-4 w-4" />
                 </button>
               )}
-            </div>
+            </Flex>
 
             {/* Create Schedule Button - only show in scheduled section */}
             {currentView === 'scheduled' && onCreateSchedule && (
@@ -306,8 +306,8 @@ export function ReportsList({
                 Crear programación
               </Button>
             )}
-          </div>
-        </div>
+          </Flex>
+        </Flex>
 
         {/* View controls bar - only show in templates section (Reportes) */}
         {currentView === 'templates' && (
@@ -354,9 +354,9 @@ export function ReportsList({
                   <List className="h-4 w-4" />
                   <span className="ml-2 text-sm">Lista</span>
                 </Button>
-              </div>
-            </div>
-          </div>
+              </Flex>
+            </Flex>
+          </Flex>
         )}
 
         {/* Table view */}
@@ -474,7 +474,7 @@ export function ReportsList({
                                       <Skeleton className="w-4 h-4 rounded-full">
                                         <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
                                       </Skeleton>
-                                    </div>
+                                    </Flex>
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     <p>Este reporte se está generando</p>
@@ -497,12 +497,12 @@ export function ReportsList({
                                   {report.nombre}
                                 </span>
                               )}
-                            </div>
+                            </Flex>
                           </TableCell>
                           <TableCell className="text-muted-foreground text-sm py-4 max-w-xs">
                             <div className="truncate" title={report.descripcion}>
                               {report.descripcion}
-                            </div>
+                            </Flex>
                           </TableCell>
                           {(currentView === "saved" || currentView === "favorites") ? (
                             <>
@@ -664,10 +664,10 @@ export function ReportsList({
                     )}
                   </TableBody>
                 </Table>
-              </div>
-            </div>
-          </div>
-        </div>
+              </Flex>
+            </Flex>
+          </Flex>
+        </Flex>
       </div>
     </TooltipProvider>
   )

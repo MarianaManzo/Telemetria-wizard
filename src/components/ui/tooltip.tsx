@@ -1,61 +1,99 @@
-"use client";
+import { Tooltip as AntdTooltip } from "antd";
+import type { TooltipProps as AntdTooltipProps } from "antd";
+import {
+  createContext,
+  type PropsWithChildren,
+  type ReactElement,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-import * as React from "react";
-import * as TooltipPrimitive from "@radix-ui/react-tooltip@1.1.8";
+type TooltipContextValue = {
+  title: ReactNode;
+  setTitle: (value: ReactNode) => void;
+  placement: AntdTooltipProps["placement"];
+  setPlacement: (value: AntdTooltipProps["placement"]) => void;
+  overlayClassName?: string;
+  setOverlayClassName: (value?: string) => void;
+};
 
-import { cn } from "./utils";
+const TooltipContext = createContext<TooltipContextValue | null>(null);
 
-function TooltipProvider({
-  delayDuration = 0,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
+function useTooltipContext(component: string) {
+  const ctx = useContext(TooltipContext);
+  if (!ctx) {
+    throw new Error(`${component} must be used within <Tooltip>`);
+  }
+  return ctx;
+}
+
+export function TooltipProvider({ children }: PropsWithChildren<{ delayDuration?: number }>) {
+  return <>{children}</>;
+}
+
+export function Tooltip({ children }: PropsWithChildren<unknown>) {
+  const [title, setTitle] = useState<ReactNode>(null);
+  const [placement, setPlacement] = useState<AntdTooltipProps["placement"]>("top");
+  const [overlayClassName, setOverlayClassName] = useState<string | undefined>();
+
+  const contextValue = useMemo<TooltipContextValue>(
+    () => ({ title, setTitle, placement, setPlacement, overlayClassName, setOverlayClassName }),
+    [title, placement, overlayClassName],
+  );
+
+  return <TooltipContext.Provider value={contextValue}>{children}</TooltipContext.Provider>;
+}
+
+type TooltipTriggerProps = PropsWithChildren<{
+  asChild?: boolean;
+}> & Omit<AntdTooltipProps, "title" | "placement" | "overlayClassName" | "children">;
+
+export function TooltipTrigger({ children, asChild = false, ...props }: TooltipTriggerProps) {
+  const ctx = useTooltipContext("TooltipTrigger");
+
+  const triggerNode: ReactElement = asChild && children ? (children as ReactElement) : (
+    <span className="inline-flex">{children}</span>
+  );
+
   return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delayDuration={delayDuration}
+    <AntdTooltip
+      title={ctx.title}
+      placement={ctx.placement}
+      overlayClassName={ctx.overlayClassName}
       {...props}
-    />
+    >
+      {triggerNode}
+    </AntdTooltip>
   );
 }
 
-function Tooltip({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return (
-    <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
-    </TooltipProvider>
-  );
+type TooltipContentProps = PropsWithChildren<{
+  className?: string;
+  side?: "top" | "bottom" | "left" | "right";
+}>;
+
+export function TooltipContent({ className, side = "top", children }: TooltipContentProps) {
+  const ctx = useTooltipContext("TooltipContent");
+
+  useEffect(() => {
+    ctx.setTitle(children);
+    ctx.setPlacement(sideMap[side] ?? "top");
+    ctx.setOverlayClassName(className);
+    return () => {
+      ctx.setTitle(null);
+      ctx.setOverlayClassName(undefined);
+    };
+  }, [ctx, children, className, side]);
+
+  return null;
 }
 
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
-}
-
-function TooltipContent({
-  className,
-  sideOffset = 0,
-  children,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
-  return (
-    <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Content
-        data-slot="tooltip-content"
-        sideOffset={sideOffset}
-        className={cn(
-          "bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        <TooltipPrimitive.Arrow className="bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
-      </TooltipPrimitive.Content>
-    </TooltipPrimitive.Portal>
-  );
-}
-
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
+const sideMap: Partial<Record<string, AntdTooltipProps["placement"]>> = {
+  top: "top",
+  bottom: "bottom",
+  left: "left",
+  right: "right",
+};

@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react"
+import { Layout } from "antd"
 import { NotificationProvider } from "./contexts/NotificationContext"
 import { GlobalHeader } from "./components/GlobalHeader"
 import { Sidebar } from "./components/Sidebar"
@@ -17,6 +18,10 @@ import { showCustomToast } from "./components/CustomToast"
 import { Star } from "lucide-react"
 import { Rule, Event, AppView, Tag } from "./types"
 import { initialRules, initialEvents, initialTags } from "./constants/data"
+
+const { Header, Sider, Content } = Layout;
+
+const SIDEBAR_WIDTH = 240;
 
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>('rules')
@@ -537,44 +542,79 @@ export default function App() {
     return null
   }
 
+  const shouldShowPrimarySidebar = !(
+    currentView === 'rules' && (rulesView === 'type-select' || rulesView === 'new' || rulesView === 'edit')
+  ) && !showEventDetail;
+
+  const primarySidebar = shouldShowPrimarySidebar
+    ? currentView === 'rules' && rulesView === 'view' && selectedRule
+      ? <RulesDetailSidebar />
+      : <Sidebar currentView={currentView} onViewChange={handleGlobalNavigation} />
+    : null;
+
+  const eventSidebar = showEventDetail && selectedEvent ? <EventsDetailSidebar /> : null;
+
   return (
     <NotificationProvider>
-      <div className="h-screen bg-muted/30 flex flex-col overflow-hidden">
-      <GlobalHeader 
-        currentView={currentView}
-        onNavigate={handleGlobalNavigation}
-        searchQuery={eventsSearchQuery}
-        onSearchChange={handleSearchChange}
-      />
-      
-      <div className="flex flex-1 overflow-hidden">
-        {/* Conditional sidebar rendering */}
-        {!(currentView === 'rules' && (rulesView === 'type-select' || rulesView === 'new' || rulesView === 'edit')) && !showEventDetail && (
-          <>
-            {/* Show RulesDetailSidebar when viewing a rule detail */}
-            {currentView === 'rules' && rulesView === 'view' && selectedRule ? (
-              <RulesDetailSidebar />
-            ) : (
-              <Sidebar 
-                currentView={currentView}
-                onViewChange={handleGlobalNavigation}
-              />
-            )}
-          </>
-        )}
-
-        {/* Show EventsDetailSidebar when viewing event detail */}
-        {showEventDetail && selectedEvent && (
-          <EventsDetailSidebar />
-        )}
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {renderContent()}
-        </div>
-      </div>
-
-        <Toaster />
-      </div>
+      <Layout style={{ minHeight: "100vh", background: "var(--color-bg-base)" }}>
+        <Header
+          style={{
+            background: "var(--color-bg-base)",
+            borderBottom: "1px solid var(--color-gray-200)",
+            padding: 0,
+            lineHeight: "initial",
+          }}
+        >
+          <GlobalHeader
+            currentView={currentView}
+            onNavigate={handleGlobalNavigation}
+            searchQuery={eventsSearchQuery}
+            onSearchChange={handleSearchChange}
+          />
+        </Header>
+        <Layout hasSider style={{ minHeight: 0, background: "var(--color-bg-base)" }}>
+          {primarySidebar && (
+            <Sider
+              width={SIDEBAR_WIDTH}
+              theme="light"
+              style={{
+                background: "var(--color-bg-base)",
+                borderInlineEnd: "1px solid var(--color-gray-200)",
+                paddingInline: 0,
+                height: "100%",
+              }}
+            >
+              {primarySidebar}
+            </Sider>
+          )}
+          {eventSidebar && (
+            <Sider
+              width={SIDEBAR_WIDTH}
+              theme="light"
+              style={{
+                background: "var(--color-bg-base)",
+                borderInlineEnd: "1px solid var(--color-gray-200)",
+                paddingInline: 0,
+                height: "100%",
+              }}
+            >
+              {eventSidebar}
+            </Sider>
+          )}
+          <Content
+            style={{
+              background: "var(--color-bg-base)",
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {renderContent()}
+          </Content>
+        </Layout>
+      </Layout>
+      <Toaster />
     </NotificationProvider>
   )
 }

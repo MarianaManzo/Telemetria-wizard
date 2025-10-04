@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
+import { Flex, Typography } from "antd";
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
@@ -113,6 +114,9 @@ import { RecipientsSelector } from "./RecipientsSelector"
 import { ExitRuleConfirmationModal } from "./ExitRuleConfirmationModal"
 import { SensorSelectorWithSearch } from "./SensorSelectorWithSearch"
 import { initialTags } from "../constants/data"
+import { spacing, toPx, radii } from "../styles/tokens"
+
+const { Title, Paragraph } = Typography;
 
 interface UnidadData {
   id: string
@@ -1938,17 +1942,32 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsList>
               
               <TabsContent value="parameters" className="mt-6 space-y-6">
-                {/* Parameters to evaluate */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Gauge className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Parámetros a evaluar</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
+                <div
+                  className="bg-white border border-gray-200 rounded-lg p-4"
+                  style={{
+                    background: "var(--color-bg-base)",
+                    border: "1px solid var(--color-gray-200)",
+                    borderRadius: toPx(radii.base),
+                    padding: toPx(spacing.sm),
+                  }}
+                >
+                  <Flex align="center" style={{ gap: toPx(spacing.xs) }}>
+                    <Gauge className="h-4 w-4" style={{ color: "var(--color-gray-600)" }} />
+                    <Title level={5} style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "var(--color-gray-700)" }}>
+                      Parámetros a evaluar
+                    </Title>
+                  </Flex>
+                  <Paragraph style={{ margin: 0, color: "var(--color-gray-600)" }}>
                     ¿Qué condiciones evalúa esta regla?
-                  </p>
+                  </Paragraph>
                   {conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0) && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
+                    <div
+                      style={{
+                        borderBottom: "1px solid var(--color-gray-200)",
+                        marginBlock: toPx(spacing.sm),
+                        marginInline: "calc(-1 * var(--size-sm))",
+                      }}
+                    />
                   )}
                   
                   <DndProvider backend={HTML5Backend}>

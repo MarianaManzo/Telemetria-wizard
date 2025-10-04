@@ -1,66 +1,150 @@
-"use client";
-
-import * as React from "react";
-import * as TabsPrimitive from "@radix-ui/react-tabs@1.1.3";
-
+import { Button } from "antd";
+import type { ButtonProps } from "antd";
+import {
+  createContext,
+  type PropsWithChildren,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { cn } from "./utils";
 
-function Tabs({
-  className,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+type TabsContextValue = {
+  value?: string;
+  setValue: (value: string) => void;
+  registerValue: (value: string) => void;
+  unregisterValue: (value: string) => void;
+};
+
+const TabsContext = createContext<TabsContextValue | null>(null);
+
+function useTabsContext(component: string) {
+  const ctx = useContext(TabsContext);
+  if (!ctx) {
+    throw new Error(`${component} must be used within <Tabs>`);
+  }
+  return ctx;
+}
+
+type TabsProps = PropsWithChildren<{
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  className?: string;
+}>;
+
+export function Tabs({ value, defaultValue, onValueChange, className, children }: TabsProps) {
+  const [internalValue, setInternalValue] = useState<string | undefined>(defaultValue);
+  const [registeredValues, setRegisteredValues] = useState<string[]>([]);
+
+  const isControlled = value !== undefined;
+  const currentValue = value ?? internalValue ?? registeredValues[0];
+
+  useEffect(() => {
+    if (!isControlled && internalValue === undefined && registeredValues.length > 0) {
+      setInternalValue(registeredValues[0]);
+    }
+  }, [isControlled, internalValue, registeredValues]);
+
+  const setValue = useCallback(
+    (next: string) => {
+      if (!isControlled) {
+        setInternalValue(next);
+      }
+      onValueChange?.(next);
+    },
+    [isControlled, onValueChange],
+  );
+
+  const registerValue = useCallback((next: string) => {
+    setRegisteredValues(prev => (prev.includes(next) ? prev : [...prev, next]));
+  }, []);
+
+  const unregisterValue = useCallback((target: string) => {
+    setRegisteredValues(prev => prev.filter(item => item !== target));
+  }, []);
+
+  const contextValue = useMemo<TabsContextValue>(
+    () => ({ value: currentValue, setValue, registerValue, unregisterValue }),
+    [currentValue, setValue, registerValue, unregisterValue],
+  );
+
   return (
-    <TabsPrimitive.Root
-      data-slot="tabs"
-      className={cn("flex flex-col gap-2", className)}
-      {...props}
-    />
+    <TabsContext.Provider value={contextValue}>
+      <div className={cn("flex flex-col gap-2", className)}>{children}</div>
+    </TabsContext.Provider>
   );
 }
 
-function TabsList({
-  className,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.List>) {
+type TabsListProps = PropsWithChildren<{ className?: string }>;
+
+export function TabsList({ className, children }: TabsListProps) {
   return (
-    <TabsPrimitive.List
-      data-slot="tabs-list"
-      className={cn(
-        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-xl p-[3px] flex",
-        className,
-      )}
-      {...props}
-    />
+    <div role="tablist" className={cn("inline-flex flex-wrap gap-2", className)}>
+      {children}
+    </div>
   );
 }
 
-function TabsTrigger({
-  className,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+type TabsTriggerProps = PropsWithChildren<{
+  value: string;
+  className?: string;
+} & Omit<ButtonProps, "type" | "children" | "className">>;
+
+export function TabsTrigger({ value, className, children, disabled, ...buttonProps }: TabsTriggerProps) {
+  const ctx = useTabsContext("TabsTrigger");
+
+  useEffect(() => {
+    ctx.registerValue(value);
+    return () => ctx.unregisterValue(value);
+  }, [ctx, value]);
+
+  const isActive = ctx.value === value;
+
+  const handleClick = useCallback(() => {
+    if (!disabled) {
+      ctx.setValue(value);
+    }
+  }, [ctx, value, disabled]);
+
   return (
-    <TabsPrimitive.Trigger
-      data-slot="tabs-trigger"
-      className={cn(
-        "data-[state=active]:bg-card dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-xl border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className,
-      )}
-      {...props}
-    />
+    <Button
+      {...buttonProps}
+      type="text"
+      disabled={disabled}
+      onClick={handleClick}
+      role="tab"
+      aria-selected={isActive}
+      data-state={isActive ? "active" : "inactive"}
+      className={cn("px-4 py-2", className)}
+    >
+      {children}
+    </Button>
   );
 }
 
-function TabsContent({
-  className,
-  ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+type TabsContentProps = PropsWithChildren<{ value: string; className?: string; forceMount?: boolean }>;
+
+export function TabsContent({ value, className, forceMount, children }: TabsContentProps) {
+  const ctx = useTabsContext("TabsContent");
+  const isActive = ctx.value === value;
+
+  if (!isActive && !forceMount) {
+    return null;
+  }
+
   return (
-    <TabsPrimitive.Content
-      data-slot="tabs-content"
+    <div
+      role="tabpanel"
+      aria-hidden={!isActive}
+      data-state={isActive ? "active" : "inactive"}
+      hidden={!isActive}
       className={cn("flex-1 outline-none", className)}
-      {...props}
-    />
+    >
+      {children}
+    </div>
   );
 }
-
-export { Tabs, TabsList, TabsTrigger, TabsContent };

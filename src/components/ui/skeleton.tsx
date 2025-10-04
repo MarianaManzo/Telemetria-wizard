@@ -1,13 +1,7 @@
+import { Skeleton as AntdSkeleton } from "antd";
+import type { SkeletonProps as AntdSkeletonProps } from "antd";
 import { cn } from "./utils";
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="skeleton"
-      className={cn("bg-accent animate-pulse rounded-md", className)}
-      {...props}
-    />
-  );
+export function Skeleton({ className, ...props }: AntdSkeletonProps) {
+  return <AntdSkeleton active className={cn(className)} {...props} />;
 }
-
-export { Skeleton };

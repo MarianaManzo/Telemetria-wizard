@@ -405,40 +405,57 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   return (
     <TooltipProvider>
-      <div className="flex-1 flex flex-col overflow-hidden bg-background relative">
-        {/* Header */}
-        <div className="border-b border-border bg-background px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onCancel}
-                    className="flex items-center gap-2 p-0 hover:bg-transparent"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    {showRenameInput ? (
-                      <Input
-                        value={tempRuleName}
-                        onChange={(e) => setTempRuleName(e.target.value)}
-                        onKeyDown={handleRenameKeyDown}
-                        onBlur={handleRenameConfirm}
-                        className="text-[16px] h-auto p-0 border-none bg-transparent focus:ring-0 font-normal"
-                        autoFocus
-                      />
-                    ) : (
-                      <span className="text-[16px]">{isEditing ? (ruleName || 'Editar regla') : 'Crear regla'}</span>
-                    )}
-                  </Button>
-                </div>
-                <div className="text-[14px] text-muted-foreground" style={{ marginLeft: '22px' }}>
-                  Telemetría
-                </div>
+      <Flex
+        vertical
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflow: "hidden",
+          background: "var(--color-bg-base)",
+          position: "relative",
+        }}
+      >
+        <Flex
+          align="center"
+          justify="space-between"
+          style={{
+            borderBottom: "1px solid var(--color-gray-200)",
+            background: "var(--color-bg-base)",
+            paddingInline: toPx(spacing.lg),
+            paddingBlock: toPx(spacing.md),
+            gap: toPx(spacing.md),
+          }}
+        >
+          <Flex align="center" style={{ gap: toPx(spacing.sm) }}>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onCancel}
+                  className="flex items-center gap-2 p-0 hover:bg-transparent"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  {showRenameInput ? (
+                    <Input
+                      value={tempRuleName}
+                      onChange={(e) => setTempRuleName(e.target.value)}
+                      onKeyDown={handleRenameKeyDown}
+                      onBlur={handleRenameConfirm}
+                      className="text-[16px] h-auto p-0 border-none bg-transparent focus:ring-0 font-normal"
+                      autoFocus
+                    />
+                  ) : (
+                    <span className="text-[16px]">{isEditing ? (ruleName || 'Editar regla') : 'Crear regla'}</span>
+                  )}
+                </Button>
+              </div>
+              <div className="text-[14px] text-muted-foreground" style={{ marginLeft: '22px' }}>
+                Telemetría
               </div>
             </div>
-            <div className="flex items-center gap-3">
+          </Flex>
+          <Flex align="center" style={{ gap: toPx(spacing.sm) }}>
               <Button
                 onClick={handleSave}
                 className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal"
@@ -468,11 +485,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </DropdownMenu>
               )}
             </div>
-          </div>
-        </div>
+          </Flex>
+        </Flex>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto">
+        <Flex vertical style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
           <div className="max-w-4xl mx-auto p-6">
             <Tabs value={activeTab} onValueChange={() => {}} className="pb-6">
               <TabsList className="sticky top-0 bg-white border-b border-gray-200 w-full justify-start h-auto p-0 space-x-8 z-10">
@@ -524,17 +541,32 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsList>
               
               <TabsContent value="parameters" className="mt-6 space-y-6">
-                {/* Parameters to evaluate */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Gauge className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Parámetros a evaluar</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
+                <div
+                  className="bg-white border border-gray-200 rounded-lg p-4"
+                  style={{
+                    background: "var(--color-bg-base)",
+                    border: "1px solid var(--color-gray-200)",
+                    borderRadius: toPx(radii.base),
+                    padding: toPx(spacing.sm),
+                  }}
+                >
+                  <Flex align="center" style={{ gap: toPx(spacing.xs) }}>
+                    <Gauge className="h-4 w-4" style={{ color: "var(--color-gray-600)" }} />
+                    <Title level={5} style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "var(--color-gray-700)" }}>
+                      Parámetros a evaluar
+                    </Title>
+                  </Flex>
+                  <Paragraph style={{ margin: 0, color: "var(--color-gray-600)" }}>
                     ¿Qué condiciones evalúa esta regla?
-                  </p>
+                  </Paragraph>
                   {conditions.length > 0 && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
+                    <div
+                      style={{
+                        borderBottom: "1px solid var(--color-gray-200)",
+                        marginBlock: toPx(spacing.sm),
+                        marginInline: "calc(-1 * var(--size-sm))",
+                      }}
+                    />
                   )}
                   
                   <div className="space-y-4">
@@ -1443,7 +1475,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsContent>
             </Tabs>
           </div>
-        </div>
+        </Flex>
 
         {/* Footer Navigation */}
         <div className="border-t border-border bg-background px-6 py-4">

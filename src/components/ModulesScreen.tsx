@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { Layout, Flex, Typography, Space, Menu } from "antd";
+import type { MenuProps } from "antd";
 import {
   Search,
   Grid3X3,
@@ -42,6 +44,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Skeleton } from "./ui/skeleton";
 import svgPaths from "../imports/svg-1askxd5yi1";
+import { spacing, toPx } from "../styles/tokens";
 
 // ============================================================================
 // DATOS DE EJEMPLO
@@ -81,6 +84,7 @@ const reportsData = [
 ];
 
 const navigationItems = [
+const SIDEBAR_WIDTH = 240;
   { title: "Monitoreo", isActive: false },
   { title: "Unidades", isActive: false },
   { title: "Dispositivos", isActive: false },
@@ -100,54 +104,75 @@ const sidebarItems = [
 // COMPONENTE HEADER GLOBAL
 // ============================================================================
 
+const headerPaddingInline = toPx(spacing.lg);
+const headerPaddingBlock = toPx(spacing.sm);
+
 const GlobalHeader = () => {
   return (
-    <header className="bg-white border-b border-border">
-      <div className="flex items-center justify-between px-6 py-3">
-        {/* Left section: Logo and Navigation */}
-        <div className="flex items-center gap-8">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">N</span>
-            </div>
-            <span className="text-foreground">Numaris</span>
+    <Flex
+      align="center"
+      justify="space-between"
+      style={{
+        paddingInline: headerPaddingInline,
+        paddingBlock: headerPaddingBlock,
+        borderBottom: "1px solid var(--color-gray-200)",
+        background: "var(--color-bg-base)",
+      }}
+    >
+      <Flex align="center" style={{ gap: toPx(spacing.lg) }}>
+        <Flex align="center" style={{ gap: toPx(spacing.xs) }}>
+          <div
+            style={{
+              width: toPx(spacing.lg),
+              height: toPx(spacing.lg),
+              borderRadius: toPx(spacing.sm / 2),
+              background: "var(--color-primary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              fontSize: "14px",
+              fontWeight: 600,
+            }}
+          >
+            N
           </div>
-
-          {/* Main Navigation */}
-          <nav className="flex items-center gap-6">
-            {navigationItems.map((item, index) => (
-              <div
-                key={index}
-                className={`px-3 py-2 cursor-pointer transition-colors border-b-2 ${
-                  item.isActive
-                    ? "text-blue-600 border-blue-600"
-                    : "text-muted-foreground border-transparent hover:text-foreground"
-                }`}
-              >
-                {item.title}
-              </div>
-            ))}
-          </nav>
-        </div>
-
-        {/* Right section: Actions and user */}
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="text-muted-foreground p-2">
-            <Search className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-muted-foreground p-2">
-            <Bell className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-muted-foreground p-2">
-            <Settings className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-muted-foreground p-2">
-            <CircleUserRound className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    </header>
+          <Typography.Text strong>Numaris</Typography.Text>
+        </Flex>
+        <Space size={spacing.lg} align="center">
+          {navigationItems.map((item, index) => (
+            <Button
+              key={index}
+              variant="ghost"
+              size="sm"
+              style={{
+                borderRadius: 0,
+                paddingInline: toPx(spacing.xs),
+                paddingBlock: toPx(spacing.xs / 2),
+                color: item.isActive ? "var(--color-primary)" : "var(--color-gray-600)",
+                borderBottom: `2px solid ${item.isActive ? 'var(--color-primary)' : 'transparent'}`,
+              }}
+            >
+              {item.title}
+            </Button>
+          ))}
+        </Space>
+      </Flex>
+      <Space size={spacing.xs}>
+        <Button variant="ghost" size="sm" style={{ padding: toPx(spacing.xs / 2), color: "var(--color-gray-600)" }}>
+          <Search className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="sm" style={{ padding: toPx(spacing.xs / 2), color: "var(--color-gray-600)" }}>
+          <Bell className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="sm" style={{ padding: toPx(spacing.xs / 2), color: "var(--color-gray-600)" }}>
+          <Settings className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="sm" style={{ padding: toPx(spacing.xs / 2), color: "var(--color-gray-600)" }}>
+          <CircleUserRound className="w-4 h-4" />
+        </Button>
+      </Space>
+    </Flex>
   );
 };
 
@@ -156,34 +181,30 @@ const GlobalHeader = () => {
 // ============================================================================
 
 const Sidebar = ({ activeSection, onSectionChange }: { activeSection: string; onSectionChange: (section: string) => void }) => {
-  const handleClick = (key: string, title: string) => {
-    // Block navigation to drafts and scheduled sections
-    if (key === 'drafts' || key === 'scheduled') {
-      return; // Do nothing, prevent navigation
+  const handleClick: MenuProps["onClick"] = ({ key }) => {
+    if (key === "drafts" || key === "scheduled") {
+      return;
     }
     onSectionChange(key);
   };
 
   return (
-    <div className="w-48 bg-white border-r border-border">
-      <div className="p-4">
-        <nav className="space-y-1">
-          {sidebarItems.map((item, index) => (
-            <div
-              key={index}
-              className={`px-3 py-2 rounded cursor-pointer transition-colors ${
-                activeSection === item.key
-                  ? "bg-gray-100 text-foreground"
-                  : "text-muted-foreground hover:bg-gray-50 hover:text-foreground"
-              }`}
-              onClick={() => handleClick(item.key, item.title)}
-            >
-              {item.title}
-            </div>
-          ))}
-        </nav>
-      </div>
-    </div>
+    <Flex
+      vertical
+      style={{
+        height: "100%",
+        background: "var(--color-bg-base)",
+        padding: `${toPx(spacing.md)} ${toPx(spacing.sm)}`,
+      }}
+    >
+      <Menu
+        mode="inline"
+        selectedKeys={[activeSection]}
+        onClick={handleClick}
+        items={sidebarItems.map(item => ({ key: item.key, label: item.title }))}
+        style={{ borderInlineEnd: "none" }}
+      />
+    </Flex>
   );
 };
 
@@ -694,18 +715,49 @@ export const ModulesScreen = ({ onReportSelect, savedReports, draftReports, onTo
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <GlobalHeader />
-      <div className="flex flex-1 pt-16">
-        <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
-        <ReportsContent 
-          onReportSelect={onReportSelect}
-          savedReports={savedReports}
-          draftReports={draftReports}
-          activeSection={activeSection}
-          onToggleFavorite={onToggleFavorite}
-        />
-      </div>
-    </div>
+    <Layout style={{ minHeight: "100vh", background: "var(--color-bg-base)" }}>
+      <Layout.Header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          background: "var(--color-bg-base)",
+          padding: 0,
+          lineHeight: "initial",
+          borderBottom: "1px solid var(--color-gray-200)",
+        }}
+      >
+        <GlobalHeader />
+      </Layout.Header>
+      <Layout hasSider style={{ minHeight: 0, background: "var(--color-bg-base)" }}>
+        <Layout.Sider
+          width={SIDEBAR_WIDTH}
+          theme="light"
+          style={{
+            background: "var(--color-bg-base)",
+            borderInlineEnd: "1px solid var(--color-gray-200)",
+            paddingInline: 0,
+            height: "100%",
+          }}
+        >
+          <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
+        </Layout.Sider>
+        <Layout.Content
+          style={{
+            padding: toPx(spacing.lg),
+            overflow: "auto",
+            background: "var(--color-bg-base)",
+          }}
+        >
+          <ReportsContent
+            onReportSelect={onReportSelect}
+            savedReports={savedReports}
+            draftReports={draftReports}
+            activeSection={activeSection}
+            onToggleFavorite={onToggleFavorite}
+          />
+        </Layout.Content>
+      </Layout>
+    </Layout>
   );
 };

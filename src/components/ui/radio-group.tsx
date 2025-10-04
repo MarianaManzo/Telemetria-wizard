@@ -1,57 +1,30 @@
-"use client";
-
-import * as React from "react";
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group@1.2.3";
-import { CircleIcon } from "lucide-react@0.487.0";
-
+import { Radio as AntdRadio } from "antd";
+import type { RadioChangeEvent } from "antd/es/radio";
+import type { RadioGroupProps as AntdRadioGroupProps, RadioProps as AntdRadioProps } from "antd";
+import type { RadioRef } from "antd";
+import { forwardRef } from "react";
 import { cn } from "./utils";
 
-function RadioGroup({
-  className,
-  ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Root>) {
-  return (
-    <RadioGroupPrimitive.Root
-      data-slot="radio-group"
-      className={cn("grid gap-3", className)}
-      {...props}
-    />
-  );
+type RadioGroupProps = Omit<AntdRadioGroupProps, "onChange"> & {
+  onValueChange?: (value: string) => void;
+  className?: string;
+};
+
+export function RadioGroup({ onValueChange, className, ...props }: RadioGroupProps) {
+  const handleChange = (event: RadioChangeEvent) => {
+    onValueChange?.(event.target.value);
+    props.onChange?.(event);
+  };
+
+  return <AntdRadio.Group className={cn(className)} {...props} onChange={handleChange} />;
 }
 
-function RadioGroupItem({
-  className,
-  ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
-  return (
-    <RadioGroupPrimitive.Item
-      data-slot="radio-group-item"
-      className={cn(
-        "aspect-square size-4 shrink-0 rounded border border-gray-300 bg-white transition-all outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600",
-        className,
-      )}
-      {...props}
-    >
-      <RadioGroupPrimitive.Indicator
-        data-slot="radio-group-indicator"
-        className="relative flex items-center justify-center"
-      >
-        <svg
-          className="h-3 w-3 text-white"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          strokeWidth={3}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-      </RadioGroupPrimitive.Indicator>
-    </RadioGroupPrimitive.Item>
-  );
-}
+type RadioGroupItemProps = AntdRadioProps & {
+  className?: string;
+};
 
-export { RadioGroup, RadioGroupItem };
+export const RadioGroupItem = forwardRef<RadioRef, RadioGroupItemProps>(({ className, ...props }, ref) => {
+  return <AntdRadio ref={ref} className={cn(className)} {...props} />;
+});
+
+RadioGroupItem.displayName = "RadioGroupItem";
