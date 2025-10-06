@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog"
+import { useState, useEffect, useMemo } from "react"
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "./ui/dialog"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Checkbox } from "./ui/checkbox"
-import { Search, ChevronLeft, ChevronRight, X } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, X, Inbox } from "lucide-react"
 
 interface Vehicle {
   id: string
@@ -45,283 +45,272 @@ const mockVehicles: Vehicle[] = [
   { id: "23", name: "Sur-023" }
 ]
 
+const MAX_SELECTION = 10
+
 export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelectionChange }: VehicleSelectorProps) {
   const [searchLeft, setSearchLeft] = useState("")
   const [searchRight, setSearchRight] = useState("")
   const [tempSelected, setTempSelected] = useState<Vehicle[]>(selectedVehicles)
+  const [leftSelection, setLeftSelection] = useState<string[]>([])
+  const [rightSelection, setRightSelection] = useState<string[]>([])
 
-  // Reset temp selected when modal opens with new selectedVehicles
   useEffect(() => {
     if (isOpen) {
-      // Filter out any invalid vehicles to prevent undefined errors
       const validVehicles = (selectedVehicles || []).filter(v => v && v.id && v.name)
       setTempSelected(validVehicles)
       setSearchLeft("")
       setSearchRight("")
+      setLeftSelection([])
+      setRightSelection([])
     }
   }, [isOpen, selectedVehicles])
 
-  const availableVehicles = mockVehicles.filter(vehicle => 
-    vehicle && vehicle.id && !tempSelected.some(selected => selected?.id === vehicle.id)
+  const availableVehicles = useMemo(
+    () => mockVehicles.filter(vehicle => !tempSelected.some(selected => selected.id === vehicle.id)),
+    [tempSelected]
   )
 
-  const filteredAvailable = availableVehicles.filter(vehicle => 
-    vehicle?.name?.toLowerCase().includes(searchLeft.toLowerCase())
+  const filteredAvailable = useMemo(
+    () => availableVehicles.filter(vehicle => vehicle?.name?.toLowerCase().includes(searchLeft.toLowerCase())),
+    [availableVehicles, searchLeft]
   )
 
-  const filteredSelected = tempSelected.filter(vehicle => 
-    vehicle?.name?.toLowerCase().includes(searchRight.toLowerCase())
+  const filteredSelected = useMemo(
+    () => tempSelected.filter(vehicle => vehicle?.name?.toLowerCase().includes(searchRight.toLowerCase())),
+    [tempSelected, searchRight]
   )
 
-  const handleVehicleToggle = (vehicle: Vehicle, isSelected: boolean) => {
-    if (isSelected) {
-      setTempSelected(prev => prev.filter(v => v.id !== vehicle.id))
-    } else {
-      setTempSelected(prev => [...prev, vehicle])
-    }
+  useEffect(() => {
+    setLeftSelection(prev => prev.filter(id => availableVehicles.some(vehicle => vehicle.id === id)))
+  }, [availableVehicles])
+
+  useEffect(() => {
+    setRightSelection(prev => prev.filter(id => tempSelected.some(vehicle => vehicle.id === id)))
+  }, [tempSelected])
+
+  const toggleLeftSelection = (id: string) => {
+    setLeftSelection(prev => (prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]))
   }
 
-  const handleClearAvailable = () => {
-    setSearchLeft("")
+  const toggleRightSelection = (id: string) => {
+    setRightSelection(prev => (prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]))
   }
 
-  const handleClearSelected = () => {
-    setTempSelected([])
-  }
+  const moveSelectedToRight = () => {
+    if (leftSelection.length === 0) return
 
-  const handleSelectAllAvailable = () => {
-    // Add all available vehicles to selection
     setTempSelected(prev => {
       const newSelected = [...prev]
-      availableVehicles.forEach(vehicle => {
-        if (!newSelected.some(selected => selected.id === vehicle.id)) {
-          newSelected.push(vehicle)
+      const remaining: string[] = []
+
+      leftSelection.forEach(id => {
+        if (newSelected.length >= MAX_SELECTION) {
+          remaining.push(id)
+          return
+        }
+
+        if (!newSelected.some(vehicle => vehicle.id === id)) {
+          const vehicle = mockVehicles.find(item => item.id === id)
+          if (vehicle) {
+            newSelected.push(vehicle)
+          }
         }
       })
+
+      setLeftSelection(remaining)
       return newSelected
     })
   }
 
-  const handleDeselectAllSelected = () => {
-    // Remove all selected vehicles
-    setTempSelected([])
+  const moveSelectedToLeft = () => {
+    if (rightSelection.length === 0) return
+
+    setTempSelected(prev => prev.filter(vehicle => !rightSelection.includes(vehicle.id)))
+    setRightSelection([])
   }
-
-  // Check if all available vehicles are selected
-  const allAvailableSelected = availableVehicles.length > 0 && availableVehicles.every(vehicle => 
-    tempSelected.some(selected => selected.id === vehicle.id)
-  )
-
-  // Check if all selected vehicles should be checked (always true for selected column)
-  const allSelectedChecked = tempSelected.length > 0
 
   const handleCancel = () => {
     setTempSelected(selectedVehicles)
+    setLeftSelection([])
+    setRightSelection([])
     setSearchLeft("")
     setSearchRight("")
     onClose()
   }
 
   const handleContinue = () => {
-    // Apply the selection changes
     onSelectionChange(tempSelected)
     setSearchLeft("")
     setSearchRight("")
+    setLeftSelection([])
+    setRightSelection([])
     onClose()
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        // Reset temp state when closing without saving
-        setTempSelected(selectedVehicles)
-      }
-      onClose()
-    }}>
-      <DialogContent className="h-[600px] p-0 flex flex-col" style={{ width: '800px', maxWidth: '800px' }}>
-        <DialogTitle className="sr-only">Seleccionar unidades</DialogTitle>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleCancel()
+        }
+      }}
+    >
+      <DialogContent
+        className="flex flex-col"
+        style={{ width: "860px", maxWidth: "860px" }}
+        styles={{ body: { padding: 0 } }}
+      >
+        <DialogTitle className="sr-only">Compartir unidades</DialogTitle>
         <DialogDescription className="sr-only">
-          Interfaz para seleccionar las unidades vehiculares necesarias para generar el reporte. Permite elegir entre todas las unidades disponibles o solo algunas específicas.
+          Elige las unidades cuya ubicación deseas compartir.
         </DialogDescription>
-        
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div>
-            <h2 className="text-xl mb-2">Seleccionar unidades</h2>
-            <p className="text-sm text-gray-600">
-              Selecciona las unidades con las cuales deseas crear el reporte. Elige todas las unidades o solo 
-              algunas del total disponible. Recuerda que debes seleccionar al menos 1 unidad para continuar.
-            </p>
-          </div>
-          
-        </div>
 
-        {/* Content */}
-        <div className="flex-1 px-6 py-4 overflow-hidden">
-          <div className="grid grid-cols-2 gap-6 h-full">
-            {/* Available Vehicles - Left Column */}
-            <div className="flex flex-col space-y-4 h-full">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Checkbox 
-                    checked={allAvailableSelected} 
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        handleSelectAllAvailable()
-                      } else {
-                        // Don't deselect all, just clear the search to show all available
-                        setSearchLeft("")
-                      }
-                    }}
-                    className="w-4 h-4" 
-                  />
-                  <span className="text-sm">{availableVehicles.length} Unidades</span>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleClearAvailable} 
-                  className="text-blue-600 hover:text-blue-800 text-sm p-0 h-auto"
-                >
-                  Limpiar
-                </Button>
-              </div>
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar Unidades"
-                  value={searchLeft}
-                  onChange={(e) => setSearchLeft(e.target.value)}
-                  className="pl-10 h-10"
-                />
-              </div>
-
-              <div className="border rounded-lg flex-1 overflow-hidden">
-                <div className="h-full overflow-y-auto">
-                  <div className="p-4 space-y-3 max-h-64 overflow-y-auto">
-                    {filteredAvailable.map((vehicle) => (
-                      <div key={vehicle.id} className="flex items-center gap-3 hover:bg-gray-50 p-1 rounded">
-                        <Checkbox
-                          checked={false}
-                          onCheckedChange={() => handleVehicleToggle(vehicle, false)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm">{vehicle?.name || 'Sin nombre'}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="w-8 h-8 p-0" disabled>
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <span>1</span>
-                  <Button variant="outline" size="sm" className="w-8 h-8 p-0" disabled>
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                  <span className="ml-3">0 - {availableVehicles.length} Unidades</span>
-                </div>
-              </div>
+        <div className="flex flex-col h-[560px]">
+          <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Compartir unidades</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Elige las unidades cuya ubicación deseas compartir. Recuerda elegir al menos 1 para continuar.
+              </p>
             </div>
+            <DialogClose asChild>
+              <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500">
+                <X className="w-4 h-4" />
+              </button>
+            </DialogClose>
+          </div>
 
-            {/* Selected Vehicles - Right Column */}
-            <div className="flex flex-col space-y-4 h-full">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Checkbox 
-                    checked={allSelectedChecked} 
-                    onCheckedChange={(checked) => {
-                      if (!checked) {
-                        handleDeselectAllSelected()
-                      }
-                      // If checking, we don't need to do anything special since all items are already selected in this column
-                    }}
-                    className="w-4 h-4" 
-                  />
-                  <span className="text-sm">{tempSelected.length} Seleccionadas</span>
+          <div className="flex-1 px-6 py-4 overflow-hidden">
+            <div className="grid grid-cols-[1fr_auto_1fr] gap-4 h-full">
+              <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b">
+                  <h3 className="text-sm font-medium text-gray-700">Unidades</h3>
+                  <span className="text-sm text-gray-500">{leftSelection.length}/{availableVehicles.length}</span>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleClearSelected} 
-                  className="text-blue-600 hover:text-blue-800 text-sm p-0 h-auto"
-                >
-                  Limpiar
-                </Button>
-              </div>
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar Unidades"
-                  value={searchRight}
-                  onChange={(e) => setSearchRight(e.target.value)}
-                  className="pl-10 h-10"
-                />
-              </div>
-
-              <div className="border rounded-lg flex-1 overflow-hidden">
-                {tempSelected.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                    <div className="w-16 h-12 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                      <div className="w-8 h-6 bg-gray-200 rounded"></div>
-                    </div>
-                    <p className="text-sm">No tienes unidades</p>
+                <div className="px-4 py-3 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Buscar Unidades"
+                      value={searchLeft}
+                      onChange={(e) => setSearchLeft(e.target.value)}
+                      className="pl-9 h-10 text-[14px]"
+                    />
                   </div>
-                ) : (
-                  <div className="h-full overflow-y-auto">
-                    <div className="p-4 space-y-3">
-                      {filteredSelected.map((vehicle) => (
-                        <div key={vehicle.id} className="flex items-center gap-3 hover:bg-gray-50 p-1 rounded">
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  {filteredAvailable.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-sm text-gray-400">
+                      No hay unidades disponibles
+                    </div>
+                  ) : (
+                    <ul className="h-full overflow-y-auto divide-y divide-gray-100">
+                      {filteredAvailable.map(vehicle => (
+                        <li
+                          key={vehicle.id}
+                          className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                          onClick={() => toggleLeftSelection(vehicle.id)}
+                        >
                           <Checkbox
-                            checked={true}
-                            onCheckedChange={() => handleVehicleToggle(vehicle, true)}
+                            checked={leftSelection.includes(vehicle.id)}
+                            onCheckedChange={() => toggleLeftSelection(vehicle.id)}
                             className="w-4 h-4"
+                            onClick={(event) => event.stopPropagation()}
                           />
-                          <span className="text-sm">{vehicle?.name || 'Sin nombre'}</span>
-                        </div>
+                          <span className="text-[14px] text-gray-700 truncate">{vehicle.name}</span>
+                        </li>
                       ))}
-                    </div>
-                  </div>
-                )}
+                    </ul>
+                  )}
+                </div>
               </div>
 
-              <div className="flex items-center justify-center text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="w-8 h-8 p-0" disabled>
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <span>1</span>
-                  <Button variant="outline" size="sm" className="w-8 h-8 p-0" disabled>
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                  <span className="ml-3">1 - {tempSelected.length} Unidades</span>
+              <div className="flex flex-col items-center justify-center gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-10 h-10"
+                  onClick={moveSelectedToRight}
+                  disabled={leftSelection.length === 0 || tempSelected.length >= MAX_SELECTION}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-10 h-10"
+                  onClick={moveSelectedToLeft}
+                  disabled={rightSelection.length === 0}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b">
+                  <h3 className="text-sm font-medium text-gray-700">Unidades a compartir</h3>
+                  <span className="text-sm text-gray-500">{tempSelected.length}/{MAX_SELECTION}</span>
+                </div>
+                <div className="px-4 py-3 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Buscar Unidades"
+                      value={searchRight}
+                      onChange={(e) => setSearchRight(e.target.value)}
+                      className="pl-9 h-10 text-[14px]"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  {tempSelected.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-400">
+                      <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <Inbox className="w-6 h-6" />
+                      </div>
+                      <p className="text-sm">No tienes unidades</p>
+                    </div>
+                  ) : (
+                    <ul className="h-full overflow-y-auto divide-y divide-gray-100">
+                      {filteredSelected.map(vehicle => (
+                        <li
+                          key={vehicle.id}
+                          className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                          onClick={() => toggleRightSelection(vehicle.id)}
+                        >
+                          <Checkbox
+                            checked={rightSelection.includes(vehicle.id)}
+                            onCheckedChange={() => toggleRightSelection(vehicle.id)}
+                            className="w-4 h-4"
+                            onClick={(event) => event.stopPropagation()}
+                          />
+                          <span className="text-[14px] text-gray-700 truncate">{vehicle.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t">
-          <span className="text-sm">Unidades seleccionadas : {tempSelected.length}</span>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleContinue}
-              className={`${tempSelected.length === 0 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-              disabled={tempSelected.length === 0}
-            >
-              Continuar
-            </Button>
+          <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
+            <span className="text-sm text-gray-600">
+              Unidades a compartir: {tempSelected.length} (Máx. {MAX_SELECTION})
+            </span>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleCancel}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleContinue}
+                disabled={tempSelected.length === 0}
+                className="bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+              >
+                Continuar
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
