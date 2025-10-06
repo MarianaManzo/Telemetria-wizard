@@ -146,6 +146,8 @@ const systemTelemetrySensors = [
     unit: '', 
     dataType: 'boolean', 
     category: 'system' as const,
+    valueDescription: 'En movimiento / Detenido',
+    inputType: 'Dropdown (boolean string)',
     options: [
       { value: 'moving', label: 'En movimiento' },
       { value: 'stopped', label: 'Detenido' }
@@ -157,6 +159,8 @@ const systemTelemetrySensors = [
     unit: '', 
     dataType: 'boolean', 
     category: 'system' as const,
+    valueDescription: 'Encendido / Apagado',
+    inputType: 'Dropdown (boolean con icono)',
     options: [
       { value: 'true', label: 'Encendido' },
       { value: 'false', label: 'Apagado' }
@@ -168,42 +172,48 @@ const systemTelemetrySensors = [
     unit: '', 
     dataType: 'string', 
     category: 'system' as const,
+    valueDescription: 'Sin conexión / Mayor a 24 hrs / Mayor a 60 min',
+    inputType: 'Dropdown (lista predefinida)',
     options: [
       { value: 'no_connection', label: 'Sin conexión' },
       { value: 'more_24h', label: 'Mayor a 24 hrs' },
       { value: 'more_60min', label: 'Mayor a 60 min' }
     ]
   },
-  { value: 'battery', label: 'Batería', unit: '%', dataType: 'numeric', category: 'system' as const },
-  { value: 'gsm_signal', label: 'Señal GSM (%)', unit: '%', dataType: 'numeric', category: 'system' as const },
-  { value: 'satellites_count', label: 'Número de Satélites', unit: '', dataType: 'numeric', category: 'system' as const },
-  { value: 'location', label: 'Ubicación', unit: '', dataType: 'string', category: 'system' as const },
-  { value: 'relative_distance', label: 'Distancia relativa (m)', unit: 'm', dataType: 'numeric', category: 'system' as const },
-  { value: 'server_date', label: 'Fecha del servidor', unit: '', dataType: 'datetime', category: 'system' as const },
-  { value: 'device_date', label: 'Fecha del dispositivo', unit: '', dataType: 'datetime', category: 'system' as const },
-  { value: 'speed', label: 'Velocidad (km/h)', unit: 'km/h', dataType: 'numeric', category: 'system' as const },
-  { value: 'odometer', label: 'Odómetro (Km)', unit: 'km', dataType: 'numeric', category: 'system' as const },
-  { value: 'latitude', label: 'Latitud (°)', unit: '°', dataType: 'numeric', category: 'system' as const },
-  { value: 'longitude', label: 'Longitud (°)', unit: '°', dataType: 'numeric', category: 'system' as const },
+  { value: 'battery', label: 'Batería', unit: '%', dataType: 'numeric', category: 'system' as const, valueDescription: '% (0–100)', inputType: 'Input numérico (%)' },
+  { value: 'gsm_signal', label: 'Señal GSM (%)', unit: '%', dataType: 'numeric', category: 'system' as const, valueDescription: '% (0–100)', inputType: 'Input numérico (%)' },
+  { value: 'satellites_count', label: 'Número de Satélites', unit: '', dataType: 'numeric', category: 'system' as const, valueDescription: 'Número entero (0–20+)', inputType: 'Input numérico' },
+  { value: 'location', label: 'Ubicación', unit: '', dataType: 'string', category: 'system' as const, valueDescription: 'Dirección o coordenadas', inputType: 'Input texto / mapa' },
+  { value: 'relative_distance', label: 'Distancia relativa (m)', unit: 'm', dataType: 'numeric', category: 'system' as const, valueDescription: 'Metros', inputType: 'Input numérico' },
+  { value: 'server_date', label: 'Fecha del servidor', unit: '', dataType: 'datetime', category: 'system' as const, valueDescription: 'Fecha y hora', inputType: 'Selector de fecha/hora' },
+  { value: 'device_date', label: 'Fecha del dispositivo', unit: '', dataType: 'datetime', category: 'system' as const, valueDescription: 'Fecha y hora', inputType: 'Selector de fecha/hora' },
+  { value: 'speed', label: 'Velocidad (km/h)', unit: 'km/h', dataType: 'numeric', category: 'system' as const, valueDescription: 'km/h (0–250)', inputType: 'Input numérico' },
+  { value: 'odometer', label: 'Odómetro (Km)', unit: 'km', dataType: 'numeric', category: 'system' as const, valueDescription: 'Kilómetros', inputType: 'Input numérico' },
+  { value: 'latitude', label: 'Latitud (°)', unit: '°', dataType: 'numeric', category: 'system' as const, valueDescription: 'Coordenada decimal', inputType: 'Input numérico' },
+  { value: 'longitude', label: 'Longitud (°)', unit: '°', dataType: 'numeric', category: 'system' as const, valueDescription: 'Coordenada decimal', inputType: 'Input numérico' },
   { 
     value: 'power_takeoff', 
     label: 'Toma de fuerza', 
     unit: '', 
     dataType: 'boolean', 
     category: 'system' as const,
+    valueDescription: 'Activada / Desactivada',
+    inputType: 'Dropdown (boolean string)',
     options: [
       { value: 'true', label: 'Activada' },
       { value: 'false', label: 'Desactivada' }
     ]
   },
-  { value: 'temperature', label: 'Temperatura (°C)', unit: '°C', dataType: 'numeric', category: 'system' as const },
-  { value: 'axis_x', label: 'eje x (°)', unit: '°', dataType: 'numeric', category: 'system' as const },
+  { value: 'temperature', label: 'Temperatura (°C)', unit: '°C', dataType: 'numeric', category: 'system' as const, valueDescription: '°C (-40 a 120)', inputType: 'Input numérico' },
+  { value: 'axis_x', label: 'eje x (°)', unit: '°', dataType: 'numeric', category: 'system' as const, valueDescription: 'Grados de acelerómetro', inputType: 'Input numérico' },
   { 
     value: 'panic_button', 
     label: 'Pánico', 
     unit: '', 
     dataType: 'boolean', 
     category: 'system' as const,
+    valueDescription: 'Activado / No activado',
+    inputType: 'Dropdown (boolean con icono campana)',
     options: [
       { value: 'true', label: 'Activado' },
       { value: 'false', label: 'No activado' }
@@ -213,25 +223,29 @@ const systemTelemetrySensors = [
 
 // Mock custom sensors - in real app, these would be loaded from API
 const customTelemetrySensors = [
-  { value: 'custom_fuel_sensor', label: 'Sensor de Combustible Personalizado', unit: 'L', dataType: 'numeric', category: 'custom' as const },
+  { value: 'custom_fuel_sensor', label: 'Sensor de Combustible Personalizado', unit: 'L', dataType: 'numeric', category: 'custom' as const, valueDescription: 'Litros', inputType: 'Input numérico' },
   { 
     value: 'custom_door_sensor', 
     label: 'Sensor de Puerta Trasera', 
     unit: '', 
     dataType: 'boolean', 
     category: 'custom' as const,
+    valueDescription: 'Abierta / Cerrada',
+    inputType: 'Dropdown (boolean)',
     options: [
       { value: 'true', label: 'Abierta' },
       { value: 'false', label: 'Cerrada' }
     ]
   },
-  { value: 'custom_cargo_weight', label: 'Peso de Carga', unit: 'kg', dataType: 'numeric', category: 'custom' as const },
+  { value: 'custom_cargo_weight', label: 'Peso de Carga', unit: 'kg', dataType: 'numeric', category: 'custom' as const, valueDescription: 'Kilogramos', inputType: 'Input numérico' },
   { 
     value: 'custom_driver_id', 
     label: 'ID Chofer Personalizado', 
     unit: '', 
     dataType: 'string', 
     category: 'custom' as const,
+    valueDescription: 'Lista de choferes autorizados',
+    inputType: 'Dropdown (lista predefinida)',
     options: [
       { value: 'ID001', label: 'Juan Pérez (ID001)' },
       { value: 'ID002', label: 'María Rodríguez (ID002)' },
@@ -376,11 +390,12 @@ function DraggableConditionInGroup({
         ref={(node) => drag(drop(node))}
         className={`p-3 rounded-lg border border-gray-200/50 bg-white ${isDragging ? 'opacity-50' : ''}`}
       >
-      <div className="flex items-start gap-3">
+      <div className="flex gap-3 relative" style={{ paddingTop: '8px' }}>
         {/* Drag handle */}
         <div 
           ref={drag}
-          className="flex-shrink-0 cursor-move p-1 hover:bg-gray-100 rounded mt-[26px]"
+          className="flex-shrink-0 cursor-move hover:bg-gray-100 rounded flex items-center justify-center"
+          style={{ width: '36px', height: '36px', marginTop: '34px' }}
         >
           <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
@@ -404,12 +419,12 @@ function DraggableConditionInGroup({
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'operator', value)}
             disabled={!condition.sensor}
           >
-            <SelectTrigger className="w-full text-[14px]">
+            <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
               <SelectValue placeholder="Seleccionar operador" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
               {availableOperators.map((op) => (
-                <SelectItem key={op.value} value={op.value}>
+                <SelectItem key={op.value} value={op.value} className="text-[14px]">
                   {op.label}
                 </SelectItem>
               ))}
@@ -427,12 +442,12 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full text-[14px]">
+                <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -444,12 +459,12 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full text-[14px]">
+                <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
                   <SelectValue placeholder="Seleccionar opción" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -462,6 +477,7 @@ function DraggableConditionInGroup({
                 value={condition.value}
                 onChange={(e) => updateConditionInGroup(groupId, condition.id, 'value', e.target.value)}
                 className="w-full text-[14px]"
+                style={{ height: '40px', borderRadius: '8px' }}
                 disabled={!condition.sensor}
               />
             )}
@@ -478,7 +494,8 @@ function DraggableConditionInGroup({
             variant="ghost"
             size="icon"
             onClick={() => removeConditionFromGroup(groupId, condition.id)}
-            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center mt-8"
+            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+            style={{ marginTop: '34px' }}
           >
             <CloseOutlined className="text-gray-700 text-[14px]" />
           </Button>
@@ -538,11 +555,12 @@ function DraggableCondition({
         ref={(node) => drag(drop(node))}
         className={`p-3 rounded-lg border border-gray-200/50 ${index === 0 ? 'bg-white' : 'bg-gray-50/50'} ${isDragging ? 'opacity-50' : ''}`}
       >
-      <div className="flex items-start gap-3">
+      <div className="flex gap-3" style={{ paddingTop: '8px' }}>
         {/* Drag handle - show for all conditions */}
         <div 
           ref={drag}
-          className="flex-shrink-0 cursor-move p-1 hover:bg-gray-100 rounded mt-[26px]"
+          className="flex-shrink-0 cursor-move hover:bg-gray-100 rounded flex items-center justify-center"
+          style={{ width: '36px', height: '36px', marginTop: '34px' }}
         >
           <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
@@ -603,17 +621,17 @@ function DraggableCondition({
 
         <div className="min-w-0 flex-1">
           <Label className="block mb-2" textClassName="text-[14px]">Operador</Label>
-          <Select
-            value={condition.operator}
-            onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
-            disabled={!condition.sensor}
-          >
-            <SelectTrigger className="w-full text-[14px]">
-              <SelectValue placeholder="Seleccionar operador" />
-            </SelectTrigger>
-            <SelectContent>
+        <Select
+          value={condition.operator}
+          onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
+          disabled={!condition.sensor}
+        >
+          <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+            <SelectValue placeholder="Seleccionar operador" />
+          </SelectTrigger>
+            <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
               {availableOperators.map((op) => (
-                <SelectItem key={op.value} value={op.value}>
+                <SelectItem key={op.value} value={op.value} className="text-[14px]">
                   {op.label}
                 </SelectItem>
               ))}
@@ -627,17 +645,17 @@ function DraggableCondition({
             {/* Render different input types based on sensor dataType */}
             {sensor?.dataType === 'boolean' ? (
               // Dropdown for boolean sensors (Encendido/Apagado, Activado/Desactivado, etc.)
-              <Select
-                value={condition.value}
-                onValueChange={(value) => updateCondition(condition.id, 'value', value)}
-                disabled={!condition.sensor}
-              >
-                <SelectTrigger className="w-full text-[14px]">
-                  <SelectValue placeholder="Seleccionar estado" />
-                </SelectTrigger>
-                <SelectContent>
+            <Select
+              value={condition.value}
+              onValueChange={(value) => updateCondition(condition.id, 'value', value)}
+              disabled={!condition.sensor}
+            >
+              <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectValue placeholder="Seleccionar estado" />
+              </SelectTrigger>
+                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -645,17 +663,17 @@ function DraggableCondition({
               </Select>
             ) : sensor?.dataType === 'string' ? (
               // Select with predefined list for string sensors (Chofer, ID Chofer, etc.)
-              <Select
-                value={condition.value}
-                onValueChange={(value) => updateCondition(condition.id, 'value', value)}
-                disabled={!condition.sensor}
-              >
-                <SelectTrigger className="w-full text-[14px]">
-                  <SelectValue placeholder="Seleccionar opción" />
-                </SelectTrigger>
-                <SelectContent>
+            <Select
+              value={condition.value}
+              onValueChange={(value) => updateCondition(condition.id, 'value', value)}
+              disabled={!condition.sensor}
+            >
+              <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectValue placeholder="Seleccionar opción" />
+              </SelectTrigger>
+                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -663,14 +681,15 @@ function DraggableCondition({
               </Select>
             ) : (
               // Numeric input for measurable values (km/h, voltios, minutos, °C, etc.)
-              <Input
-                type="number"
-                placeholder="Valor"
-                value={condition.value}
-                onChange={(e) => updateCondition(condition.id, 'value', e.target.value)}
-                className="w-full text-[14px]"
-                disabled={!condition.sensor}
-              />
+            <Input
+              type="number"
+              placeholder="Valor"
+              value={condition.value}
+              onChange={(e) => updateCondition(condition.id, 'value', e.target.value)}
+              className="w-full text-[14px]"
+              style={{ height: '40px', borderRadius: '8px' }}
+              disabled={!condition.sensor}
+            />
             )}
             {sensor && sensor.unit && (
               <span className="text-[14px] text-gray-600 whitespace-nowrap">
@@ -685,7 +704,8 @@ function DraggableCondition({
             variant="ghost"
             size="icon"
             onClick={() => removeCondition(condition.id)}
-            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center mt-8"
+            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+            style={{ marginTop: '34px' }}
           >
             <CloseOutlined className="text-gray-700 text-[14px]" />
           </Button>
@@ -1948,15 +1968,17 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                     padding: toPx(spacing.sm),
                   }}
                 >
-                  <Flex align="center" style={{ gap: toPx(spacing.xs) }}>
-                    <Gauge className="h-4 w-4" style={{ color: "var(--color-gray-600)" }} />
-                    <Title level={5} style={{ margin: 0, fontSize: "14px", color: "var(--color-gray-700)" }}>
-                      Parámetros a evaluar
-                    </Title>
-                  </Flex>
-                  <Paragraph style={{ margin: 0, color: "var(--color-gray-600)", fontSize: "14px" }}>
-                    ¿Qué condiciones evalúa esta regla?
-                  </Paragraph>
+                  <div style={{ display: 'flex', gap: toPx(spacing.xs) }}>
+                    <Gauge className="h-4 w-4 mt-1" style={{ color: "var(--color-gray-600)" }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <Title level={5} style={{ margin: 0, fontSize: "14px", color: "var(--color-gray-700)" }}>
+                        Parámetros a evaluar
+                      </Title>
+                      <Paragraph style={{ margin: 0, color: "var(--color-gray-600)", fontSize: "14px" }}>
+                        ¿Qué condiciones evalúa esta regla?
+                      </Paragraph>
+                    </div>
+                  </div>
                   {conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0) && (
                     <div
                       style={{
