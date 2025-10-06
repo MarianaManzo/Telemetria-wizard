@@ -128,18 +128,21 @@ export const SelectTrigger = forwardRef<SelectRef, TriggerProps>(
     const currentValue = ctx.value === '' ? undefined : ctx.value;
 
     return (
-      <AntdSelect
-        ref={ref}
-        className={cn("text-[14px]", className)}
-        size={antdSize}
-        value={currentValue}
-        onChange={value => ctx.setValue(value)}
-        options={ctx.options}
-        placeholder={ctx.placeholder}
-        disabled={ctx.disabled}
-        dropdownClassName={cn(ctx.dropdownClassName, dropdownClassName)}
-        {...props}
-      />
+      <>
+        {children ? <span className="hidden">{children}</span> : null}
+        <AntdSelect
+          ref={ref}
+          className={cn("text-[14px]", className)}
+          size={antdSize}
+          value={currentValue}
+          onChange={value => ctx.setValue(value)}
+          options={ctx.options}
+          placeholder={ctx.placeholder}
+          disabled={ctx.disabled}
+          dropdownClassName={cn(ctx.dropdownClassName, dropdownClassName)}
+          {...props}
+        />
+      </>
     );
   },
 );
