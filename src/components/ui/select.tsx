@@ -24,8 +24,8 @@ type SelectContextValue = {
   registerOption: (option: Option) => void;
   unregisterOption: (value: string) => void;
   options: Option[];
-  placeholder?: ReactNode;
-  setPlaceholder: (placeholder?: ReactNode) => void;
+  placeholder?: string;
+  setPlaceholder: (placeholder?: string) => void;
   disabled?: boolean;
   dropdownClassName?: string;
   setDropdownClassName: (className?: string) => void;
@@ -52,7 +52,7 @@ type BaseSelectProps = {
 export function Select({ value, defaultValue, onValueChange, disabled, children }: BaseSelectProps) {
   const [internalValue, setInternalValue] = useState<string | undefined>(defaultValue);
   const [options, setOptions] = useState<Option[]>([]);
-  const [placeholder, setPlaceholder] = useState<ReactNode | undefined>();
+  const [placeholder, setPlaceholder] = useState<string | undefined>();
   const [dropdownClassName, setDropdownClassName] = useState<string | undefined>();
 
   const handleChange = useCallback(
@@ -128,18 +128,21 @@ export const SelectTrigger = forwardRef<SelectRef, TriggerProps>(
     const currentValue = ctx.value === '' ? undefined : ctx.value;
 
     return (
-      <AntdSelect
-        ref={ref}
-        className={cn(className)}
-        size={antdSize}
-        value={currentValue}
-        onChange={value => ctx.setValue(value)}
-        options={ctx.options}
-        placeholder={ctx.placeholder}
-        disabled={ctx.disabled}
-        dropdownClassName={cn(ctx.dropdownClassName, dropdownClassName)}
-        {...props}
-      />
+      <>
+        {_children}
+        <AntdSelect
+          ref={ref}
+          className={cn(className)}
+          size={antdSize}
+          value={currentValue}
+          onChange={value => ctx.setValue(value)}
+          options={ctx.options}
+          placeholder={ctx.placeholder}
+          disabled={ctx.disabled}
+          dropdownClassName={cn(ctx.dropdownClassName, dropdownClassName)}
+          {...props}
+        />
+      </>
     );
   },
 );
@@ -154,11 +157,7 @@ export function SelectValue({ placeholder }: SelectValueProps) {
   const ctx = useSelectContext("SelectValue");
 
   useEffect(() => {
-    if (placeholder) {
-      ctx.setPlaceholder(<span className="ant-typography ant-typography-secondary truncate">{placeholder}</span>);
-    } else {
-      ctx.setPlaceholder(undefined);
-    }
+    ctx.setPlaceholder(placeholder);
   }, [ctx, placeholder]);
 
   return null;
