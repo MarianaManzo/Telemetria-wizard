@@ -155,6 +155,16 @@ export function SelectValue({ placeholder }: SelectValueProps) {
     ctx.setPlaceholder(placeholder);
   }, [ctx, placeholder]);
 
+  if (!ctx.value && placeholder) {
+    return <span className="ant-typography ant-typography-secondary truncate">{placeholder}</span>;
+  }
+
+  const selectedOption = ctx.options.find(option => option.value === ctx.value);
+
+  if (selectedOption) {
+    return <span className="truncate text-gray-900">{selectedOption.label}</span>;
+  }
+
   return null;
 }
 
