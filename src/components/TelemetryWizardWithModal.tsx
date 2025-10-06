@@ -400,7 +400,7 @@ function DraggableConditionInGroup({
           <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0" style={{ flex: '0 0 180px' }}>
           <Label className="block mb-2" textClassName="text-[14px]">Sensor</Label>
           <SensorSelectorWithSearch
             value={condition.sensor}
@@ -412,7 +412,7 @@ function DraggableConditionInGroup({
           />
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0" style={{ flex: '0 0 180px' }}>
           <Label className="block mb-2" textClassName="text-[14px]">Operador</Label>
           <Select
             value={condition.operator}
@@ -432,7 +432,7 @@ function DraggableConditionInGroup({
           </Select>
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0" style={{ flex: '0 0 180px' }}>
           <Label className="block mb-2" textClassName="text-[14px]">Valor</Label>
           <div className="flex items-center gap-2">
             {/* Render different input types based on sensor dataType */}
@@ -607,7 +607,7 @@ function DraggableCondition({
           </div>
         )}
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0" style={{ flex: '0 0 180px' }}>
           <Label className="block mb-2" textClassName="text-[14px]">Sensor</Label>
           <SensorSelectorWithSearch
             value={condition.sensor}
