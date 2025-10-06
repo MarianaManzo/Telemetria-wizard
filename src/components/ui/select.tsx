@@ -125,12 +125,14 @@ export const SelectTrigger = forwardRef<SelectRef, TriggerProps>(
 
     const antdSize: AntdSelectProps<string>["size"] = size === "sm" ? "small" : "middle";
 
+    const currentValue = ctx.value === '' ? undefined : ctx.value;
+
     return (
       <AntdSelect
         ref={ref}
         className={cn(className)}
         size={antdSize}
-        value={ctx.value}
+        value={currentValue}
         onChange={value => ctx.setValue(value)}
         options={ctx.options}
         placeholder={ctx.placeholder}
