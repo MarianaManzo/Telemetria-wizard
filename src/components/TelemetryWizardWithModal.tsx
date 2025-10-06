@@ -388,7 +388,8 @@ function DraggableConditionInGroup({
     <TooltipProvider>
       <div
         ref={(node) => drag(drop(node))}
-        className={`p-3 rounded-lg border border-gray-200/50 bg-white ${isDragging ? 'opacity-50' : ''}`}
+        className={`rounded-lg border border-gray-200/50 bg-white transition-all ${isDragging ? 'opacity-50' : 'hover:border-blue-200 hover:shadow-sm'}`}
+        style={{ padding: '8px' }}
       >
       <div className="flex gap-3 relative" style={{ paddingTop: '8px' }}>
         {/* Drag handle */}
@@ -553,7 +554,8 @@ function DraggableCondition({
     <TooltipProvider>
       <div
         ref={(node) => drag(drop(node))}
-        className={`p-3 rounded-lg border border-gray-200/50 ${index === 0 ? 'bg-white' : 'bg-gray-50/50'} ${isDragging ? 'opacity-50' : ''}`}
+        className={`rounded-lg border border-gray-200/50 ${index === 0 ? 'bg-white' : 'bg-gray-50/50'} transition-all ${isDragging ? 'opacity-50' : 'hover:border-blue-200 hover:shadow-sm'}`}
+        style={{ padding: '8px' }}
       >
       <div className="flex gap-3" style={{ paddingTop: '8px' }}>
         {/* Drag handle - show for all conditions */}
