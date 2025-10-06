@@ -46,13 +46,14 @@ const mockVehicles: Vehicle[] = [
 ]
 
 const MAX_SELECTION = 10
+const PAGE_SIZE = 8
 
 export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelectionChange }: VehicleSelectorProps) {
   const [searchLeft, setSearchLeft] = useState("")
   const [searchRight, setSearchRight] = useState("")
   const [tempSelected, setTempSelected] = useState<Vehicle[]>(selectedVehicles)
-  const [leftSelection, setLeftSelection] = useState<string[]>([])
-  const [rightSelection, setRightSelection] = useState<string[]>([])
+  const [leftPage, setLeftPage] = useState(0)
+  const [rightPage, setRightPage] = useState(0)
 
   useEffect(() => {
     if (isOpen) {
@@ -60,8 +61,8 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
       setTempSelected(validVehicles)
       setSearchLeft("")
       setSearchRight("")
-      setLeftSelection([])
-      setRightSelection([])
+      setLeftPage(0)
+      setRightPage(0)
     }
   }, [isOpen, selectedVehicles])
 
@@ -70,71 +71,77 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
     [tempSelected]
   )
 
-  const filteredAvailable = useMemo(
-    () => availableVehicles.filter(vehicle => vehicle?.name?.toLowerCase().includes(searchLeft.toLowerCase())),
-    [availableVehicles, searchLeft]
-  )
+  const filteredAvailable = useMemo(() => {
+    const term = searchLeft.trim().toLowerCase()
+    return availableVehicles.filter(vehicle => vehicle?.name?.toLowerCase().includes(term))
+  }, [availableVehicles, searchLeft])
 
-  const filteredSelected = useMemo(
-    () => tempSelected.filter(vehicle => vehicle?.name?.toLowerCase().includes(searchRight.toLowerCase())),
-    [tempSelected, searchRight]
-  )
+  const filteredSelected = useMemo(() => {
+    const term = searchRight.trim().toLowerCase()
+    return tempSelected.filter(vehicle => vehicle?.name?.toLowerCase().includes(term))
+  }, [tempSelected, searchRight])
+
+  const totalAvailablePages = Math.max(1, Math.ceil(filteredAvailable.length / PAGE_SIZE))
+  const totalSelectedPages = Math.max(1, Math.ceil(filteredSelected.length / PAGE_SIZE))
 
   useEffect(() => {
-    setLeftSelection(prev => prev.filter(id => availableVehicles.some(vehicle => vehicle.id === id)))
-  }, [availableVehicles])
+    setLeftPage(prev => Math.min(prev, totalAvailablePages - 1))
+  }, [totalAvailablePages])
 
   useEffect(() => {
-    setRightSelection(prev => prev.filter(id => tempSelected.some(vehicle => vehicle.id === id)))
-  }, [tempSelected])
+    setRightPage(prev => Math.min(prev, totalSelectedPages - 1))
+  }, [totalSelectedPages])
 
-  const toggleLeftSelection = (id: string) => {
-    setLeftSelection(prev => (prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]))
+  const paginatedAvailable = useMemo(() => {
+    const start = leftPage * PAGE_SIZE
+    return filteredAvailable.slice(start, start + PAGE_SIZE)
+  }, [filteredAvailable, leftPage])
+
+  const paginatedSelected = useMemo(() => {
+    const start = rightPage * PAGE_SIZE
+    return filteredSelected.slice(start, start + PAGE_SIZE)
+  }, [filteredSelected, rightPage])
+
+  const handleToggleAvailable = (vehicle: Vehicle) => {
+    if (tempSelected.some(item => item.id === vehicle.id)) return
+    if (tempSelected.length >= MAX_SELECTION) return
+    setTempSelected(prev => [...prev, vehicle])
   }
 
-  const toggleRightSelection = (id: string) => {
-    setRightSelection(prev => (prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]))
+  const handleToggleSelected = (vehicle: Vehicle) => {
+    setTempSelected(prev => prev.filter(item => item.id !== vehicle.id))
   }
 
-  const moveSelectedToRight = () => {
-    if (leftSelection.length === 0) return
+  const handleClearAvailable = () => {
+    setSearchLeft("")
+    setLeftPage(0)
+  }
 
+  const handleClearSelected = () => {
+    setTempSelected([])
+    setRightPage(0)
+  }
+
+  const handleSelectAllAvailable = () => {
+    if (tempSelected.length >= MAX_SELECTION) return
     setTempSelected(prev => {
-      const newSelected = [...prev]
-      const remaining: string[] = []
-
-      leftSelection.forEach(id => {
-        if (newSelected.length >= MAX_SELECTION) {
-          remaining.push(id)
-          return
-        }
-
-        if (!newSelected.some(vehicle => vehicle.id === id)) {
-          const vehicle = mockVehicles.find(item => item.id === id)
-          if (vehicle) {
-            newSelected.push(vehicle)
-          }
-        }
-      })
-
-      setLeftSelection(remaining)
-      return newSelected
+      const remainingSlots = MAX_SELECTION - prev.length
+      if (remainingSlots <= 0) return prev
+      const toAdd = filteredAvailable.slice(0, remainingSlots)
+      return [...prev, ...toAdd]
     })
   }
 
-  const moveSelectedToLeft = () => {
-    if (rightSelection.length === 0) return
-
-    setTempSelected(prev => prev.filter(vehicle => !rightSelection.includes(vehicle.id)))
-    setRightSelection([])
+  const handleDeselectAllSelected = () => {
+    setTempSelected([])
   }
 
   const handleCancel = () => {
     setTempSelected(selectedVehicles)
-    setLeftSelection([])
-    setRightSelection([])
     setSearchLeft("")
     setSearchRight("")
+    setLeftPage(0)
+    setRightPage(0)
     onClose()
   }
 
@@ -142,8 +149,8 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
     onSelectionChange(tempSelected)
     setSearchLeft("")
     setSearchRight("")
-    setLeftSelection([])
-    setRightSelection([])
+    setLeftPage(0)
+    setRightPage(0)
     onClose()
   }
 
@@ -158,8 +165,9 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
     >
       <DialogContent
         className="flex flex-col"
-        style={{ width: "860px", maxWidth: "860px" }}
+        style={{ width: "860px", maxWidth: "860px", borderRadius: "8px" }}
         styles={{ body: { padding: 0 } }}
+        maskStyle={{ backgroundColor: "rgba(0,0,0,0.4)" }}
       >
         <DialogTitle className="sr-only">Compartir unidades</DialogTitle>
         <DialogDescription className="sr-only">
@@ -167,7 +175,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
         </DialogDescription>
 
         <div className="flex flex-col h-[560px]">
-          <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b">
+          <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b bg-white">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Compartir unidades</h2>
               <p className="text-sm text-gray-600 mt-1">
@@ -181,12 +189,34 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
             </DialogClose>
           </div>
 
-          <div className="flex-1 px-6 py-4 overflow-hidden">
+          <div className="flex-1 px-6 py-4 overflow-hidden bg-white">
             <div className="grid grid-cols-[1fr_auto_1fr] gap-4 h-full">
               <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
-                  <h3 className="text-sm font-medium text-gray-700">Unidades</h3>
-                  <span className="text-sm text-gray-500">{leftSelection.length}/{availableVehicles.length}</span>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={filteredAvailable.length === 0}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          handleSelectAllAvailable()
+                        } else {
+                          setTempSelected([])
+                        }
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Unidades disponibles</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleClearAvailable}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Limpiar
+                    </button>
+                    <span className="text-sm text-gray-500">{availableVehicles.length} Unidades</span>
+                  </div>
                 </div>
                 <div className="px-4 py-3 border-b">
                   <div className="relative">
@@ -206,15 +236,15 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     </div>
                   ) : (
                     <ul className="h-full overflow-y-auto divide-y divide-gray-100">
-                      {filteredAvailable.map(vehicle => (
+                      {paginatedAvailable.map(vehicle => (
                         <li
                           key={vehicle.id}
                           className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
-                          onClick={() => toggleLeftSelection(vehicle.id)}
+                          onClick={() => handleToggleAvailable(vehicle)}
                         >
                           <Checkbox
-                            checked={leftSelection.includes(vehicle.id)}
-                            onCheckedChange={() => toggleLeftSelection(vehicle.id)}
+                            checked={false}
+                            onCheckedChange={() => handleToggleAvailable(vehicle)}
                             className="w-4 h-4"
                             onClick={(event) => event.stopPropagation()}
                           />
@@ -224,33 +254,62 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     </ul>
                   )}
                 </div>
+
+                <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-gray-500">
+                  <button
+                    type="button"
+                    onClick={() => setLeftPage(prev => Math.max(0, prev - 1))}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
+                    disabled={leftPage === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Anterior
+                  </button>
+                  <span>
+                    {filteredAvailable.length === 0
+                      ? "0 – 0 Unidades"
+                      : `${leftPage * PAGE_SIZE + 1} – ${Math.min((leftPage + 1) * PAGE_SIZE, filteredAvailable.length)} Unidades`
+                    }
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setLeftPage(prev => Math.min(totalAvailablePages - 1, prev + 1))}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
+                    disabled={leftPage >= totalAvailablePages - 1}
+                  >
+                    Siguiente <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-col items-center justify-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="w-10 h-10"
-                  onClick={moveSelectedToRight}
-                  disabled={leftSelection.length === 0 || tempSelected.length >= MAX_SELECTION}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="w-10 h-10"
-                  onClick={moveSelectedToLeft}
-                  disabled={rightSelection.length === 0}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
+                <span className="text-sm text-gray-400">Selecciona con las casillas</span>
               </div>
 
               <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
-                  <h3 className="text-sm font-medium text-gray-700">Unidades a compartir</h3>
-                  <span className="text-sm text-gray-500">{tempSelected.length}/{MAX_SELECTION}</span>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={tempSelected.length > 0}
+                      onCheckedChange={(checked) => {
+                        if (!checked) {
+                          handleDeselectAllSelected()
+                        }
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Unidades seleccionadas</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleClearSelected}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                      disabled={tempSelected.length === 0}
+                    >
+                      Limpiar
+                    </button>
+                    <span className="text-sm text-gray-500">{tempSelected.length} / {MAX_SELECTION}</span>
+                  </div>
                 </div>
                 <div className="px-4 py-3 border-b">
                   <div className="relative">
@@ -273,15 +332,15 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     </div>
                   ) : (
                     <ul className="h-full overflow-y-auto divide-y divide-gray-100">
-                      {filteredSelected.map(vehicle => (
+                      {paginatedSelected.map(vehicle => (
                         <li
                           key={vehicle.id}
                           className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 cursor-pointer"
-                          onClick={() => toggleRightSelection(vehicle.id)}
+                          onClick={() => handleToggleSelected(vehicle)}
                         >
                           <Checkbox
-                            checked={rightSelection.includes(vehicle.id)}
-                            onCheckedChange={() => toggleRightSelection(vehicle.id)}
+                            checked={true}
+                            onCheckedChange={() => handleToggleSelected(vehicle)}
                             className="w-4 h-4"
                             onClick={(event) => event.stopPropagation()}
                           />
@@ -290,6 +349,31 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                       ))}
                     </ul>
                   )}
+                </div>
+
+                <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-gray-500">
+                  <button
+                    type="button"
+                    onClick={() => setRightPage(prev => Math.max(0, prev - 1))}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
+                    disabled={rightPage === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Anterior
+                  </button>
+                  <span>
+                    {tempSelected.length === 0
+                      ? "0 – 0 Unidades"
+                      : `${rightPage * PAGE_SIZE + 1} – ${Math.min((rightPage + 1) * PAGE_SIZE, filteredSelected.length)} Unidades`
+                    }
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setRightPage(prev => Math.min(totalSelectedPages - 1, prev + 1))}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
+                    disabled={rightPage >= totalSelectedPages - 1}
+                  >
+                    Siguiente <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
