@@ -24,8 +24,8 @@ type SelectContextValue = {
   registerOption: (option: Option) => void;
   unregisterOption: (value: string) => void;
   options: Option[];
-  placeholder?: string;
-  setPlaceholder: (placeholder?: string) => void;
+  placeholder?: ReactNode;
+  setPlaceholder: (placeholder?: ReactNode) => void;
   disabled?: boolean;
   dropdownClassName?: string;
   setDropdownClassName: (className?: string) => void;
@@ -52,7 +52,7 @@ type BaseSelectProps = {
 export function Select({ value, defaultValue, onValueChange, disabled, children }: BaseSelectProps) {
   const [internalValue, setInternalValue] = useState<string | undefined>(defaultValue);
   const [options, setOptions] = useState<Option[]>([]);
-  const [placeholder, setPlaceholder] = useState<string | undefined>();
+  const [placeholder, setPlaceholder] = useState<ReactNode | undefined>();
   const [dropdownClassName, setDropdownClassName] = useState<string | undefined>();
 
   const handleChange = useCallback(
@@ -120,7 +120,7 @@ type TriggerProps = Omit<AntdSelectProps<string>, "options" | "value" | "onChang
 };
 
 export const SelectTrigger = forwardRef<SelectRef, TriggerProps>(
-  ({ className, size = "default", dropdownClassName, children: _children, ...props }, ref) => {
+  ({ className, size = "default", dropdownClassName, children, ...props }, ref) => {
     const ctx = useSelectContext("SelectTrigger");
 
     const antdSize: AntdSelectProps<string>["size"] = size === "sm" ? "small" : "middle";
@@ -128,21 +128,18 @@ export const SelectTrigger = forwardRef<SelectRef, TriggerProps>(
     const currentValue = ctx.value === '' ? undefined : ctx.value;
 
     return (
-      <>
-        {_children}
-        <AntdSelect
-          ref={ref}
-          className={cn(className)}
-          size={antdSize}
-          value={currentValue}
-          onChange={value => ctx.setValue(value)}
-          options={ctx.options}
-          placeholder={ctx.placeholder}
-          disabled={ctx.disabled}
-          dropdownClassName={cn(ctx.dropdownClassName, dropdownClassName)}
-          {...props}
-        />
-      </>
+      <AntdSelect
+        ref={ref}
+        className={cn("text-[14px]", className)}
+        size={antdSize}
+        value={currentValue}
+        onChange={value => ctx.setValue(value)}
+        options={ctx.options}
+        placeholder={ctx.placeholder}
+        disabled={ctx.disabled}
+        dropdownClassName={cn(ctx.dropdownClassName, dropdownClassName)}
+        {...props}
+      />
     );
   },
 );
@@ -157,7 +154,15 @@ export function SelectValue({ placeholder }: SelectValueProps) {
   const ctx = useSelectContext("SelectValue");
 
   useEffect(() => {
-    ctx.setPlaceholder(placeholder);
+    if (placeholder) {
+      ctx.setPlaceholder(
+        <span className="text-[14px] text-gray-400 truncate">
+          {placeholder}
+        </span>
+      );
+    } else {
+      ctx.setPlaceholder(undefined);
+    }
   }, [ctx, placeholder]);
 
   return null;
