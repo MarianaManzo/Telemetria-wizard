@@ -165,21 +165,22 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
     >
       <DialogContent
         className="flex flex-col"
-        style={{ width: "860px", maxWidth: "860px", borderRadius: "8px" }}
+        style={{ width: "790px", maxWidth: "790px", borderRadius: "8px" }}
         styles={{ body: { padding: 0 } }}
         maskStyle={{ backgroundColor: "rgba(0,0,0,0.4)" }}
       >
-        <DialogTitle className="sr-only">Compartir unidades</DialogTitle>
+        <DialogTitle className="sr-only">Seleccionar unidades</DialogTitle>
         <DialogDescription className="sr-only">
-          Elige las unidades cuya ubicación deseas compartir.
+          Selecciona las unidades con las cuales deseas crear el reporte.
         </DialogDescription>
 
-        <div className="flex flex-col h-[560px]">
+        <div className="flex flex-col" style={{ height: "560px" }}>
           <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b bg-white">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Compartir unidades</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Seleccionar unidades</h2>
               <p className="text-sm text-gray-600 mt-1">
-                Elige las unidades cuya ubicación deseas compartir. Recuerda elegir al menos 1 para continuar.
+                Selecciona las unidades con las cuales deseas crear el reporte. Elige todas las unidades o solo algunas del total disponible.
+                Recuerda que debes seleccionar al menos 1 unidad para continuar.
               </p>
             </div>
             <DialogClose asChild>
@@ -190,22 +191,22 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
           </div>
 
           <div className="flex-1 px-6 py-4 overflow-hidden bg-white">
-            <div className="grid grid-cols-[1fr_auto_1fr] gap-4 h-full">
+            <div className="grid grid-cols-2 gap-4 h-full">
               <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                   <div className="flex items-center gap-2">
                     <Checkbox
-                      checked={filteredAvailable.length === 0}
+                      checked={availableVehicles.length === 0 && tempSelected.length > 0}
                       onCheckedChange={(checked) => {
                         if (checked) {
                           handleSelectAllAvailable()
                         } else {
-                          setTempSelected([])
+                          handleDeselectAllSelected()
                         }
                       }}
                       className="w-4 h-4"
                     />
-                    <span className="text-sm font-medium text-gray-700">Unidades disponibles</span>
+                    <span className="text-sm font-medium text-gray-700">{mockVehicles.length} Unidades</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <button
@@ -215,7 +216,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     >
                       Limpiar
                     </button>
-                    <span className="text-sm text-gray-500">{availableVehicles.length} Unidades</span>
+                    <span className="text-sm text-gray-500">{availableVehicles.length} disponibles</span>
                   </div>
                 </div>
                 <div className="px-4 py-3 border-b">
@@ -229,13 +230,14 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     />
                   </div>
                 </div>
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden px-4 py-3">
                   {filteredAvailable.length === 0 ? (
                     <div className="h-full flex items-center justify-center text-sm text-gray-400">
                       No hay unidades disponibles
                     </div>
                   ) : (
-                    <ul className="h-full overflow-y-auto divide-y divide-gray-100">
+                    <div className="h-full overflow-y-auto rounded-lg border border-gray-200">
+                      <ul className="divide-y divide-gray-100">
                       {paginatedAvailable.map(vehicle => (
                         <li
                           key={vehicle.id}
@@ -251,38 +253,38 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                           <span className="text-[14px] text-gray-700 truncate">{vehicle.name}</span>
                         </li>
                       ))}
-                    </ul>
+                      </ul>
+                    </div>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-gray-500">
-                  <button
-                    type="button"
-                    onClick={() => setLeftPage(prev => Math.max(0, prev - 1))}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
-                    disabled={leftPage === 0}
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Anterior
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setLeftPage(prev => Math.max(0, prev - 1))}
+                      className="flex items-center justify-center w-8 h-8 rounded border border-gray-300 text-blue-600 hover:border-blue-500 disabled:text-gray-300 disabled:border-gray-200"
+                      disabled={leftPage === 0}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="w-6 text-center text-sm text-gray-700">{Math.min(leftPage + 1, totalAvailablePages)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setLeftPage(prev => Math.min(totalAvailablePages - 1, prev + 1))}
+                      className="flex items-center justify-center w-8 h-8 rounded border border-gray-300 text-blue-600 hover:border-blue-500 disabled:text-gray-300 disabled:border-gray-200"
+                      disabled={leftPage >= totalAvailablePages - 1}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                   <span>
                     {filteredAvailable.length === 0
-                      ? "0 – 0 Unidades"
-                      : `${leftPage * PAGE_SIZE + 1} – ${Math.min((leftPage + 1) * PAGE_SIZE, filteredAvailable.length)} Unidades`
+                      ? "0 - 0 Unidades"
+                      : `${leftPage * PAGE_SIZE + 1} - ${Math.min((leftPage + 1) * PAGE_SIZE, filteredAvailable.length)} Unidades`
                     }
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setLeftPage(prev => Math.min(totalAvailablePages - 1, prev + 1))}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
-                    disabled={leftPage >= totalAvailablePages - 1}
-                  >
-                    Siguiente <ChevronRight className="w-4 h-4" />
-                  </button>
                 </div>
-              </div>
-
-              <div className="flex flex-col items-center justify-center gap-3">
-                <span className="text-sm text-gray-400">Selecciona con las casillas</span>
               </div>
 
               <div className="flex flex-col h-full border border-gray-200 rounded-xl bg-white overflow-hidden">
@@ -297,7 +299,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                       }}
                       className="w-4 h-4"
                     />
-                    <span className="text-sm font-medium text-gray-700">Unidades seleccionadas</span>
+                    <span className="text-sm font-medium text-gray-700">{tempSelected.length} Seleccionadas</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <button
@@ -308,7 +310,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     >
                       Limpiar
                     </button>
-                    <span className="text-sm text-gray-500">{tempSelected.length} / {MAX_SELECTION}</span>
+                    <span className="text-sm text-gray-500">Máx. {MAX_SELECTION}</span>
                   </div>
                 </div>
                 <div className="px-4 py-3 border-b">
@@ -322,7 +324,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     />
                   </div>
                 </div>
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden px-4 py-3">
                   {tempSelected.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-400">
                       <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -331,7 +333,8 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                       <p className="text-sm">No tienes unidades</p>
                     </div>
                   ) : (
-                    <ul className="h-full overflow-y-auto divide-y divide-gray-100">
+                    <div className="h-full overflow-y-auto rounded-lg border border-gray-200">
+                      <ul className="divide-y divide-gray-100">
                       {paginatedSelected.map(vehicle => (
                         <li
                           key={vehicle.id}
@@ -347,33 +350,37 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                           <span className="text-[14px] text-gray-700 truncate">{vehicle.name}</span>
                         </li>
                       ))}
-                    </ul>
+                      </ul>
+                    </div>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-gray-500">
-                  <button
-                    type="button"
-                    onClick={() => setRightPage(prev => Math.max(0, prev - 1))}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
-                    disabled={rightPage === 0}
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Anterior
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRightPage(prev => Math.max(0, prev - 1))}
+                      className="flex items-center justify-center w-8 h-8 rounded border border-gray-300 text-blue-600 hover:border-blue-500 disabled:text-gray-300 disabled:border-gray-200"
+                      disabled={rightPage === 0}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="w-6 text-center text-sm text-gray-700">{Math.min(rightPage + 1, totalSelectedPages)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setRightPage(prev => Math.min(totalSelectedPages - 1, prev + 1))}
+                      className="flex items-center justify-center w-8 h-8 rounded border border-gray-300 text-blue-600 hover:border-blue-500 disabled:text-gray-300 disabled:border-gray-200"
+                      disabled={rightPage >= totalSelectedPages - 1}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                   <span>
                     {tempSelected.length === 0
-                      ? "0 – 0 Unidades"
-                      : `${rightPage * PAGE_SIZE + 1} – ${Math.min((rightPage + 1) * PAGE_SIZE, filteredSelected.length)} Unidades`
+                      ? "0 - 0 Unidades"
+                      : `${rightPage * PAGE_SIZE + 1} - ${Math.min((rightPage + 1) * PAGE_SIZE, filteredSelected.length)} Unidades`
                     }
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setRightPage(prev => Math.min(totalSelectedPages - 1, prev + 1))}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
-                    disabled={rightPage >= totalSelectedPages - 1}
-                  >
-                    Siguiente <ChevronRight className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
             </div>
@@ -381,7 +388,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
 
           <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
             <span className="text-sm text-gray-600">
-              Unidades a compartir: {tempSelected.length} (Máx. {MAX_SELECTION})
+              Unidades seleccionadas: {tempSelected.length}
             </span>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleCancel}>
