@@ -408,7 +408,7 @@ function DraggableConditionInGroup({
             systemSensors={systemTelemetrySensors}
             customSensors={customTelemetrySensors}
             placeholder="Seleccionar sensor"
-            className="w-full text-[14px]"
+            className="w-full max-w-[180px] text-[14px]"
           />
         </div>
 
@@ -615,7 +615,7 @@ function DraggableCondition({
             systemSensors={systemTelemetrySensors}
             customSensors={customTelemetrySensors}
             placeholder="Seleccionar sensor"
-            className="w-full text-[14px]"
+            className="w-full max-w-[180px] text-[14px]"
           />
         </div>
 

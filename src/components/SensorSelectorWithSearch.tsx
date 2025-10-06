@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, type CSSProperties } from "react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
@@ -26,6 +26,7 @@ interface SensorSelectorWithSearchProps {
   customSensors?: SensorOption[]
   placeholder?: string
   className?: string
+  style?: CSSProperties
 }
 
 export function SensorSelectorWithSearch({
@@ -34,7 +35,8 @@ export function SensorSelectorWithSearch({
   systemSensors,
   customSensors = [],
   placeholder = "Seleccionar sensor",
-  className
+  className,
+  style
 }: SensorSelectorWithSearchProps) {
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
@@ -79,7 +81,7 @@ export function SensorSelectorWithSearch({
           size="lg"
           role="combobox"
           aria-expanded={open}
-          style={{ fontSize: '14px', borderRadius: '8px', height: '40px' }}
+          style={{ fontSize: '14px', borderRadius: '8px', height: '40px', maxWidth: '180px', width: '100%', paddingLeft: '12px', paddingRight: '12px', ...style }}
           className={cn(
             "w-full justify-between bg-white hover:bg-gray-50 text-[14px]",
             !value && "text-muted-foreground",
@@ -87,9 +89,9 @@ export function SensorSelectorWithSearch({
           )}
         >
           {selectedSensor ? (
-            <span className="truncate">{selectedSensor.label}</span>
+            <span className="truncate text-gray-900">{selectedSensor.label}</span>
           ) : (
-            <span className="ant-typography ant-typography-secondary">{placeholder}</span>
+            <span className="ant-typography ant-typography-secondary truncate">{placeholder}</span>
           )}
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
