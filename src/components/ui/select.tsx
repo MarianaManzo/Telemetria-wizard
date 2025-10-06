@@ -24,8 +24,8 @@ type SelectContextValue = {
   registerOption: (option: Option) => void;
   unregisterOption: (value: string) => void;
   options: Option[];
-  placeholder?: string;
-  setPlaceholder: (placeholder?: string) => void;
+  placeholder?: ReactNode;
+  setPlaceholder: (placeholder?: ReactNode) => void;
   disabled?: boolean;
   dropdownClassName?: string;
   setDropdownClassName: (className?: string) => void;
@@ -52,7 +52,7 @@ type BaseSelectProps = {
 export function Select({ value, defaultValue, onValueChange, disabled, children }: BaseSelectProps) {
   const [internalValue, setInternalValue] = useState<string | undefined>(defaultValue);
   const [options, setOptions] = useState<Option[]>([]);
-  const [placeholder, setPlaceholder] = useState<string | undefined>();
+  const [placeholder, setPlaceholder] = useState<ReactNode | undefined>();
   const [dropdownClassName, setDropdownClassName] = useState<string | undefined>();
 
   const handleChange = useCallback(
@@ -152,18 +152,12 @@ export function SelectValue({ placeholder }: SelectValueProps) {
   const ctx = useSelectContext("SelectValue");
 
   useEffect(() => {
-    ctx.setPlaceholder(placeholder);
+    if (placeholder) {
+      ctx.setPlaceholder(<span className="ant-typography ant-typography-secondary truncate">{placeholder}</span>);
+    } else {
+      ctx.setPlaceholder(undefined);
+    }
   }, [ctx, placeholder]);
-
-  if (!ctx.value && placeholder) {
-    return <span className="ant-typography ant-typography-secondary truncate">{placeholder}</span>;
-  }
-
-  const selectedOption = ctx.options.find(option => option.value === ctx.value);
-
-  if (selectedOption) {
-    return <span className="truncate text-gray-900">{selectedOption.label}</span>;
-  }
 
   return null;
 }
