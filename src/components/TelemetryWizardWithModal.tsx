@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { Flex, Typography } from "antd";
+import { CloseOutlined } from '@ant-design/icons'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
@@ -385,25 +386,25 @@ function DraggableConditionInGroup({
         </div>
 
         <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Sensor</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">Sensor</Label>
           <SensorSelectorWithSearch
             value={condition.sensor}
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'sensor', value)}
             systemSensors={systemTelemetrySensors}
             customSensors={customTelemetrySensors}
             placeholder="Seleccionar sensor"
-            className="w-full"
+            className="w-full text-[14px]"
           />
         </div>
 
         <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Operador</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">Operador</Label>
           <Select
             value={condition.operator}
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'operator', value)}
             disabled={!condition.sensor}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full text-[14px]">
               <SelectValue placeholder="Seleccionar operador" />
             </SelectTrigger>
             <SelectContent>
@@ -417,7 +418,7 @@ function DraggableConditionInGroup({
         </div>
 
         <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Valor</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">Valor</Label>
           <div className="flex items-center gap-2">
             {/* Render different input types based on sensor dataType */}
             {sensor?.dataType === 'boolean' ? (
@@ -426,7 +427,7 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-[14px]">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -443,7 +444,7 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-[14px]">
                   <SelectValue placeholder="Seleccionar opción" />
                 </SelectTrigger>
                 <SelectContent>
@@ -460,7 +461,7 @@ function DraggableConditionInGroup({
                 placeholder="Valor"
                 value={condition.value}
                 onChange={(e) => updateConditionInGroup(groupId, condition.id, 'value', e.target.value)}
-                className="w-full"
+                className="w-full text-[14px]"
                 disabled={!condition.sensor}
               />
             )}
@@ -475,11 +476,11 @@ function DraggableConditionInGroup({
         {showRemoveButton && (
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => removeConditionFromGroup(groupId, condition.id)}
-            className="w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center mx-[0px] my-[8px] p-[10px] mt-8"
+            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center mt-8"
           >
-            <X className="w-2.5 h-2.5 text-gray-600" />
+            <CloseOutlined className="text-gray-700 text-[14px]" />
           </Button>
         )}
       </div>
@@ -589,25 +590,25 @@ function DraggableCondition({
         )}
 
         <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Sensor</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">Sensor</Label>
           <SensorSelectorWithSearch
             value={condition.sensor}
             onValueChange={(value) => updateCondition(condition.id, 'sensor', value)}
             systemSensors={systemTelemetrySensors}
             customSensors={customTelemetrySensors}
             placeholder="Seleccionar sensor"
-            className="w-full"
+            className="w-full text-[14px]"
           />
         </div>
 
         <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Operador</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">Operador</Label>
           <Select
             value={condition.operator}
             onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
             disabled={!condition.sensor}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full text-[14px]">
               <SelectValue placeholder="Seleccionar operador" />
             </SelectTrigger>
             <SelectContent>
@@ -621,7 +622,7 @@ function DraggableCondition({
         </div>
 
         <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Valor</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">Valor</Label>
           <div className="flex items-center gap-2">
             {/* Render different input types based on sensor dataType */}
             {sensor?.dataType === 'boolean' ? (
@@ -631,7 +632,7 @@ function DraggableCondition({
                 onValueChange={(value) => updateCondition(condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-[14px]">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -649,7 +650,7 @@ function DraggableCondition({
                 onValueChange={(value) => updateCondition(condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full text-[14px]">
                   <SelectValue placeholder="Seleccionar opción" />
                 </SelectTrigger>
                 <SelectContent>
@@ -667,7 +668,7 @@ function DraggableCondition({
                 placeholder="Valor"
                 value={condition.value}
                 onChange={(e) => updateCondition(condition.id, 'value', e.target.value)}
-                className="w-full"
+                className="w-full text-[14px]"
                 disabled={!condition.sensor}
               />
             )}
@@ -682,11 +683,11 @@ function DraggableCondition({
         {conditionsLength > 1 && (
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => removeCondition(condition.id)}
-            className="w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center mx-[0px] my-[8px] p-[10px] mt-8"
+            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center mt-8"
           >
-            <X className="w-2.5 h-2.5 text-gray-600" />
+            <CloseOutlined className="text-gray-700 text-[14px]" />
           </Button>
         )}
       </div>
@@ -752,7 +753,7 @@ function DraggableConditionGroup({
                 <button
                   type="button"
                   onClick={() => updateGroup(group.id, 'groupLogicOperator', 'and')}
-                  className={`px-3 py-2 rounded text-[12px] font-medium transition-colors flex items-center justify-center ${
+                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
                     group.groupLogicOperator === 'and' 
                       ? 'bg-blue-600/30 text-blue-800' 
                       : 'bg-transparent text-gray-600 hover:text-gray-800'
@@ -763,7 +764,7 @@ function DraggableConditionGroup({
                 <button
                   type="button"
                   onClick={() => updateGroup(group.id, 'groupLogicOperator', 'or')}
-                  className={`px-3 py-2 rounded text-[12px] font-medium transition-colors flex items-center justify-center ${
+                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
                     group.groupLogicOperator === 'or' 
                       ? 'bg-yellow-500/50 text-yellow-800' 
                       : 'bg-transparent text-gray-600 hover:text-gray-800'
@@ -782,15 +783,11 @@ function DraggableConditionGroup({
                 variant="link"
                 size="sm"
                 onClick={() => addConditionToGroup(group.id)}
-                className="text-[12px] px-2 py-1 h-7 text-blue-600 hover:text-blue-700 flex items-center justify-between"
+                className="text-[14px] px-2 py-1 h-7 text-blue-600 hover:text-blue-700 flex items-center gap-2 whitespace-nowrap"
               >
-                <span className="flex items-center">
-                  <Plus className="w-3 h-3 mr-1" />
-                  Agregar condición
-                </span>
-                <span className="ml-2 text-blue-600">
-                  ({group.conditions.length}/3)
-                </span>
+                <Plus className="w-3 h-3" />
+                <span>Agregar condición</span>
+                <span className="text-blue-600">({group.conditions.length}/3)</span>
               </Button>
             )}
 
@@ -839,7 +836,7 @@ function DraggableConditionGroup({
               variant="outline"
               size="sm"
               onClick={() => addConditionToGroup(group.id)}
-              className="text-[12px]"
+              className="text-[14px]"
             >
               <Plus className="w-3 h-3 mr-1" />
               Agregar primera condición
@@ -1953,11 +1950,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 >
                   <Flex align="center" style={{ gap: toPx(spacing.xs) }}>
                     <Gauge className="h-4 w-4" style={{ color: "var(--color-gray-600)" }} />
-                    <Title level={5} style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "var(--color-gray-700)" }}>
+                    <Title level={5} style={{ margin: 0, fontSize: "14px", color: "var(--color-gray-700)" }}>
                       Parámetros a evaluar
                     </Title>
                   </Flex>
-                  <Paragraph style={{ margin: 0, color: "var(--color-gray-600)" }}>
+                  <Paragraph style={{ margin: 0, color: "var(--color-gray-600)", fontSize: "14px" }}>
                     ¿Qué condiciones evalúa esta regla?
                   </Paragraph>
                   {conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0) && (
@@ -1996,8 +1993,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 <button
                                   type="button"
                                   onClick={() => updateGroup(conditionGroups[1].id, 'betweenGroupOperator', 'and')}
-                                  className={`px-3 py-2 rounded text-[12px] font-medium transition-colors flex items-center justify-center ${
-                                    conditionGroups[1]?.betweenGroupOperator === 'and' || !conditionGroups[1]?.betweenGroupOperator
+                                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
+                                    conditionGroups[1]?.betweenGroupOperator === 'and' || !conditionGroups[1]?.betweenGroupOperator 
                                       ? 'bg-blue-600/30 text-blue-800' 
                                       : 'bg-transparent text-gray-600 hover:text-gray-800'
                                   }`}
@@ -2007,7 +2004,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 <button
                                   type="button"
                                   onClick={() => updateGroup(conditionGroups[1].id, 'betweenGroupOperator', 'or')}
-                                  className={`px-3 py-2 rounded text-[12px] font-medium transition-colors flex items-center justify-center ${
+                                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
                                     conditionGroups[1]?.betweenGroupOperator === 'or' 
                                       ? 'bg-yellow-500/50 text-yellow-800' 
                                       : 'bg-transparent text-gray-600 hover:text-gray-800'
@@ -2026,22 +2023,18 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           <Button
                             variant="link"
                             onClick={addGroup}
-                            className="p-0 h-auto text-blue-600 hover:text-blue-700 flex items-center justify-between"
+                            className="p-0 h-auto text-blue-600 hover:text-blue-700 flex items-center gap-2 text-[14px] whitespace-nowrap"
                             disabled={conditionGroups.length >= 2}
                           >
-                            <span className="flex items-center">
-                              <Plus className="w-4 h-4 mr-1" />
-                              Agregar grupo
-                            </span>
-                            <span className="ml-2 text-blue-600">
-                              ({conditionGroups.length}/2)
-                            </span>
+                            <Plus className="w-4 h-4" />
+                            <span>Agregar grupo</span>
+                            <span className="text-blue-600">({conditionGroups.length}/2)</span>
                           </Button>
                         </div>
                         <Button
                           variant="link"
                           onClick={clearAllGroups}
-                          className="p-0 h-auto text-blue-600 hover:text-blue-700"
+                          className="p-0 h-auto text-blue-600 hover:text-blue-700 text-[14px]"
                           disabled={conditionGroups.length === 1 && conditionGroups[0].conditions.length === 1 && !conditionGroups[0].conditions[0].sensor}
                         >
                           Limpiar todo
