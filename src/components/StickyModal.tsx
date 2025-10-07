@@ -1,0 +1,100 @@
+import React, { useEffect, useRef } from 'react'
+import { Modal, Typography, Button } from 'antd'
+import { CloseOutlined } from '@ant-design/icons'
+
+const { Text } = Typography
+
+export type StickyModalProps = {
+  open: boolean
+  title: string
+  subtitle?: string
+  size?: 'sm' | 'md' | 'lg'
+  maskClosable?: boolean
+  onClose: () => void
+  onSubmit?: () => void
+  primaryLabel?: string
+  secondaryLabel?: string
+  hideSecondary?: boolean
+  children: React.ReactNode
+}
+
+const WIDTH_MAP: Record<NonNullable<StickyModalProps['size']>, number> = {
+  sm: 560,
+  md: 720,
+  lg: 880,
+}
+
+export default function StickyModal({
+  open,
+  title,
+  subtitle,
+  size = 'md',
+  maskClosable = true,
+  onClose,
+  onSubmit,
+  primaryLabel = 'Guardar',
+  secondaryLabel = 'Cancelar',
+  hideSecondary,
+  children,
+}: StickyModalProps) {
+  const triggerRef = useRef<HTMLElement | null>(document.activeElement as HTMLElement)
+
+  useEffect(() => {
+    if (!open && triggerRef.current) {
+      triggerRef.current.focus?.()
+    }
+  }, [open])
+
+  return (
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={WIDTH_MAP[size]}
+      centered
+      maskClosable={maskClosable}
+      keyboard
+      closable={false}
+      rootClassName="nm-sticky-modal"
+      style={{ top: 32 }}
+      styles={{
+        content: { borderRadius: 16, boxShadow: '0 12px 32px rgba(0,0,0,.18)', padding: 0 },
+        header: { display: 'none' },
+        body: { padding: 0 },
+        footer: { display: 'none' },
+      }}
+    >
+      <div className="flex flex-col" style={{ maxHeight: 560, overflow: 'hidden' }}>
+        <div className="flex items-center justify-between border-b" style={{ padding: 16, minHeight: 64 }}>
+          <Typography.Title level={5} style={{ margin: 0, fontSize: 16, lineHeight: '24px', fontWeight: 600 }}>
+            {title}
+          </Typography.Title>
+          <Button type="text" aria-label="Cerrar" icon={<CloseOutlined />} onClick={onClose} />
+        </div>
+        <div className="flex-1 overflow-auto" style={{ padding: 24 }}>
+          {subtitle && (
+            <Text style={{ display: 'block', fontSize: 14, lineHeight: '20px', color: '#6B7280', marginBottom: 24 }}>
+              {subtitle}
+            </Text>
+          )}
+          {children}
+        </div>
+        <div className="flex items-center justify-end gap-3 border-t" style={{ padding: '16px 24px' }}>
+          {!hideSecondary && (
+            <Button onClick={onClose} style={{ minHeight: 40, paddingInline: 20 }}>
+              {secondaryLabel}
+            </Button>
+          )}
+          <Button
+            type="primary"
+            onClick={onSubmit}
+            style={{ minHeight: 40, paddingInline: 20 }}
+            disabled={!onSubmit}
+          >
+            {primaryLabel}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
