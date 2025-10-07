@@ -165,7 +165,8 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
     >
       <DialogContent
         className="flex flex-col"
-        style={{ width: "790px", maxWidth: "790px", borderRadius: "8px" }}
+        width={790}
+        style={{ borderRadius: "8px" }}
         styles={{ body: { padding: 0 } }}
         maskStyle={{ backgroundColor: "rgba(0,0,0,0.4)" }}
       >
