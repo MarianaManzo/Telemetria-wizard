@@ -126,9 +126,10 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
       primaryLabel="Continuar"
       secondaryLabel="Cancelar"
     >
-      <Form layout="vertical">
-        <Row gutter={[24, 16]} style={{ minHeight: 360 }}>
-          <Col xs={24} md={12} style={{ minHeight: 360 }}>
+      <div style={{ fontSize: 14 }}>
+        <Form layout="vertical">
+          <Row gutter={[24, 16]} style={{ minHeight: 360 }}>
+            <Col xs={24} md={12} style={{ minHeight: 360 }}>
             <Form.Item label="Unidades disponibles" style={{ marginBottom: 24 }}>
               <div style={panelStyles}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
@@ -243,8 +244,9 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
               </div>
             </Form.Item>
           </Col>
-        </Row>
-      </Form>
+          </Row>
+        </Form>
+      </div>
     </StickyModal>
   )
 }
