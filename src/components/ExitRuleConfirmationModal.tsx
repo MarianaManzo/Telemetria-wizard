@@ -17,7 +17,10 @@ export function ExitRuleConfirmationModal({
 }: ExitRuleConfirmationModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 border border-gray-200 rounded-[12px] shadow-lg [&>button]:hidden">
+      <DialogContent
+        className="max-w-md p-0 rounded-[12px] shadow-lg [&>button]:hidden"
+        styles={{ body: { padding: 0 } }}
+      >
         <div className="flex flex-col">
           <div className="flex items-start justify-between px-6 py-4 border-b border-gray-100">
             <DialogTitle className="text-[18px] font-semibold text-gray-900 leading-[24px]">

@@ -63,7 +63,10 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
         }
       }}
     >
-      <DialogContent className="max-w-[480px] bg-white rounded-[12px] p-0 border border-gray-200 shadow-lg [&>button]:hidden">
+      <DialogContent
+        className="max-w-[480px] bg-white rounded-[12px] p-0 shadow-lg [&>button]:hidden"
+        styles={{ body: { padding: 0 } }}
+      >
         <div className="flex flex-col">
           <div className="flex items-start justify-between px-6 py-4 border-b border-gray-100">
             <div>

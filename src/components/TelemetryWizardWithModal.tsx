@@ -2287,7 +2287,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                               <label className="text-[14px] font-medium text-gray-700">¿En qué zona geográfica aplica esta regla?</label>
                             </div>
                           </div>
-                          <div className="space-y-4">
+                          <div className="flex flex-col gap-4">
                             <Select value={geographicZone} onValueChange={setGeographicZone}>
                               <SelectTrigger className="w-full">
                                 <SelectValue />
@@ -2311,7 +2311,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 <label className="text-[14px] font-medium text-gray-700">Zonas</label>
                               </div>
                             </div>
-                            <div className="space-y-4">
+                            <div className="flex flex-col gap-4">
                               <ZonasSelectorInput
                                 selectedZones={selectedZonesData.map(zone => ({ 
                                   id: zone.id, 
@@ -2480,7 +2480,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 return (
                                   <div key={day} className="grid grid-cols-4 gap-4 items-center">
                                     {/* Column 1: Checkbox + day name (aligned with labels in first column) */}
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center gap-4 pr-12 pl-8">
                                       <Checkbox
                                         checked={config.enabled}
                                         onCheckedChange={(checked) => updateDaySchedule(day, 'enabled', checked)}
@@ -2489,7 +2489,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                         {dayLabels[day]}
                                       </label>
                                     </div>
-                                    
+
                                     {/* Column 2: Start time input (aligned with second column of dropdowns) */}
                                     <div>
                                       <Select
@@ -2515,7 +2515,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                         </SelectContent>
                                       </Select>
                                     </div>
-                                    
+
                                     {/* Column 3: End time input (aligned directly to the right of column 2) */}
                                     <div>
                                       <Select
@@ -2536,7 +2536,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                         </SelectContent>
                                       </Select>
                                     </div>
-                                    
+
                                     {/* Column 4: Condition dropdown (aligned with rightmost dropdown position) */}
                                     <div>
                                       <Select
