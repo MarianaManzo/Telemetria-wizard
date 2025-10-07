@@ -2178,10 +2178,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </div>
                       <div>
                         <Select value={appliesTo} onValueChange={setAppliesTo}>
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full text-[14px]">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="text-[14px]">
                             <SelectItem value="all-units">Todas las unidades</SelectItem>
                             <SelectItem value="custom">Personalizado</SelectItem>
                           </SelectContent>

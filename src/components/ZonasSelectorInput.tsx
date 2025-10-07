@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { ZoneSelector } from "./ZoneSelector"
 import { ChevronDown } from "lucide-react"
+import { CapsuleOverflowTooltip } from "./CapsuleOverflowTooltip"
 
 interface ZoneData {
   id: string
@@ -54,15 +55,19 @@ export function ZonasSelectorInput({
         {visibleZones.map((zone) => (
           <span
             key={zone.id}
-            className="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] bg-gray-100 text-gray-800 border max-w-[120px]"
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-[14px] bg-gray-100 text-gray-800 border max-w-[120px]"
           >
             <span className="truncate">{zone.name}</span>
           </span>
         ))}
         {remainingCount > 0 && (
-          <span key="remaining-count" className="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] bg-gray-200 text-gray-600 border">
+          <CapsuleOverflowTooltip
+            key="remaining-count"
+            items={selectedZones.slice(maxVisible)}
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-[14px] bg-gray-200 text-gray-600 border"
+          >
             +{remainingCount}
-          </span>
+          </CapsuleOverflowTooltip>
         )}
       </div>
     )
@@ -72,7 +77,7 @@ export function ZonasSelectorInput({
     <div className={`w-full ${className}`}>
       <div className="relative">
         <div
-          className={`w-full min-h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
+          className={`w-full min-h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-[8px] bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
             disabled ? 'opacity-50 cursor-not-allowed' : ''
           }`}
           onClick={() => !disabled && setIsModalOpen(true)}

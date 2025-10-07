@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Search, ChevronDown, X } from "lucide-react"
-import { TruncatedText } from "./TruncatedText"
+import { CapsuleOverflowTooltip } from "./CapsuleOverflowTooltip"
 
 interface GenericSelectorInputProps<T = any> {
   selectedItems: T[]
@@ -260,7 +260,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
         {visibleItems.map((item) => (
           <span
             key={item.id}
-            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[12px] border max-w-[120px] ${
+            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[14px] border max-w-[120px] ${
               showColorPills && item.color
                 ? 'text-white'
                 : 'bg-gray-100 text-gray-800'
@@ -271,9 +271,13 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
           </span>
         ))}
         {remainingCount > 0 && (
-          <span key="remaining-count" className="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] bg-gray-200 text-gray-600 border">
+          <CapsuleOverflowTooltip
+            key="remaining-count"
+            items={selectedItems.slice(maxVisiblePills)}
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-[14px] bg-gray-200 text-gray-600 border"
+          >
             +{remainingCount}
-          </span>
+          </CapsuleOverflowTooltip>
         )}
       </div>
     )
@@ -337,7 +341,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
             {showPillsDisplay && showColorPills && selectedItems.length > 0 && selectedItems.some(item => item.color) ? (
               <div
                 ref={containerRef}
-                className={`w-full h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
+                className={`w-full h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-[8px] bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
                   disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 onClick={() => !disabled && setIsOpen(true)}
@@ -346,7 +350,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
                   {selectedItems.slice(0, dynamicVisiblePills).map((item) => (
                     <span
                       key={item.id}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[12px] text-white border max-w-[120px] flex-shrink-0"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[14px] text-white border max-w-[120px] flex-shrink-0"
                       style={{ backgroundColor: (item as any).color }}
                     >
                       <span className="truncate">{item.name}</span>
@@ -364,15 +368,19 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
                     </span>
                   ))}
                   {selectedItems.length > dynamicVisiblePills && (
-                    <span key="dynamic-remaining-count" className="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] bg-gray-200 text-gray-600 border flex-shrink-0">
+                    <CapsuleOverflowTooltip
+                      key="dynamic-remaining-count"
+                      items={selectedItems.slice(dynamicVisiblePills)}
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[14px] bg-gray-200 text-gray-600 border flex-shrink-0"
+                    >
                       +{selectedItems.length - dynamicVisiblePills}
-                    </span>
+                    </CapsuleOverflowTooltip>
                   )}
                 </div>
               </div>
             ) : showPillsDisplay ? (
               <div
-                className={`w-full h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
+                className={`w-full h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-[8px] bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
                   disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 onClick={() => !disabled && setIsOpen(true)}
@@ -381,7 +389,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
               </div>
             ) : (
               <div
-                className={`w-full h-[40px] px-3 py-2 text-sm border border-gray-300 rounded-md bg-white cursor-pointer text-gray-900 flex items-center ${
+                className={`w-full h-[40px] px-3 py-2 text-sm border border-gray-300 rounded-[8px] bg-white cursor-pointer text-gray-900 flex items-center ${
                   disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 onClick={() => !disabled && setIsOpen(true)}
@@ -393,7 +401,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
                     {selectedItems.slice(0, dynamicVisiblePills).map((item) => (
                       <span
                         key={item.id}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white max-w-[120px] flex-shrink-0"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[14px] text-white max-w-[120px] flex-shrink-0"
                         style={{ backgroundColor: item.color || '#6B7280' }}
                       >
                         <span className="truncate">{item.name}</span>
@@ -411,9 +419,13 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
                       </span>
                     ))}
                     {selectedItems.length > dynamicVisiblePills && (
-                      <span key="alt-dynamic-remaining-count" className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-200 text-gray-600 flex-shrink-0">
+                      <CapsuleOverflowTooltip
+                        key="alt-dynamic-remaining-count"
+                        items={selectedItems.slice(dynamicVisiblePills)}
+                        className="inline-flex items-center px-2 py-1 rounded-md text-[14px] bg-gray-200 text-gray-600 flex-shrink-0"
+                      >
                         +{selectedItems.length - dynamicVisiblePills}
-                      </span>
+                      </CapsuleOverflowTooltip>
                     )}
                   </div>
                 ) : (
