@@ -1909,10 +1909,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-auto">
-            <div className="max-w-4xl mx-auto p-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="pb-6">
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-4xl mx-auto p-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="pb-6">
               <TabsList className="sticky top-0 bg-white border-b border-gray-200 w-full justify-start h-auto p-0 space-x-8 z-10">
                 <TabsTrigger 
                   value="parameters" 
@@ -2085,7 +2084,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           if (validGroups.length === 0) return "Configura las condiciones para ver el resumen"
                           
                           return (
-                            <div className="space-y-4">
+                            <div className="flex flex-col gap-4">
                               {validGroups.map((group, groupIndex) => {
                                 const groupNumber = groupIndex + 1
                                 const logicText = group.groupLogicOperator === 'and' ? (
@@ -2171,7 +2170,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   </p>
                   <div className="-mx-4 border-b border-gray-200 mb-4"></div>
                   
-                  <div className="space-y-4">
+                  <div className="flex flex-col gap-4">
                     {/* Main selector */}
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
@@ -2179,10 +2178,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </div>
                       <div>
                         <Select value={appliesTo} onValueChange={setAppliesTo}>
-                          <SelectTrigger className="w-full text-[14px]">
+                          <SelectTrigger className="w-full">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="text-[14px]">
+                          <SelectContent>
                             <SelectItem value="all-units">Todas las unidades</SelectItem>
                             <SelectItem value="custom">Personalizado</SelectItem>
                           </SelectContent>
@@ -2466,7 +2465,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         {/* Section 5 – Days of the week (table layout) */}
                         {ruleSchedule === 'personalizado' && (
                           <div className="mt-6">
-                            <div className="space-y-4">
+                            <div className="flex flex-col gap-4">
                               {Object.entries(scheduleConfig).map(([day, config]) => {
                                 const dayLabels = {
                                   lunes: 'Lunes',
@@ -2481,7 +2480,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 return (
                                   <div key={day} className="grid grid-cols-4 gap-4 items-center">
                                     {/* Column 1: Checkbox + day name (aligned with labels in first column) */}
-                                    <div className="flex items-center gap-4 pr-12 pl-8">
+                                    <div className="flex items-center gap-4 pl-8 pr-12">
                                       <Checkbox
                                         checked={config.enabled}
                                         onCheckedChange={(checked) => updateDaySchedule(day, 'enabled', checked)}
@@ -2490,7 +2489,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                         {dayLabels[day]}
                                       </label>
                                     </div>
-
+                                    
                                     {/* Column 2: Start time input (aligned with second column of dropdowns) */}
                                     <div>
                                       <Select
@@ -2516,7 +2515,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                         </SelectContent>
                                       </Select>
                                     </div>
-
+                                    
                                     {/* Column 3: End time input (aligned directly to the right of column 2) */}
                                     <div>
                                       <Select
@@ -2537,7 +2536,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                         </SelectContent>
                                       </Select>
                                     </div>
-
+                                    
                                     {/* Column 4: Condition dropdown (aligned with rightmost dropdown position) */}
                                     <div>
                                       <Select
@@ -3930,24 +3929,25 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             </Tabs>
           </div>
         </div>
-        <div className="border-t border-border bg-background px-6 py-4 sticky bottom-0 z-10">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={isFirstTab ? onBackToTypeSelector : handlePreviousStep}
-                disabled={isFirstTab}
-                className="text-[14px] font-normal"
-              >
-                Anterior
-              </Button>
-              <Button
-                onClick={handleNextStep}
-                disabled={isLastTab}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal"
-              >
-                Siguiente
-              </Button>
-            </div>
+
+        {/* Footer Navigation */}
+        <div className="border-t border-border bg-background px-6 py-4">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={isFirstTab ? onBackToTypeSelector : handlePreviousStep}
+              disabled={isFirstTab}
+              className="text-[14px] font-normal"
+            >
+              Anterior
+            </Button>
+            <Button
+              onClick={handleNextStep}
+              disabled={isLastTab}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal"
+            >
+              Siguiente
+            </Button>
           </div>
         </div>
 

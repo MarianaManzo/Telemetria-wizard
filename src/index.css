@@ -262,33 +262,6 @@
 
   body {
     line-height: inherit;
-    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  }
-
-  html, body, #root {
-    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  }
-
-  button, input, optgroup, select, textarea {
-    font-family: inherit;
-  }
-
-  .ant-select,
-  .ant-select *,
-  .ant-select-dropdown,
-  .ant-select-dropdown *,
-  .ant-input,
-  .ant-input *,
-  .ant-btn,
-  .ant-btn *,
-  .ant-typography,
-  .ant-popover,
-  .ant-popover *,
-  .ant-tooltip,
-  .ant-tooltip *,
-  [class^="ant-"],
-  [class*=" ant-"] {
-    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
   }
 
   hr {
@@ -4590,7 +4563,6 @@ input[type="radio"]:focus {
 .items-center { align-items: center; }
 .rounded-lg { border-radius: var(--radius-base); }
 .rounded-md { border-radius: var(--radius-sm); }
-.ant-select-dropdown-rounded { border-radius: 8px !important; }
 .border-b { border-bottom: 1px solid var(--color-gray-200); }
 .border-border { border-color: var(--color-gray-200); }
 .bg-background, .bg-white { background-color: var(--color-bg-base); }

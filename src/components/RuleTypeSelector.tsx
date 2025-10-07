@@ -86,14 +86,14 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
               const isSelected = selectedType === type.id
               
               return (
-                <Card
-                  key={type.id}
-                  className={`relative flex h-full flex-col p-6 cursor-pointer transition-all hover:shadow-md ${
+                <Card 
+                  key={type.id} 
+                  className={`relative p-6 cursor-pointer transition-all hover:shadow-md ${
                     isSelected ? 'ring-2 ring-blue-500 border-blue-200' : ''
                   } ${type.primary ? 'border-blue-200 bg-blue-50/30' : ''}`}
                   onClick={() => setSelectedType(type.id)}
                 >
-                  <div className="flex flex-1 flex-col items-center gap-4 text-center">
+                  <div className="flex flex-col items-center text-center space-y-4">
                     {/* Icon */}
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
                       type.primary 
@@ -111,31 +111,26 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
                     </h3>
 
                     {/* Description */}
-                    <p
-                      className="text-sm text-muted-foreground leading-relaxed line-clamp-5 overflow-hidden"
-                      style={{ maxHeight: 105, minHeight: 105 }}
-                    >
+                    <p className="text-sm text-muted-foreground leading-relaxed min-h-[4rem] flex items-center">
                       {type.description}
                     </p>
 
                     {/* Select Button */}
-                    <div className="mt-auto w-full">
-                      <Button
-                        variant={type.primary ? 'default' : 'outline'}
-                        size="sm"
-                        className={`${
-                          type.primary
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                            : ''
-                        } w-full`}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleSelect(type.id)
-                        }}
-                      >
-                        Seleccionar
-                      </Button>
-                    </div>
+                    <Button
+                      variant={type.primary ? "default" : "outline"}
+                      size="sm"
+                      className={`w-full mt-4 ${
+                        type.primary 
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                          : ''
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSelect(type.id)
+                      }}
+                    >
+                      Seleccionar
+                    </Button>
                   </div>
                 </Card>
               )

@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { VehicleSelector } from "./VehicleSelector"
 import { ChevronDown } from "lucide-react"
-import { CapsuleOverflowTooltip } from "./CapsuleOverflowTooltip"
 
 interface UnidadData {
   id: string
@@ -89,19 +88,15 @@ export function UnidadesSelectorInput({
         {visibleUnits.map((unit) => (
           <span
             key={unit.id}
-            className="inline-flex items-center px-2 py-0.5 rounded-md text-[14px] bg-gray-100 text-gray-800 border max-w-[120px]"
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] bg-gray-100 text-gray-800 border max-w-[120px]"
           >
             <span className="truncate">{unit.name}</span>
           </span>
         ))}
         {remainingCount > 0 && (
-          <CapsuleOverflowTooltip
-            key="remaining-count"
-            items={selectedUnits.slice(maxVisible)}
-            className="inline-flex items-center px-2 py-0.5 rounded-md text-[14px] bg-gray-200 text-gray-600 border"
-          >
+          <span key="remaining-count" className="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] bg-gray-200 text-gray-600 border">
             +{remainingCount}
-          </CapsuleOverflowTooltip>
+          </span>
         )}
       </div>
     )
@@ -136,7 +131,7 @@ export function UnidadesSelectorInput({
     <div className={`w-full ${className}`}>
       <div className="relative">
         <div
-          className={`w-full min-h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-[8px] bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
+          className={`w-full min-h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
             disabled ? 'opacity-50 cursor-not-allowed' : ''
           }`}
           onClick={() => !disabled && setIsModalOpen(true)}

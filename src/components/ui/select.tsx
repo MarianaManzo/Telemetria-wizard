@@ -132,14 +132,14 @@ export const SelectTrigger = forwardRef<SelectRef, TriggerProps>(
         {children ? <span className="hidden">{children}</span> : null}
         <AntdSelect
           ref={ref}
-          className={cn("text-[14px] rounded-[8px]", className)}
+          className={cn("text-[14px]", className)}
           size={antdSize}
           value={currentValue}
           onChange={value => ctx.setValue(value)}
           options={ctx.options}
           placeholder={ctx.placeholder}
           disabled={ctx.disabled}
-          dropdownClassName={cn("ant-select-dropdown-rounded", ctx.dropdownClassName, dropdownClassName)}
+          dropdownClassName={cn(ctx.dropdownClassName, dropdownClassName)}
           {...props}
         />
       </>
@@ -198,7 +198,7 @@ export function SelectItem({ value, children, disabled, className }: SelectItemP
   const ctx = useSelectContext("SelectItem");
 
   useEffect(() => {
-    ctx.registerOption({ value, label: <span className={cn("text-[14px]", className)}>{children}</span>, disabled });
+    ctx.registerOption({ value, label: <span className={cn(className)}>{children}</span>, disabled });
     return () => ctx.unregisterOption(value);
   }, [ctx, value, children, disabled, className]);
 
