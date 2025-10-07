@@ -56,7 +56,9 @@ const panelStyles: React.CSSProperties = {
 const listStyles: React.CSSProperties = {
   border: '1px solid #E5E7EB',
   borderRadius: 8,
-  height: '100%'
+  height: '100%',
+  overflowY: 'auto',
+  overflowX: 'hidden'
 }
 
 export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelectionChange }: VehicleSelectorProps) {
