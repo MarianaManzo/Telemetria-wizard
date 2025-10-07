@@ -81,14 +81,14 @@ export default function StickyModal({
         </div>
         <div className="flex items-center justify-end gap-3 border-t" style={{ padding: '16px 24px' }}>
           {!hideSecondary && (
-            <Button onClick={onClose} style={{ minHeight: 40, paddingInline: 20 }}>
+            <Button onClick={onClose} style={{ minHeight: 40, paddingInline: 20, fontSize: 14 }}>
               {secondaryLabel}
             </Button>
           )}
           <Button
             type="primary"
             onClick={onSubmit}
-            style={{ minHeight: 40, paddingInline: 20 }}
+            style={{ minHeight: 40, paddingInline: 20, fontSize: 14 }}
             disabled={!onSubmit}
           >
             {primaryLabel}

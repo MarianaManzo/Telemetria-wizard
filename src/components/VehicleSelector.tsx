@@ -133,7 +133,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
             <Form.Item label="Unidades disponibles" style={{ marginBottom: 24 }}>
               <div style={panelStyles}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
                     <AntCheckbox
                       checked={filteredAvailable.length === 0 && tempSelected.length > 0}
                       indeterminate={filteredAvailable.length > 0 && filteredAvailable.length < availableVehicles.length}
@@ -143,13 +143,17 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                         }
                       }}
                     />
-                    <Typography.Text strong>{totalUnits} Unidades</Typography.Text>
+                    <Typography.Text strong style={{ fontSize: 14 }}>
+                      {totalUnits} Unidades
+                    </Typography.Text>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <AntButton type="text" size="small" onClick={() => setSearchAvailable('')}>
+                  <div className="flex items-center gap-3" style={{ fontSize: 14 }}>
+                    <AntButton type="text" size="small" onClick={() => setSearchAvailable('')} style={{ fontSize: 14 }}>
                       Limpiar
                     </AntButton>
-                    <Typography.Text type="secondary">{filteredAvailable.length} disponibles</Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                      {filteredAvailable.length} disponibles
+                    </Typography.Text>
                   </div>
                 </div>
                 <div style={{ padding: '16px 16px 12px' }}>
@@ -177,7 +181,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                             <AntCheckbox checked={false} />
                             <Typography.Text style={{ fontSize: 14 }}>{vehicle.name}</Typography.Text>
                           </div>
-                          <Typography.Text type="secondary" style={{ fontSize: 12 }}>Agregar</Typography.Text>
+                          <Typography.Text type="secondary" style={{ fontSize: 14 }}>Agregar</Typography.Text>
                         </div>
                       ))
                     )}
@@ -191,7 +195,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
             <Form.Item label="Unidades seleccionadas" style={{ marginBottom: 24 }}>
               <div style={panelStyles}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
                     <AntCheckbox
                       indeterminate={tempSelected.length > 0 && filteredSelected.length > 0 && filteredSelected.length < tempSelected.length}
                       checked={tempSelected.length > 0}
@@ -201,13 +205,23 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                         }
                       }}
                     />
-                    <Typography.Text strong>{tempSelected.length} Seleccionadas</Typography.Text>
+                    <Typography.Text strong style={{ fontSize: 14 }}>
+                      {tempSelected.length} Seleccionadas
+                    </Typography.Text>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <AntButton type="text" size="small" onClick={handleClearSelected} disabled={tempSelected.length === 0}>
+                  <div className="flex items-center gap-3" style={{ fontSize: 14 }}>
+                    <AntButton
+                      type="text"
+                      size="small"
+                      onClick={handleClearSelected}
+                      disabled={tempSelected.length === 0}
+                      style={{ fontSize: 14 }}
+                    >
                       Limpiar
                     </AntButton>
-                    <Typography.Text type="secondary">Máx. {MAX_SELECTION}</Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                      Máx. {MAX_SELECTION}
+                    </Typography.Text>
                   </div>
                 </div>
                 <div style={{ padding: '16px 16px 12px' }}>
@@ -235,7 +249,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                             <AntCheckbox checked={true} />
                             <Typography.Text style={{ fontSize: 14 }}>{vehicle.name}</Typography.Text>
                           </div>
-                          <Typography.Text type="secondary" style={{ fontSize: 12 }}>Quitar</Typography.Text>
+                          <Typography.Text type="secondary" style={{ fontSize: 14 }}>Quitar</Typography.Text>
                         </div>
                       ))
                     )}
