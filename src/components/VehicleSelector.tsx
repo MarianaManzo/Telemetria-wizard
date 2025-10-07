@@ -128,9 +128,9 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
     >
       <div style={{ fontSize: 14 }}>
         <Form layout="vertical">
-          <Row gutter={[24, 16]} style={{ minHeight: 360 }}>
-          <Col xs={24} md={12} style={{ minHeight: 360 }}>
-            <div style={panelStyles}>
+          <Row gutter={[24, 16]} style={{ minHeight: 360, height: 360 }}>
+            <Col xs={24} md={12} style={{ display: 'flex', height: '100%' }}>
+              <div style={{ ...panelStyles, width: '100%' }}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
                   <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
                     <AntCheckbox
@@ -189,8 +189,8 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
               </div>
           </Col>
 
-          <Col xs={24} md={12} style={{ minHeight: 360 }}>
-            <div style={panelStyles}>
+          <Col xs={24} md={12} style={{ display: 'flex', height: '100%' }}>
+            <div style={{ ...panelStyles, width: '100%' }}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
                   <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
                     <AntCheckbox
