@@ -187,7 +187,6 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                   </div>
                 </div>
               </div>
-            </div>
           </Col>
 
           <Col xs={24} md={12} style={{ minHeight: 360 }}>
@@ -254,7 +253,6 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                   </div>
                 </div>
               </div>
-            </div>
           </Col>
         </Row>
       </Form>
