@@ -104,3 +104,5 @@ export default function StickyModal({
     </Modal>
   )
 }
+
+export type { StickyModalProps };

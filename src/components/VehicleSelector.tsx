@@ -1,18 +1,16 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Form, Input, Row, Col, Typography, Empty, Button as AntButton, Checkbox as AntCheckbox } from 'antd'
-import { SearchOutlined } from '@ant-design/icons'
-import StickyModal from './StickyModal'
+import { useEffect, useMemo, useState } from 'react';
+import UnitsTransferModal, { TransferItem } from './modal/transfer/units';
 
 interface Vehicle {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface VehicleSelectorProps {
-  isOpen: boolean
-  onClose: () => void
-  selectedVehicles: Vehicle[]
-  onSelectionChange: (vehicles: Vehicle[]) => void
+  isOpen: boolean;
+  onClose: () => void;
+  selectedVehicles: Vehicle[];
+  onSelectionChange: (vehicles: Vehicle[]) => void;
 }
 
 const mockVehicles: Vehicle[] = [
@@ -40,87 +38,73 @@ const mockVehicles: Vehicle[] = [
   { id: '20', name: 'RAM ProMaster' },
   { id: '21', name: 'Mitsubishi Fuso' },
   { id: '22', name: 'Norte-022' },
-  { id: '23', name: 'Sur-023' }
-]
+  { id: '23', name: 'Sur-023' },
+];
 
-const MAX_SELECTION = 10
-
-const panelStyles: React.CSSProperties = {
-  border: '1px solid #E5E7EB',
-  borderRadius: 12,
-  display: 'flex',
-  flexDirection: 'column',
-  height: 360,
-  maxHeight: 360,
-  overflow: 'hidden',
-}
-
-const listStyles: React.CSSProperties = {
-  border: '1px solid #E5E7EB',
-  borderRadius: 8,
-  height: '100%',
-  overflowY: 'auto',
-  overflowX: 'hidden',
-}
+const MAX_SELECTION = 10;
 
 export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelectionChange }: VehicleSelectorProps) {
-  const [searchAvailable, setSearchAvailable] = useState('')
-  const [searchSelected, setSearchSelected] = useState('')
-  const [tempSelected, setTempSelected] = useState<Vehicle[]>(selectedVehicles)
+  const [searchAvailable, setSearchAvailable] = useState('');
+  const [searchSelected, setSearchSelected] = useState('');
+  const [tempSelected, setTempSelected] = useState<Vehicle[]>(selectedVehicles);
 
   useEffect(() => {
     if (isOpen) {
-      const valid = (selectedVehicles || []).filter(v => v?.id && v?.name)
-      setTempSelected(valid)
-      setSearchAvailable('')
-      setSearchSelected('')
+      const valid = (selectedVehicles || []).filter((vehicle) => vehicle?.id && vehicle?.name);
+      setTempSelected(valid);
+      setSearchAvailable('');
+      setSearchSelected('');
     }
-  }, [isOpen, selectedVehicles])
+  }, [isOpen, selectedVehicles]);
 
   const availableVehicles = useMemo(
-    () => mockVehicles.filter(vehicle => !tempSelected.some(selected => selected.id === vehicle.id)),
-    [tempSelected]
-  )
+    () => mockVehicles.filter((vehicle) => !tempSelected.some((selected) => selected.id === vehicle.id)),
+    [tempSelected],
+  );
 
   const filteredAvailable = useMemo(() => {
-    const term = searchAvailable.trim().toLowerCase()
-    return availableVehicles.filter(vehicle => vehicle.name.toLowerCase().includes(term))
-  }, [availableVehicles, searchAvailable])
+    const term = searchAvailable.trim().toLowerCase();
+    return availableVehicles.filter((vehicle) => vehicle.name.toLowerCase().includes(term));
+  }, [availableVehicles, searchAvailable]);
 
   const filteredSelected = useMemo(() => {
-    const term = searchSelected.trim().toLowerCase()
-    return tempSelected.filter(vehicle => vehicle.name.toLowerCase().includes(term))
-  }, [tempSelected, searchSelected])
+    const term = searchSelected.trim().toLowerCase();
+    return tempSelected.filter((vehicle) => vehicle.name.toLowerCase().includes(term));
+  }, [tempSelected, searchSelected]);
 
   const handleSelectAvailable = (vehicle: Vehicle) => {
-    if (tempSelected.length >= MAX_SELECTION) return
-    setTempSelected(prev => [...prev, vehicle])
-  }
+    if (tempSelected.length >= MAX_SELECTION) return;
+    setTempSelected((prev) => [...prev, vehicle]);
+  };
 
   const handleUnselect = (vehicle: Vehicle) => {
-    setTempSelected(prev => prev.filter(item => item.id !== vehicle.id))
-  }
+    setTempSelected((prev) => prev.filter((item) => item.id !== vehicle.id));
+  };
 
   const handleSelectAllAvailable = () => {
-    const candidates = filteredAvailable.slice(0, MAX_SELECTION - tempSelected.length)
-    if (candidates.length === 0) return
-    setTempSelected(prev => [...prev, ...candidates])
-  }
+    if (tempSelected.length >= MAX_SELECTION) return;
+    const remainingSlots = MAX_SELECTION - tempSelected.length;
+    const candidates = filteredAvailable.slice(0, remainingSlots);
+    if (candidates.length === 0) return;
+    setTempSelected((prev) => [...prev, ...candidates]);
+  };
 
   const handleClearSelected = () => {
-    setTempSelected([])
-  }
+    setTempSelected([]);
+  };
 
   const handleContinue = () => {
-    onSelectionChange(tempSelected)
-    onClose()
-  }
+    onSelectionChange(tempSelected);
+    onClose();
+  };
 
-  const totalUnits = mockVehicles.length
-  const totalSelected = tempSelected.length
+  const totalSelected = tempSelected.length;
+
+  const availableColumnItems: TransferItem[] = filteredAvailable;
+  const selectedColumnItems: TransferItem[] = filteredSelected;
 
   return (
-    <StickyModal
+    <UnitsTransferModal
       open={isOpen}
       onClose={onClose}
       onSubmit={totalSelected > 0 ? handleContinue : undefined}
@@ -129,132 +113,49 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
       size="md"
       primaryLabel="Continuar"
       secondaryLabel="Cancelar"
-    >
-      <div style={{ fontSize: 14 }} className="ModalBase_standardContent">
-        <Form layout="vertical">
-          <Row gutter={[24, 16]}>
-            <Col xs={24} md={12} style={{ display: 'flex' }}>
-              <div style={{ ...panelStyles, width: '100%' }}>
-                <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
-                  <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
-                    <AntCheckbox
-                      checked={filteredAvailable.length === 0 && tempSelected.length > 0}
-                      indeterminate={filteredAvailable.length > 0 && filteredAvailable.length < availableVehicles.length}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          handleSelectAllAvailable()
-                        }
-                      }}
-                    />
-                    <Typography.Text strong style={{ fontSize: 14 }}>
-                      {totalUnits} Unidades
-                    </Typography.Text>
-                  </div>
-                  <div className="flex items-center gap-3" style={{ fontSize: 14 }}>
-                    <AntButton type="text" size="small" onClick={() => setSearchAvailable('')} style={{ fontSize: 14 }}>
-                      Limpiar
-                    </AntButton>
-                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>
-                      {filteredAvailable.length} disponibles
-                    </Typography.Text>
-                  </div>
-                </div>
-                <div style={{ padding: '16px 16px 12px' }}>
-                  <Input
-                    prefix={<SearchOutlined />}
-                    placeholder="Buscar Unidades"
-                    value={searchAvailable}
-                    onChange={(event) => setSearchAvailable(event.target.value)}
-                    allowClear
-                  />
-                </div>
-                <div style={{ padding: '0 16px 16px', flex: 1 }}>
-                  <div style={listStyles}>
-                    {filteredAvailable.length === 0 ? (
-                      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No hay unidades" style={{ paddingTop: 40 }} />
-                    ) : (
-                      filteredAvailable.map(vehicle => (
-                        <label
-                          key={vehicle.id}
-                          className="flex items-center gap-2"
-                          style={{ padding: '12px 16px', cursor: 'pointer' }}
-                          onClick={() => handleSelectAvailable(vehicle)}
-                        >
-                          <AntCheckbox checked={false} style={{ pointerEvents: 'none' }} />
-                          <Typography.Text style={{ fontSize: 14 }}>{vehicle.name}</Typography.Text>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-          </Col>
-
-          <Col xs={24} md={12} style={{ display: 'flex' }}>
-            <div style={{ ...panelStyles, width: '100%' }}>
-                <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
-                  <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
-                    <AntCheckbox
-                      indeterminate={tempSelected.length > 0 && filteredSelected.length > 0 && filteredSelected.length < tempSelected.length}
-                      checked={tempSelected.length > 0}
-                      onChange={(event) => {
-                        if (!event.target.checked) {
-                          handleClearSelected()
-                        }
-                      }}
-                    />
-                    <Typography.Text strong style={{ fontSize: 14 }}>
-                      {tempSelected.length} Seleccionadas
-                    </Typography.Text>
-                  </div>
-                  <div className="flex items-center gap-3" style={{ fontSize: 14 }}>
-                    <AntButton
-                      type="text"
-                      size="small"
-                      onClick={handleClearSelected}
-                      disabled={tempSelected.length === 0}
-                      style={{ fontSize: 14 }}
-                    >
-                      Limpiar
-                    </AntButton>
-                    <Typography.Text type="secondary" style={{ fontSize: 14 }}>
-                      Máx. {MAX_SELECTION}
-                    </Typography.Text>
-                  </div>
-                </div>
-                <div style={{ padding: '16px 16px 12px' }}>
-                  <Input
-                    prefix={<SearchOutlined />}
-                    placeholder="Buscar Unidades"
-                    value={searchSelected}
-                    onChange={(event) => setSearchSelected(event.target.value)}
-                    allowClear
-                  />
-                </div>
-                <div style={{ padding: '0 16px 16px', flex: 1 }}>
-                  <div style={listStyles}>
-                    {filteredSelected.length === 0 ? (
-                      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No tienes unidades" style={{ paddingTop: 40 }} />
-                    ) : (
-                      filteredSelected.map(vehicle => (
-                        <label
-                          key={vehicle.id}
-                          className="flex items-center gap-2"
-                          style={{ padding: '12px 16px', cursor: 'pointer' }}
-                          onClick={() => handleUnselect(vehicle)}
-                        >
-                          <AntCheckbox checked style={{ pointerEvents: 'none' }} />
-                          <Typography.Text style={{ fontSize: 14 }}>{vehicle.name}</Typography.Text>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-          </Col>
-        </Row>
-      </Form>
-    </div>
-    </StickyModal>
-  )
+      leftColumn={{
+        title: 'Unidades disponibles',
+        checkbox: {
+          checked: filteredAvailable.length === 0 && tempSelected.length > 0,
+          indeterminate:
+            filteredAvailable.length > 0 && filteredAvailable.length < availableVehicles.length,
+          onChange: (event) => {
+            if (event.target.checked) {
+              handleSelectAllAvailable();
+            }
+          },
+        },
+        onClear: () => setSearchAvailable(''),
+        clearDisabled: searchAvailable.trim() === '',
+        searchPlaceholder: 'Buscar unidades',
+        searchValue: searchAvailable,
+        onSearchChange: setSearchAvailable,
+        items: availableColumnItems,
+        emptyMessage: 'No hay unidades',
+        onItemClick: handleSelectAvailable,
+        itemCheckboxChecked: false,
+      }}
+      rightColumn={{
+        title: 'Unidades seleccionadas',
+        checkbox: {
+          checked: tempSelected.length > 0 && filteredSelected.length === tempSelected.length,
+          indeterminate: tempSelected.length > 0 && filteredSelected.length < tempSelected.length,
+          onChange: (event) => {
+            if (!event.target.checked) {
+              handleClearSelected();
+            }
+          },
+        },
+        onClear: handleClearSelected,
+        clearDisabled: tempSelected.length === 0,
+        searchPlaceholder: 'Buscar unidades seleccionadas',
+        searchValue: searchSelected,
+        onSearchChange: setSearchSelected,
+        items: selectedColumnItems,
+        emptyMessage: 'No tienes unidades',
+        onItemClick: handleUnselect,
+        itemCheckboxChecked: true,
+      }}
+    />
+  );
 }
