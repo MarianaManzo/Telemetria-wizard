@@ -87,14 +87,17 @@ export default function StickyModal({
           style={{ padding: '16px 24px' }}
         >
           {!hideSecondary && (
-            <Button onClick={onClose} style={{ minHeight: 40, paddingInline: 20, fontSize: 14 }}>
+            <Button
+              onClick={onClose}
+              style={{ height: 32, minHeight: 32, paddingInline: 16, fontSize: 14 }}
+            >
               {secondaryLabel}
             </Button>
           )}
           <Button
             type="primary"
             onClick={onSubmit}
-            style={{ minHeight: 40, paddingInline: 20, fontSize: 14 }}
+            style={{ height: 32, minHeight: 32, paddingInline: 16, fontSize: 14 }}
             disabled={!onSubmit}
           >
             {primaryLabel}

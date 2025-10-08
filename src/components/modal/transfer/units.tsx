@@ -50,7 +50,6 @@ const panelStyles: React.CSSProperties = {
 };
 
 const listStyles: React.CSSProperties = {
-  border: '1px solid #E5E7EB',
   borderRadius: 8,
   height: '100%',
   overflowY: 'auto',
@@ -89,10 +88,9 @@ function TransferColumn({
         </div>
         <AntButton
           type="primary"
-          size="small"
           onClick={onClear}
           disabled={clearDisabled}
-          style={{ fontSize: 14 }}
+          style={{ fontSize: 14, height: 32, minHeight: 32, paddingInline: 16 }}
         >
           Limpiar
         </AntButton>
@@ -100,7 +98,7 @@ function TransferColumn({
 
       {renderSubtitle && <div style={{ padding: '0 16px', fontSize: 14 }}>{renderSubtitle}</div>}
 
-      <div style={{ padding: '16px 16px 12px' }}>
+      <div style={{ padding: '16px 16px 12px', fontSize: 14 }}>
         <Input
           prefix={<SearchOutlined />}
           placeholder={searchPlaceholder}
