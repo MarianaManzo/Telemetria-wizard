@@ -127,12 +127,13 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
       title="Seleccionar unidades"
       subtitle="Selecciona las unidades con las cuales deseas crear el reporte. Elige todas las unidades o solo algunas del total disponible. Recuerda que debes seleccionar al menos 1 unidad para continuar."
       size="md"
-      primaryLabel="Continuar"
-      secondaryLabel="Cancelar"
+  primaryLabel="Continuar"
+  secondaryLabel="Cancelar"
+      bodyScrollable={false}
     >
-      <div style={{ fontSize: 14 }}>
-        <Form layout="vertical">
-          <Row gutter={[24, 16]} style={{ minHeight: 360, height: 360 }}>
+      <div style={{ fontSize: 14, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Form layout="vertical" style={{ height: '100%' }}>
+          <Row gutter={[24, 16]} style={{ flex: 1, minHeight: 360, height: '100%' }}>
             <Col xs={24} md={12} style={{ display: 'flex', height: '100%' }}>
               <div style={{ ...panelStyles, width: '100%' }}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>

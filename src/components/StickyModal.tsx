@@ -15,6 +15,7 @@ export type StickyModalProps = {
   primaryLabel?: string
   secondaryLabel?: string
   hideSecondary?: boolean
+  bodyScrollable?: boolean
   children: React.ReactNode
 }
 
@@ -35,6 +36,7 @@ export default function StickyModal({
   primaryLabel = 'Guardar',
   secondaryLabel = 'Cancelar',
   hideSecondary,
+  bodyScrollable = true,
   children,
 }: StickyModalProps) {
   const triggerRef = useRef<HTMLElement | null>(document.activeElement as HTMLElement)
@@ -71,7 +73,10 @@ export default function StickyModal({
           </Typography.Title>
           <Button type="text" aria-label="Cerrar" icon={<CloseOutlined />} onClick={onClose} />
         </div>
-        <div className="flex-1 overflow-auto" style={{ padding: 24 }}>
+        <div
+          className="flex-1"
+          style={{ padding: 24, overflowY: bodyScrollable ? 'auto' : 'hidden' }}
+        >
           {subtitle && (
             <Text style={{ display: 'block', fontSize: 14, lineHeight: '20px', color: '#6B7280', marginBottom: 24 }}>
               {subtitle}
