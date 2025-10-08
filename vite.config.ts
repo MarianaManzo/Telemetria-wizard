@@ -53,6 +53,26 @@
     build: {
       target: 'esnext',
       outDir: 'dist',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined;
+
+            if (id.includes('antd')) return 'chunk-antd';
+            if (id.includes('@ant-design/icons')) return 'chunk-antd-icons';
+            if (id.includes('@radix-ui')) return 'chunk-radix-ui';
+            if (id.includes('recharts')) return 'chunk-recharts';
+            if (id.includes('react-dnd')) return 'chunk-react-dnd';
+            if (id.includes('lucide-react')) return 'chunk-lucide';
+            if (id.includes('embla-carousel-react')) return 'chunk-embla';
+            if (id.includes('cmdk')) return 'chunk-cmdk';
+
+            if (id.includes('react')) return 'chunk-react';
+
+            return 'chunk-vendor';
+          },
+        },
+      },
     },
     server: {
       port: 3000,
