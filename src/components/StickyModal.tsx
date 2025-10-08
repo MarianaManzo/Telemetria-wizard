@@ -64,7 +64,10 @@ export default function StickyModal({
         footer: { display: 'none' },
       }}
     >
-      <div className="ModalBase" style={{ display: 'flex', flexDirection: 'column' }}>
+      <div
+        className="ModalBase"
+        style={{ display: 'flex', flexDirection: 'column', fontFamily: "'Source Sans 3', sans-serif" }}
+      >
         <div
           className="ModalBase_header flex items-center justify-between border-b"
           style={{ padding: 16, minHeight: 64, fontFamily: 'Source Sans 3, sans-serif' }}

@@ -163,7 +163,7 @@ export default function UnitsTransferModal({
       secondaryLabel={secondaryLabel}
       hideSecondary={hideSecondary}
     >
-      <Row gutter={[24, 16]} className="ModalBase_standardContent" style={{ fontSize: 14, fontFamily: 'Source Sans 3, sans-serif' }}>
+      <Row gutter={[24, 16]} className="ModalBase_standardContent" style={{ fontSize: 14 }}>
         <Col xs={24} md={12} style={{ display: 'flex' }}>
           <TransferColumn {...leftColumn} />
         </Col>
