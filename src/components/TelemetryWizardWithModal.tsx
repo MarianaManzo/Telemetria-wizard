@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { Flex, Typography } from "antd";
+import { CloseOutlined } from '@ant-design/icons'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
@@ -145,6 +146,8 @@ const systemTelemetrySensors = [
     unit: '', 
     dataType: 'boolean', 
     category: 'system' as const,
+    valueDescription: 'En movimiento / Detenido',
+    inputType: 'Dropdown (boolean string)',
     options: [
       { value: 'moving', label: 'En movimiento' },
       { value: 'stopped', label: 'Detenido' }
@@ -156,6 +159,8 @@ const systemTelemetrySensors = [
     unit: '', 
     dataType: 'boolean', 
     category: 'system' as const,
+    valueDescription: 'Encendido / Apagado',
+    inputType: 'Dropdown (boolean con icono)',
     options: [
       { value: 'true', label: 'Encendido' },
       { value: 'false', label: 'Apagado' }
@@ -167,42 +172,48 @@ const systemTelemetrySensors = [
     unit: '', 
     dataType: 'string', 
     category: 'system' as const,
+    valueDescription: 'Sin conexión / Mayor a 24 hrs / Mayor a 60 min',
+    inputType: 'Dropdown (lista predefinida)',
     options: [
       { value: 'no_connection', label: 'Sin conexión' },
       { value: 'more_24h', label: 'Mayor a 24 hrs' },
       { value: 'more_60min', label: 'Mayor a 60 min' }
     ]
   },
-  { value: 'battery', label: 'Batería', unit: '%', dataType: 'numeric', category: 'system' as const },
-  { value: 'gsm_signal', label: 'Señal GSM (%)', unit: '%', dataType: 'numeric', category: 'system' as const },
-  { value: 'satellites_count', label: 'Número de Satélites', unit: '', dataType: 'numeric', category: 'system' as const },
-  { value: 'location', label: 'Ubicación', unit: '', dataType: 'string', category: 'system' as const },
-  { value: 'relative_distance', label: 'Distancia relativa (m)', unit: 'm', dataType: 'numeric', category: 'system' as const },
-  { value: 'server_date', label: 'Fecha del servidor', unit: '', dataType: 'datetime', category: 'system' as const },
-  { value: 'device_date', label: 'Fecha del dispositivo', unit: '', dataType: 'datetime', category: 'system' as const },
-  { value: 'speed', label: 'Velocidad (km/h)', unit: 'km/h', dataType: 'numeric', category: 'system' as const },
-  { value: 'odometer', label: 'Odómetro (Km)', unit: 'km', dataType: 'numeric', category: 'system' as const },
-  { value: 'latitude', label: 'Latitud (°)', unit: '°', dataType: 'numeric', category: 'system' as const },
-  { value: 'longitude', label: 'Longitud (°)', unit: '°', dataType: 'numeric', category: 'system' as const },
+  { value: 'battery', label: 'Batería', unit: '%', dataType: 'numeric', category: 'system' as const, valueDescription: '% (0–100)', inputType: 'Input numérico (%)' },
+  { value: 'gsm_signal', label: 'Señal GSM (%)', unit: '%', dataType: 'numeric', category: 'system' as const, valueDescription: '% (0–100)', inputType: 'Input numérico (%)' },
+  { value: 'satellites_count', label: 'Número de Satélites', unit: '', dataType: 'numeric', category: 'system' as const, valueDescription: 'Número entero (0–20+)', inputType: 'Input numérico' },
+  { value: 'location', label: 'Ubicación', unit: '', dataType: 'string', category: 'system' as const, valueDescription: 'Dirección o coordenadas', inputType: 'Input texto / mapa' },
+  { value: 'relative_distance', label: 'Distancia relativa (m)', unit: 'm', dataType: 'numeric', category: 'system' as const, valueDescription: 'Metros', inputType: 'Input numérico' },
+  { value: 'server_date', label: 'Fecha del servidor', unit: '', dataType: 'datetime', category: 'system' as const, valueDescription: 'Fecha y hora', inputType: 'Selector de fecha/hora' },
+  { value: 'device_date', label: 'Fecha del dispositivo', unit: '', dataType: 'datetime', category: 'system' as const, valueDescription: 'Fecha y hora', inputType: 'Selector de fecha/hora' },
+  { value: 'speed', label: 'Velocidad (km/h)', unit: 'km/h', dataType: 'numeric', category: 'system' as const, valueDescription: 'km/h (0–250)', inputType: 'Input numérico' },
+  { value: 'odometer', label: 'Odómetro (Km)', unit: 'km', dataType: 'numeric', category: 'system' as const, valueDescription: 'Kilómetros', inputType: 'Input numérico' },
+  { value: 'latitude', label: 'Latitud (°)', unit: '°', dataType: 'numeric', category: 'system' as const, valueDescription: 'Coordenada decimal', inputType: 'Input numérico' },
+  { value: 'longitude', label: 'Longitud (°)', unit: '°', dataType: 'numeric', category: 'system' as const, valueDescription: 'Coordenada decimal', inputType: 'Input numérico' },
   { 
     value: 'power_takeoff', 
     label: 'Toma de fuerza', 
     unit: '', 
     dataType: 'boolean', 
     category: 'system' as const,
+    valueDescription: 'Activada / Desactivada',
+    inputType: 'Dropdown (boolean string)',
     options: [
       { value: 'true', label: 'Activada' },
       { value: 'false', label: 'Desactivada' }
     ]
   },
-  { value: 'temperature', label: 'Temperatura (°C)', unit: '°C', dataType: 'numeric', category: 'system' as const },
-  { value: 'axis_x', label: 'eje x (°)', unit: '°', dataType: 'numeric', category: 'system' as const },
+  { value: 'temperature', label: 'Temperatura (°C)', unit: '°C', dataType: 'numeric', category: 'system' as const, valueDescription: '°C (-40 a 120)', inputType: 'Input numérico' },
+  { value: 'axis_x', label: 'eje x (°)', unit: '°', dataType: 'numeric', category: 'system' as const, valueDescription: 'Grados de acelerómetro', inputType: 'Input numérico' },
   { 
     value: 'panic_button', 
     label: 'Pánico', 
     unit: '', 
     dataType: 'boolean', 
     category: 'system' as const,
+    valueDescription: 'Activado / No activado',
+    inputType: 'Dropdown (boolean con icono campana)',
     options: [
       { value: 'true', label: 'Activado' },
       { value: 'false', label: 'No activado' }
@@ -212,25 +223,29 @@ const systemTelemetrySensors = [
 
 // Mock custom sensors - in real app, these would be loaded from API
 const customTelemetrySensors = [
-  { value: 'custom_fuel_sensor', label: 'Sensor de Combustible Personalizado', unit: 'L', dataType: 'numeric', category: 'custom' as const },
+  { value: 'custom_fuel_sensor', label: 'Sensor de Combustible Personalizado', unit: 'L', dataType: 'numeric', category: 'custom' as const, valueDescription: 'Litros', inputType: 'Input numérico' },
   { 
     value: 'custom_door_sensor', 
     label: 'Sensor de Puerta Trasera', 
     unit: '', 
     dataType: 'boolean', 
     category: 'custom' as const,
+    valueDescription: 'Abierta / Cerrada',
+    inputType: 'Dropdown (boolean)',
     options: [
       { value: 'true', label: 'Abierta' },
       { value: 'false', label: 'Cerrada' }
     ]
   },
-  { value: 'custom_cargo_weight', label: 'Peso de Carga', unit: 'kg', dataType: 'numeric', category: 'custom' as const },
+  { value: 'custom_cargo_weight', label: 'Peso de Carga', unit: 'kg', dataType: 'numeric', category: 'custom' as const, valueDescription: 'Kilogramos', inputType: 'Input numérico' },
   { 
     value: 'custom_driver_id', 
     label: 'ID Chofer Personalizado', 
     unit: '', 
     dataType: 'string', 
     category: 'custom' as const,
+    valueDescription: 'Lista de choferes autorizados',
+    inputType: 'Dropdown (lista predefinida)',
     options: [
       { value: 'ID001', label: 'Juan Pérez (ID001)' },
       { value: 'ID002', label: 'María Rodríguez (ID002)' },
@@ -373,42 +388,44 @@ function DraggableConditionInGroup({
     <TooltipProvider>
       <div
         ref={(node) => drag(drop(node))}
-        className={`p-3 rounded-lg border border-gray-200/50 bg-white ${isDragging ? 'opacity-50' : ''}`}
+        className={`rounded-lg border border-gray-200/50 bg-white transition-all ${isDragging ? 'opacity-50' : 'hover:border-blue-200 hover:shadow-sm'}`}
+        style={{ padding: '8px' }}
       >
-      <div className="flex items-start gap-3">
+      <div className="flex gap-3 relative" style={{ paddingTop: '8px' }}>
         {/* Drag handle */}
         <div 
           ref={drag}
-          className="flex-shrink-0 cursor-move p-1 hover:bg-gray-100 rounded mt-[26px]"
+          className="flex-shrink-0 cursor-move hover:bg-gray-100 rounded flex items-center justify-center"
+          style={{ width: '36px', height: '36px', marginTop: '34px' }}
         >
           <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
 
-        <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Sensor</Label>
+        <div className="min-w-0" style={{ flex: '0 0 180px' }}>
+          <Label className="block mb-2" textClassName="text-[14px]">Sensor</Label>
           <SensorSelectorWithSearch
             value={condition.sensor}
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'sensor', value)}
             systemSensors={systemTelemetrySensors}
             customSensors={customTelemetrySensors}
             placeholder="Seleccionar sensor"
-            className="w-full"
+            className="w-full max-w-[180px] text-[14px]"
           />
         </div>
 
-        <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Operador</Label>
+        <div className="min-w-0" style={{ flex: '0 0 180px' }}>
+          <Label className="block mb-2" textClassName="text-[14px]">Operador</Label>
           <Select
             value={condition.operator}
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'operator', value)}
             disabled={!condition.sensor}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
               <SelectValue placeholder="Seleccionar operador" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
               {availableOperators.map((op) => (
-                <SelectItem key={op.value} value={op.value}>
+                <SelectItem key={op.value} value={op.value} className="text-[14px]">
                   {op.label}
                 </SelectItem>
               ))}
@@ -416,8 +433,8 @@ function DraggableConditionInGroup({
           </Select>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Valor</Label>
+        <div className="min-w-0" style={{ flex: '0 0 180px' }}>
+          <Label className="block mb-2" textClassName="text-[14px]">Valor</Label>
           <div className="flex items-center gap-2">
             {/* Render different input types based on sensor dataType */}
             {sensor?.dataType === 'boolean' ? (
@@ -426,12 +443,12 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -443,12 +460,12 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
                   <SelectValue placeholder="Seleccionar opción" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -460,7 +477,8 @@ function DraggableConditionInGroup({
                 placeholder="Valor"
                 value={condition.value}
                 onChange={(e) => updateConditionInGroup(groupId, condition.id, 'value', e.target.value)}
-                className="w-full"
+                className="w-full text-[14px]"
+                style={{ height: '40px', borderRadius: '8px' }}
                 disabled={!condition.sensor}
               />
             )}
@@ -475,11 +493,12 @@ function DraggableConditionInGroup({
         {showRemoveButton && (
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => removeConditionFromGroup(groupId, condition.id)}
-            className="w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center mx-[0px] my-[8px] p-[10px] mt-8"
+            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+            style={{ marginTop: '34px' }}
           >
-            <X className="w-2.5 h-2.5 text-gray-600" />
+            <CloseOutlined className="text-gray-700 text-[14px]" />
           </Button>
         )}
       </div>
@@ -535,13 +554,15 @@ function DraggableCondition({
     <TooltipProvider>
       <div
         ref={(node) => drag(drop(node))}
-        className={`p-3 rounded-lg border border-gray-200/50 ${index === 0 ? 'bg-white' : 'bg-gray-50/50'} ${isDragging ? 'opacity-50' : ''}`}
+        className={`rounded-lg border border-gray-200/50 ${index === 0 ? 'bg-white' : 'bg-gray-50/50'} transition-all ${isDragging ? 'opacity-50' : 'hover:border-blue-200 hover:shadow-sm'}`}
+        style={{ padding: '8px' }}
       >
-      <div className="flex items-start gap-3">
+      <div className="flex gap-3" style={{ paddingTop: '8px' }}>
         {/* Drag handle - show for all conditions */}
         <div 
           ref={drag}
-          className="flex-shrink-0 cursor-move p-1 hover:bg-gray-100 rounded mt-[26px]"
+          className="flex-shrink-0 cursor-move hover:bg-gray-100 rounded flex items-center justify-center"
+          style={{ width: '36px', height: '36px', marginTop: '34px' }}
         >
           <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
@@ -588,31 +609,31 @@ function DraggableCondition({
           </div>
         )}
 
-        <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Sensor</Label>
+        <div className="min-w-0" style={{ flex: '0 0 180px' }}>
+          <Label className="block mb-2" textClassName="text-[14px]">Sensor</Label>
           <SensorSelectorWithSearch
             value={condition.sensor}
             onValueChange={(value) => updateCondition(condition.id, 'sensor', value)}
             systemSensors={systemTelemetrySensors}
             customSensors={customTelemetrySensors}
             placeholder="Seleccionar sensor"
-            className="w-full"
+            className="w-full max-w-[180px] text-[14px]"
           />
         </div>
 
         <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Operador</Label>
-          <Select
-            value={condition.operator}
-            onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
-            disabled={!condition.sensor}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccionar operador" />
-            </SelectTrigger>
-            <SelectContent>
+          <Label className="block mb-2" textClassName="text-[14px]">Operador</Label>
+        <Select
+          value={condition.operator}
+          onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
+          disabled={!condition.sensor}
+        >
+          <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+            <SelectValue placeholder="Seleccionar operador" />
+          </SelectTrigger>
+            <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
               {availableOperators.map((op) => (
-                <SelectItem key={op.value} value={op.value}>
+                <SelectItem key={op.value} value={op.value} className="text-[14px]">
                   {op.label}
                 </SelectItem>
               ))}
@@ -621,22 +642,22 @@ function DraggableCondition({
         </div>
 
         <div className="min-w-0 flex-1">
-          <Label className="block mb-2">Valor</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">Valor</Label>
           <div className="flex items-center gap-2">
             {/* Render different input types based on sensor dataType */}
             {sensor?.dataType === 'boolean' ? (
               // Dropdown for boolean sensors (Encendido/Apagado, Activado/Desactivado, etc.)
-              <Select
-                value={condition.value}
-                onValueChange={(value) => updateCondition(condition.id, 'value', value)}
-                disabled={!condition.sensor}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar estado" />
-                </SelectTrigger>
-                <SelectContent>
+            <Select
+              value={condition.value}
+              onValueChange={(value) => updateCondition(condition.id, 'value', value)}
+              disabled={!condition.sensor}
+            >
+              <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectValue placeholder="Seleccionar estado" />
+              </SelectTrigger>
+                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -644,17 +665,17 @@ function DraggableCondition({
               </Select>
             ) : sensor?.dataType === 'string' ? (
               // Select with predefined list for string sensors (Chofer, ID Chofer, etc.)
-              <Select
-                value={condition.value}
-                onValueChange={(value) => updateCondition(condition.id, 'value', value)}
-                disabled={!condition.sensor}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar opción" />
-                </SelectTrigger>
-                <SelectContent>
+            <Select
+              value={condition.value}
+              onValueChange={(value) => updateCondition(condition.id, 'value', value)}
+              disabled={!condition.sensor}
+            >
+              <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectValue placeholder="Seleccionar opción" />
+              </SelectTrigger>
+                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -662,14 +683,15 @@ function DraggableCondition({
               </Select>
             ) : (
               // Numeric input for measurable values (km/h, voltios, minutos, °C, etc.)
-              <Input
-                type="number"
-                placeholder="Valor"
-                value={condition.value}
-                onChange={(e) => updateCondition(condition.id, 'value', e.target.value)}
-                className="w-full"
-                disabled={!condition.sensor}
-              />
+            <Input
+              type="number"
+              placeholder="Valor"
+              value={condition.value}
+              onChange={(e) => updateCondition(condition.id, 'value', e.target.value)}
+              className="w-full text-[14px]"
+              style={{ height: '40px', borderRadius: '8px' }}
+              disabled={!condition.sensor}
+            />
             )}
             {sensor && sensor.unit && (
               <span className="text-[14px] text-gray-600 whitespace-nowrap">
@@ -682,11 +704,12 @@ function DraggableCondition({
         {conditionsLength > 1 && (
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => removeCondition(condition.id)}
-            className="w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center mx-[0px] my-[8px] p-[10px] mt-8"
+            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+            style={{ marginTop: '34px' }}
           >
-            <X className="w-2.5 h-2.5 text-gray-600" />
+            <CloseOutlined className="text-gray-700 text-[14px]" />
           </Button>
         )}
       </div>
@@ -752,7 +775,7 @@ function DraggableConditionGroup({
                 <button
                   type="button"
                   onClick={() => updateGroup(group.id, 'groupLogicOperator', 'and')}
-                  className={`px-3 py-2 rounded text-[12px] font-medium transition-colors flex items-center justify-center ${
+                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
                     group.groupLogicOperator === 'and' 
                       ? 'bg-blue-600/30 text-blue-800' 
                       : 'bg-transparent text-gray-600 hover:text-gray-800'
@@ -763,7 +786,7 @@ function DraggableConditionGroup({
                 <button
                   type="button"
                   onClick={() => updateGroup(group.id, 'groupLogicOperator', 'or')}
-                  className={`px-3 py-2 rounded text-[12px] font-medium transition-colors flex items-center justify-center ${
+                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
                     group.groupLogicOperator === 'or' 
                       ? 'bg-yellow-500/50 text-yellow-800' 
                       : 'bg-transparent text-gray-600 hover:text-gray-800'
@@ -782,15 +805,11 @@ function DraggableConditionGroup({
                 variant="link"
                 size="sm"
                 onClick={() => addConditionToGroup(group.id)}
-                className="text-[12px] px-2 py-1 h-7 text-blue-600 hover:text-blue-700 flex items-center justify-between"
+                className="text-[14px] px-2 py-1 h-7 text-blue-600 hover:text-blue-700 flex items-center gap-2 whitespace-nowrap"
               >
-                <span className="flex items-center">
-                  <Plus className="w-3 h-3 mr-1" />
-                  Agregar condición
-                </span>
-                <span className="ml-2 text-blue-600">
-                  ({group.conditions.length}/3)
-                </span>
+                <Plus className="w-3 h-3" />
+                <span>Agregar condición</span>
+                <span className="text-blue-600">({group.conditions.length}/3)</span>
               </Button>
             )}
 
@@ -839,7 +858,7 @@ function DraggableConditionGroup({
               variant="outline"
               size="sm"
               onClick={() => addConditionToGroup(group.id)}
-              className="text-[12px]"
+              className="text-[14px]"
             >
               <Plus className="w-3 h-3 mr-1" />
               Agregar primera condición
@@ -1951,15 +1970,17 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                     padding: toPx(spacing.sm),
                   }}
                 >
-                  <Flex align="center" style={{ gap: toPx(spacing.xs) }}>
-                    <Gauge className="h-4 w-4" style={{ color: "var(--color-gray-600)" }} />
-                    <Title level={5} style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "var(--color-gray-700)" }}>
-                      Parámetros a evaluar
-                    </Title>
-                  </Flex>
-                  <Paragraph style={{ margin: 0, color: "var(--color-gray-600)" }}>
-                    ¿Qué condiciones evalúa esta regla?
-                  </Paragraph>
+                  <div style={{ display: 'flex', gap: toPx(spacing.xs) }}>
+                    <Gauge className="h-4 w-4 mt-1" style={{ color: "var(--color-gray-600)" }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <Title level={5} style={{ margin: 0, fontSize: "14px", color: "var(--color-gray-700)" }}>
+                        Parámetros a evaluar
+                      </Title>
+                      <Paragraph style={{ margin: 0, color: "var(--color-gray-600)", fontSize: "14px" }}>
+                        ¿Qué condiciones evalúa esta regla?
+                      </Paragraph>
+                    </div>
+                  </div>
                   {conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0) && (
                     <div
                       style={{
@@ -1996,8 +2017,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 <button
                                   type="button"
                                   onClick={() => updateGroup(conditionGroups[1].id, 'betweenGroupOperator', 'and')}
-                                  className={`px-3 py-2 rounded text-[12px] font-medium transition-colors flex items-center justify-center ${
-                                    conditionGroups[1]?.betweenGroupOperator === 'and' || !conditionGroups[1]?.betweenGroupOperator
+                                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
+                                    conditionGroups[1]?.betweenGroupOperator === 'and' || !conditionGroups[1]?.betweenGroupOperator 
                                       ? 'bg-blue-600/30 text-blue-800' 
                                       : 'bg-transparent text-gray-600 hover:text-gray-800'
                                   }`}
@@ -2007,7 +2028,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 <button
                                   type="button"
                                   onClick={() => updateGroup(conditionGroups[1].id, 'betweenGroupOperator', 'or')}
-                                  className={`px-3 py-2 rounded text-[12px] font-medium transition-colors flex items-center justify-center ${
+                                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
                                     conditionGroups[1]?.betweenGroupOperator === 'or' 
                                       ? 'bg-yellow-500/50 text-yellow-800' 
                                       : 'bg-transparent text-gray-600 hover:text-gray-800'
@@ -2026,22 +2047,18 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           <Button
                             variant="link"
                             onClick={addGroup}
-                            className="p-0 h-auto text-blue-600 hover:text-blue-700 flex items-center justify-between"
+                            className="p-0 h-auto text-blue-600 hover:text-blue-700 flex items-center gap-2 text-[14px] whitespace-nowrap"
                             disabled={conditionGroups.length >= 2}
                           >
-                            <span className="flex items-center">
-                              <Plus className="w-4 h-4 mr-1" />
-                              Agregar grupo
-                            </span>
-                            <span className="ml-2 text-blue-600">
-                              ({conditionGroups.length}/2)
-                            </span>
+                            <Plus className="w-4 h-4" />
+                            <span>Agregar grupo</span>
+                            <span className="text-blue-600">({conditionGroups.length}/2)</span>
                           </Button>
                         </div>
                         <Button
                           variant="link"
                           onClick={clearAllGroups}
-                          className="p-0 h-auto text-blue-600 hover:text-blue-700"
+                          className="p-0 h-auto text-blue-600 hover:text-blue-700 text-[14px]"
                           disabled={conditionGroups.length === 1 && conditionGroups[0].conditions.length === 1 && !conditionGroups[0].conditions[0].sensor}
                         >
                           Limpiar todo
@@ -2067,7 +2084,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           if (validGroups.length === 0) return "Configura las condiciones para ver el resumen"
                           
                           return (
-                            <div className="space-y-4">
+                            <div className="flex flex-col gap-4">
                               {validGroups.map((group, groupIndex) => {
                                 const groupNumber = groupIndex + 1
                                 const logicText = group.groupLogicOperator === 'and' ? (
@@ -2153,7 +2170,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   </p>
                   <div className="-mx-4 border-b border-gray-200 mb-4"></div>
                   
-                  <div className="space-y-4">
+                  <div className="flex flex-col gap-4">
                     {/* Main selector */}
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
@@ -2270,7 +2287,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                               <label className="text-[14px] font-medium text-gray-700">¿En qué zona geográfica aplica esta regla?</label>
                             </div>
                           </div>
-                          <div className="space-y-4">
+                          <div className="flex flex-col gap-4">
                             <Select value={geographicZone} onValueChange={setGeographicZone}>
                               <SelectTrigger className="w-full">
                                 <SelectValue />
@@ -2294,7 +2311,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 <label className="text-[14px] font-medium text-gray-700">Zonas</label>
                               </div>
                             </div>
-                            <div className="space-y-4">
+                            <div className="flex flex-col gap-4">
                               <ZonasSelectorInput
                                 selectedZones={selectedZonesData.map(zone => ({ 
                                   id: zone.id, 
@@ -2448,7 +2465,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         {/* Section 5 – Days of the week (table layout) */}
                         {ruleSchedule === 'personalizado' && (
                           <div className="mt-6">
-                            <div className="space-y-4">
+                            <div className="flex flex-col gap-4">
                               {Object.entries(scheduleConfig).map(([day, config]) => {
                                 const dayLabels = {
                                   lunes: 'Lunes',
@@ -2463,7 +2480,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 return (
                                   <div key={day} className="grid grid-cols-4 gap-4 items-center">
                                     {/* Column 1: Checkbox + day name (aligned with labels in first column) */}
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center gap-4 pl-8 pr-12">
                                       <Checkbox
                                         checked={config.enabled}
                                         onCheckedChange={(checked) => updateDaySchedule(day, 'enabled', checked)}

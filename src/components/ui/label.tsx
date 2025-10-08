@@ -5,13 +5,15 @@ import { cn } from "./utils";
 
 const { Text } = Typography;
 
-type LabelProps = LabelHTMLAttributes<HTMLLabelElement>;
+type LabelProps = LabelHTMLAttributes<HTMLLabelElement> & {
+  textClassName?: string;
+};
 
 export const Label = forwardRef<HTMLLabelElement, LabelProps>(
-  ({ className, children, ...props }, ref) => {
+  ({ className, textClassName, children, ...props }, ref) => {
     return (
       <label ref={ref} className={cn(className)} {...props}>
-        <Text>{children}</Text>
+        <Text className={cn(textClassName)}>{children}</Text>
       </label>
     );
   },

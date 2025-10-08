@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, type CSSProperties } from "react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
@@ -14,6 +14,9 @@ interface SensorOption {
   unit: string
   dataType: string
   category: 'system' | 'custom'
+  valueDescription?: string
+  inputType?: string
+  options?: Array<{ value: string; label: string }>
 }
 
 interface SensorSelectorWithSearchProps {
@@ -23,6 +26,7 @@ interface SensorSelectorWithSearchProps {
   customSensors?: SensorOption[]
   placeholder?: string
   className?: string
+  style?: CSSProperties
 }
 
 export function SensorSelectorWithSearch({
@@ -31,7 +35,8 @@ export function SensorSelectorWithSearch({
   systemSensors,
   customSensors = [],
   placeholder = "Seleccionar sensor",
-  className
+  className,
+  style
 }: SensorSelectorWithSearchProps) {
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
@@ -63,41 +68,50 @@ export function SensorSelectorWithSearch({
     setSearchValue("")
   }
 
+  const showEmptyState =
+    searchValue.trim().length > 0 &&
+    filteredSystemSensors.length === 0 &&
+    filteredCustomSensors.length === 0
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          size="lg"
           role="combobox"
           aria-expanded={open}
+          style={{ fontSize: '14px', borderRadius: '8px', height: '40px', maxWidth: '180px', width: '100%', paddingLeft: '12px', paddingRight: '12px', ...style }}
           className={cn(
-            "w-full justify-between bg-white hover:bg-gray-50",
+            "w-full justify-between bg-white hover:bg-gray-50 text-[14px]",
             !value && "text-muted-foreground",
             className
           )}
         >
           {selectedSensor ? (
-            <span className="truncate">{selectedSensor.label}</span>
+            <span className="truncate text-gray-900">{selectedSensor.label}</span>
           ) : (
-            placeholder
+            <span className="ant-typography ant-typography-secondary truncate">{placeholder}</span>
           )}
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-lg" align="start" style={{ borderRadius: '8px' }}>
         <Command>
-          <div className="flex items-center border-b px-3">
+          <div className="border-b">
             <CommandInput
               placeholder="Buscar sensor..."
               value={searchValue}
               onValueChange={setSearchValue}
-              className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full bg-gray-100 px-3 py-2 text-[14px] outline-none placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-50 border-none rounded-none"
             />
           </div>
           <CommandList className="max-h-[300px]">
-            <CommandEmpty className="py-6 text-center text-sm">
-              No se encontraron sensores.
-            </CommandEmpty>
+            {showEmptyState && (
+              <CommandEmpty className="py-6 text-center text-sm">
+                No se encontraron sensores.
+              </CommandEmpty>
+            )}
             
             {/* System sensors */}
             {filteredSystemSensors.length > 0 && (
@@ -112,15 +126,17 @@ export function SensorSelectorWithSearch({
                       key={sensor.value}
                       value={sensor.value}
                       onSelect={() => handleSelect(sensor.value)}
-                      className="flex items-center gap-2 cursor-pointer"
+                      className="flex cursor-pointer gap-3"
                     >
                       <Check
                         className={cn(
-                          "h-4 w-4",
+                          "h-4 w-4 mt-1",
                           value === sensor.value ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      <span>{sensor.label}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[14px] text-gray-900">{sensor.label}</span>
+                      </div>
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -142,18 +158,22 @@ export function SensorSelectorWithSearch({
                     key={sensor.value}
                     value={sensor.value}
                     onSelect={() => handleSelect(sensor.value)}
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex cursor-pointer gap-3"
                   >
                     <Check
                       className={cn(
-                        "h-4 w-4",
+                        "h-4 w-4 mt-1",
                         value === sensor.value ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    <span>{sensor.label}</span>
-                    <span className="text-[10px] text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full">
-                      Custom
-                    </span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[14px] text-gray-900">{sensor.label}</span>
+                          <span className="text-[10px] text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full">
+                            Custom
+                          </span>
+                        </div>
+                    </div>
                   </CommandItem>
                 ))}
               </CommandGroup>
