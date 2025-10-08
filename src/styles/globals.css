@@ -202,6 +202,20 @@ html {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .line-clamp-5 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+  }
 }
 
 /* Force calendar to be white theme */
@@ -247,6 +261,35 @@ html {
 
 .switch-blue[data-state="checked"] [data-slot="switch-thumb"] {
   background-color: #ffffff !important;
+}
+
+/* Form controls rounded corners */
+.ant-select,
+.ant-select .ant-select-selector,
+.ant-select .ant-select-selector .ant-select-selection-search,
+.ant-select .ant-select-selector .ant-select-selection-search-input,
+.ant-select .ant-select-selector .ant-select-selection-item,
+.ant-select .ant-select-selector .ant-select-selection-placeholder {
+  border-radius: 8px !important;
+}
+
+.ant-select-dropdown,
+.ant-select-dropdown .ant-select-item,
+.ant-select-dropdown .ant-select-item-option-content {
+  border-radius: 8px !important;
+}
+
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-number,
+.ant-input-number .ant-input-number-input {
+  border-radius: 8px !important;
+}
+
+.ant-picker,
+.ant-picker-panel-container,
+.ant-picker-panel {
+  border-radius: 8px !important;
 }
 
 /* Custom Radio Button Styles */

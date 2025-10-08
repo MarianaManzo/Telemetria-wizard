@@ -1909,9 +1909,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto">
-          <div className="max-w-4xl mx-auto p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="pb-6">
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-auto">
+            <div className="max-w-4xl mx-auto p-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="pb-6">
               <TabsList className="sticky top-0 bg-white border-b border-gray-200 w-full justify-start h-auto p-0 space-x-8 z-10">
                 <TabsTrigger 
                   value="parameters" 
@@ -3929,25 +3930,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             </Tabs>
           </div>
         </div>
-
-        {/* Footer Navigation */}
-        <div className="border-t border-border bg-background px-6 py-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={isFirstTab ? onBackToTypeSelector : handlePreviousStep}
-              disabled={isFirstTab}
-              className="text-[14px] font-normal"
-            >
-              Anterior
-            </Button>
-            <Button
-              onClick={handleNextStep}
-              disabled={isLastTab}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal"
-            >
-              Siguiente
-            </Button>
+        <div className="border-t border-border bg-background px-6 py-4 sticky bottom-0 z-10">
+            <div className="max-w-4xl mx-auto flex items-center justify-between">
+              <Button
+                variant="outline"
+                onClick={isFirstTab ? onBackToTypeSelector : handlePreviousStep}
+                disabled={isFirstTab}
+                className="text-[14px] font-normal"
+              >
+                Anterior
+              </Button>
+              <Button
+                onClick={handleNextStep}
+                disabled={isLastTab}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal"
+              >
+                Siguiente
+              </Button>
+            </div>
           </div>
         </div>
 
