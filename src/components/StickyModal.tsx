@@ -64,14 +64,17 @@ export default function StickyModal({
         footer: { display: 'none' },
       }}
     >
-      <div className="flex flex-col" style={{ maxHeight: 560, overflow: 'hidden' }}>
-        <div className="flex items-center justify-between border-b" style={{ padding: 16, minHeight: 64 }}>
+      <div className="ModalBase" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div
+          className="ModalBase_header flex items-center justify-between border-b"
+          style={{ padding: 16, minHeight: 64 }}
+        >
           <Typography.Title level={5} style={{ margin: 0, fontSize: 16, lineHeight: '24px', fontWeight: 600 }}>
             {title}
           </Typography.Title>
           <Button type="text" aria-label="Cerrar" icon={<CloseOutlined />} onClick={onClose} />
         </div>
-        <div className="flex-1 overflow-auto" style={{ padding: 24 }}>
+        <div className="ModalBase_standardContent" style={{ padding: 24 }}>
           {subtitle && (
             <Text style={{ display: 'block', fontSize: 14, lineHeight: '20px', color: '#6B7280', marginBottom: 24 }}>
               {subtitle}
@@ -79,7 +82,10 @@ export default function StickyModal({
           )}
           {children}
         </div>
-        <div className="flex items-center justify-end gap-3 border-t" style={{ padding: '16px 24px' }}>
+        <div
+          className="ModalBase_footer flex items-center justify-end gap-3 border-t"
+          style={{ padding: '16px 24px' }}
+        >
           {!hideSecondary && (
             <Button onClick={onClose} style={{ minHeight: 40, paddingInline: 20, fontSize: 14 }}>
               {secondaryLabel}

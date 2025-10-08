@@ -50,11 +50,17 @@ const panelStyles: React.CSSProperties = {
   borderRadius: 12,
   display: 'flex',
   flexDirection: 'column',
+  height: 360,
+  maxHeight: 360,
+  overflow: 'hidden',
 }
 
 const listStyles: React.CSSProperties = {
   border: '1px solid #E5E7EB',
   borderRadius: 8,
+  height: '100%',
+  overflowY: 'auto',
+  overflowX: 'hidden',
 }
 
 export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelectionChange }: VehicleSelectorProps) {
@@ -124,10 +130,10 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
       primaryLabel="Continuar"
       secondaryLabel="Cancelar"
     >
-      <div style={{ fontSize: 14 }}>
+      <div style={{ fontSize: 14 }} className="ModalBase_standardContent">
         <Form layout="vertical">
           <Row gutter={[24, 16]}>
-            <Col xs={24} md={12}>
+            <Col xs={24} md={12} style={{ display: 'flex' }}>
               <div style={{ ...panelStyles, width: '100%' }}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
                   <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
@@ -162,7 +168,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     allowClear
                   />
                 </div>
-                <div style={{ padding: '0 16px 16px' }}>
+                <div style={{ padding: '0 16px 16px', flex: 1 }}>
                   <div style={listStyles}>
                     {filteredAvailable.length === 0 ? (
                       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No hay unidades" style={{ paddingTop: 40 }} />
@@ -184,7 +190,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
               </div>
           </Col>
 
-          <Col xs={24} md={12}>
+          <Col xs={24} md={12} style={{ display: 'flex' }}>
             <div style={{ ...panelStyles, width: '100%' }}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
                   <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
@@ -225,7 +231,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                     allowClear
                   />
                 </div>
-                <div style={{ padding: '0 16px 16px' }}>
+                <div style={{ padding: '0 16px 16px', flex: 1 }}>
                   <div style={listStyles}>
                     {filteredSelected.length === 0 ? (
                       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No tienes unidades" style={{ paddingTop: 40 }} />
