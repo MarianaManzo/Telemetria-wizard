@@ -502,11 +502,80 @@
     }
   }
 
-  body {
-    background-color: var(--color-bg-base);
-    color: var(--color-text-base);
-    font-family: "Source Sans 3", sans-serif;
-  }
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+  font-family: "Source Sans 3", sans-serif;
+  font-size: 14px;
+}
+
+body,
+body :is(button, input, optgroup, select, textarea),
+:where(.ant-typography,
+  .ant-btn,
+  .ant-input,
+  .ant-select,
+  .ant-select-selector,
+  .ant-menu,
+  .ant-table,
+  .ant-form,
+  .ant-modal,
+  .ant-alert,
+  .ant-tabs,
+  .ant-tooltip,
+  .ant-dropdown-menu,
+  .ant-picker,
+  .ant-radio-wrapper,
+  .ant-checkbox-wrapper,
+  .ant-segmented,
+  .ant-tag,
+  .ant-breadcrumb,
+  .ant-pagination,
+  .ant-segmented-item-label,
+  .ant-message,
+  .ant-popover,
+  .ant-collapse,
+  .ant-card,
+  .ant-statistic,
+  .ant-list,
+  .ant-typography-edit-content,
+  .ant-tree,
+  .ant-result,
+  .ant-empty,
+  .ant-descriptions,
+  .ant-avatar,
+  .ant-badge,
+  .ant-space,
+  .ant-progress,
+  .ant-anchor,
+  .ant-segmented-group,
+  .ant-steps,
+  .ant-drawer,
+  .ant-segmented-item,
+  .ant-slider,
+  .ant-switch,
+  .ant-segmented-thumb) {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 14px;
+}
+
+body :is(input:not([type='checkbox']):not([type='radio']),
+  select,
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-input-number,
+  .ant-input-number-input,
+  .ant-select-selector,
+  .ant-select-selection-item,
+  .ant-select-selection-placeholder,
+  .ant-select-selection-search-input,
+  .ant-picker,
+  .ant-picker-range,
+  .ant-picker-input > input) {
+  min-height: 32px;
+  height: 32px;
+  line-height: 32px;
+}
 
   :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) h1 {
     font-size: var(--text-2xl);
