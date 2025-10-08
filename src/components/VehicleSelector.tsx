@@ -50,13 +50,17 @@ const panelStyles: React.CSSProperties = {
   borderRadius: 12,
   display: 'flex',
   flexDirection: 'column',
-  height: '100%'
+  height: 360,
+  maxHeight: 360,
+  overflow: 'hidden'
 }
 
 const listStyles: React.CSSProperties = {
   border: '1px solid #E5E7EB',
   borderRadius: 8,
-  height: '100%'
+  height: '100%',
+  overflowY: 'auto',
+  overflowX: 'hidden'
 }
 
 export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelectionChange }: VehicleSelectorProps) {
@@ -128,10 +132,9 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
     >
       <div style={{ fontSize: 14 }}>
         <Form layout="vertical">
-          <Row gutter={[24, 16]} style={{ minHeight: 360 }}>
-            <Col xs={24} md={12} style={{ minHeight: 360 }}>
-            <Form.Item label="Unidades disponibles" style={{ marginBottom: 24 }}>
-              <div style={panelStyles}>
+          <Row gutter={[24, 16]} style={{ minHeight: 360, height: 360 }}>
+            <Col xs={24} md={12} style={{ display: 'flex', height: '100%' }}>
+              <div style={{ ...panelStyles, width: '100%' }}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
                   <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
                     <AntCheckbox
@@ -171,29 +174,24 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No hay unidades" style={{ paddingTop: 40 }} />
                     ) : (
                       filteredAvailable.map(vehicle => (
-                        <div
+                        <label
                           key={vehicle.id}
-                          className="flex items-center justify-between"
+                          className="flex items-center gap-2"
                           style={{ padding: '12px 16px', cursor: 'pointer' }}
                           onClick={() => handleSelectAvailable(vehicle)}
                         >
-                          <div className="flex items-center gap-2">
-                            <AntCheckbox checked={false} />
-                            <Typography.Text style={{ fontSize: 14 }}>{vehicle.name}</Typography.Text>
-                          </div>
-                          <Typography.Text type="secondary" style={{ fontSize: 14 }}>Agregar</Typography.Text>
-                        </div>
+                          <AntCheckbox checked={false} style={{ pointerEvents: 'none' }} />
+                          <Typography.Text style={{ fontSize: 14 }}>{vehicle.name}</Typography.Text>
+                        </label>
                       ))
                     )}
                   </div>
                 </div>
               </div>
-            </Form.Item>
           </Col>
 
-          <Col xs={24} md={12} style={{ minHeight: 360 }}>
-            <Form.Item label="Unidades seleccionadas" style={{ marginBottom: 24 }}>
-              <div style={panelStyles}>
+          <Col xs={24} md={12} style={{ display: 'flex', height: '100%' }}>
+            <div style={{ ...panelStyles, width: '100%' }}>
                 <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
                   <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
                     <AntCheckbox
@@ -239,28 +237,24 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
                       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No tienes unidades" style={{ paddingTop: 40 }} />
                     ) : (
                       filteredSelected.map(vehicle => (
-                        <div
+                        <label
                           key={vehicle.id}
-                          className="flex items-center justify-between"
+                          className="flex items-center gap-2"
                           style={{ padding: '12px 16px', cursor: 'pointer' }}
                           onClick={() => handleUnselect(vehicle)}
                         >
-                          <div className="flex items-center gap-2">
-                            <AntCheckbox checked={true} />
-                            <Typography.Text style={{ fontSize: 14 }}>{vehicle.name}</Typography.Text>
-                          </div>
-                          <Typography.Text type="secondary" style={{ fontSize: 14 }}>Quitar</Typography.Text>
-                        </div>
+                          <AntCheckbox checked style={{ pointerEvents: 'none' }} />
+                          <Typography.Text style={{ fontSize: 14 }}>{vehicle.name}</Typography.Text>
+                        </label>
                       ))
                     )}
                   </div>
                 </div>
               </div>
-            </Form.Item>
           </Col>
-          </Row>
-        </Form>
-      </div>
+        </Row>
+      </Form>
+    </div>
     </StickyModal>
   )
 }
