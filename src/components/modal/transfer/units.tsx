@@ -46,12 +46,15 @@ const panelStyles: React.CSSProperties = {
   flexDirection: 'column',
   height: 360,
   maxHeight: 360,
+  minHeight: 0,
   overflow: 'hidden',
 };
 
 const listStyles: React.CSSProperties = {
   borderRadius: 8,
   height: '100%',
+  flex: 1,
+  minHeight: 0,
   overflowY: 'auto',
   overflowX: 'hidden',
 };
@@ -111,7 +114,7 @@ function TransferColumn({
           style={{ fontSize: 14 }}
         />
       </div>
-      <div style={{ padding: '0 16px 16px', flex: 1 }}>
+      <div style={{ padding: '0 16px 16px', flex: 1, display: 'flex', minHeight: 0 }}>
         <div style={listStyles}>
           {items.length === 0 ? (
             <Empty
