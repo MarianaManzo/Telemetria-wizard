@@ -72,7 +72,10 @@ function TransferColumn({
 }: TransferColumnProps) {
   return (
     <div style={{ ...panelStyles, width: '100%' }}>
-      <div className="flex items-center justify-between" style={{ padding: 16, borderBottom: '1px solid #E5E7EB' }}>
+      <div
+        className="flex items-center justify-between"
+        style={{ padding: 16, borderBottom: '1px solid #E5E7EB', fontFamily: 'Source Sans 3, sans-serif' }}
+      >
         <div className="flex items-center gap-2" style={{ fontSize: 14 }}>
           {checkbox && (
             <Checkbox
@@ -105,18 +108,23 @@ function TransferColumn({
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           allowClear
+          style={{ fontSize: 14 }}
         />
       </div>
       <div style={{ padding: '0 16px 16px', flex: 1 }}>
         <div style={listStyles}>
           {items.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={emptyMessage} style={{ paddingTop: 40 }} />
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={<span style={{ fontSize: 14 }}>{emptyMessage}</span>}
+              style={{ paddingTop: 40, fontSize: 14, fontFamily: 'Source Sans 3, sans-serif' }}
+            />
           ) : (
             items.map((item) => (
               <label
                 key={item.id}
                 className="flex items-center gap-2"
-                style={{ padding: '12px 16px', cursor: 'pointer' }}
+                style={{ padding: '4px 16px', cursor: 'pointer', fontFamily: 'Source Sans 3, sans-serif' }}
                 onClick={() => onItemClick(item)}
               >
                 <Checkbox checked={itemCheckboxChecked} style={{ pointerEvents: 'none' }} />
@@ -155,7 +163,7 @@ export default function UnitsTransferModal({
       secondaryLabel={secondaryLabel}
       hideSecondary={hideSecondary}
     >
-      <Row gutter={[24, 16]} className="ModalBase_standardContent" style={{ fontSize: 14 }}>
+      <Row gutter={[24, 16]} className="ModalBase_standardContent" style={{ fontSize: 14, fontFamily: 'Source Sans 3, sans-serif' }}>
         <Col xs={24} md={12} style={{ display: 'flex' }}>
           <TransferColumn {...leftColumn} />
         </Col>

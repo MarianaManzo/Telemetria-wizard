@@ -67,14 +67,17 @@ export default function StickyModal({
       <div className="ModalBase" style={{ display: 'flex', flexDirection: 'column' }}>
         <div
           className="ModalBase_header flex items-center justify-between border-b"
-          style={{ padding: 16, minHeight: 64 }}
+          style={{ padding: 16, minHeight: 64, fontFamily: 'Source Sans 3, sans-serif' }}
         >
           <Typography.Title level={5} style={{ margin: 0, fontSize: 16, lineHeight: '24px', fontWeight: 600 }}>
             {title}
           </Typography.Title>
           <Button type="text" aria-label="Cerrar" icon={<CloseOutlined />} onClick={onClose} />
         </div>
-        <div className="ModalBase_standardContent" style={{ padding: 24 }}>
+        <div
+          className="ModalBase_standardContent"
+          style={{ padding: 24, fontFamily: 'Source Sans 3, sans-serif', fontSize: 14 }}
+        >
           {subtitle && (
             <Text style={{ display: 'block', fontSize: 14, lineHeight: '20px', color: '#6B7280', marginBottom: 24 }}>
               {subtitle}
@@ -84,7 +87,7 @@ export default function StickyModal({
         </div>
         <div
           className="ModalBase_footer flex items-center justify-end gap-3 border-t"
-          style={{ padding: '16px 24px' }}
+          style={{ padding: '16px 24px', fontFamily: 'Source Sans 3, sans-serif' }}
         >
           {!hideSecondary && (
             <Button
