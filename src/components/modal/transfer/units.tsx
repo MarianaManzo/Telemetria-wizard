@@ -87,10 +87,10 @@ function TransferColumn({
           </Text>
         </div>
         <AntButton
-          type="primary"
+          type="text"
           onClick={onClear}
           disabled={clearDisabled}
-          style={{ fontSize: 14, height: 32, minHeight: 32, paddingInline: 16 }}
+          style={{ fontSize: 14, height: 32, minHeight: 32, paddingInline: 16, color: '#1867FF' }}
         >
           Limpiar
         </AntButton>
