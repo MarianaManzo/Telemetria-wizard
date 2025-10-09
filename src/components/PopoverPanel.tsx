@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button } from './ui/button';
+import { Button as AntdButton } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { cn } from './ui/utils';
 
@@ -47,14 +47,7 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
       <div className="flex items-center gap-2">
         {actions}
         {!hideCloseButton && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-transparent flex items-center justify-center"
-          >
-            <CloseOutlined style={{ fontSize: 18 }} />
-          </Button>
+          <AntdButton type="text" aria-label="Cerrar" icon={<CloseOutlined style={{ fontSize: 18 }} />} onClick={onClose} />
         )}
       </div>
     </div>
