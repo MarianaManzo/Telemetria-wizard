@@ -146,7 +146,7 @@ export function SaveReportModal({
   }
 
   const footer = (
-    <div className="flex justify-between items-center pt-6 border-t">
+    <div className="flex justify-between items-center">
       <button
         type="button"
         onClick={() => setIsFavorite(!isFavorite)}

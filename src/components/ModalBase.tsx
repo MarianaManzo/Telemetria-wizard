@@ -97,13 +97,20 @@ export default function ModalBase({
         </div>
 
         {customFooter ? (
-          <div className="ModalBase_footer custom-footer" style={{ padding: '16px 24px' }}>
+          <div
+            className="ModalBase_footer custom-footer"
+            style={{ padding: '16px 24px', borderTop: '1px solid #E5E7EB' }}
+          >
             {customFooter}
           </div>
         ) : (
           <div
             className="ModalBase_footer flex items-center justify-end gap-3 border-t"
-            style={{ padding: '16px 24px', fontFamily: 'Source Sans 3, sans-serif' }}
+            style={{
+              padding: '16px 24px',
+              fontFamily: 'Source Sans 3, sans-serif',
+              borderTop: '1px solid #E5E7EB',
+            }}
           >
             {!hideSecondary && (
               <Button onClick={onClose} style={{ height: 32, minHeight: 32, paddingInline: 16, fontSize: 14 }}>
