@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Button } from './ui/button';
-import { X } from 'lucide-react';
+import { CloseOutlined } from '@ant-design/icons';
 import { cn } from './ui/utils';
 
 interface PopoverBaseProps {
@@ -53,7 +53,7 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
             onClick={onClose}
             className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-transparent flex items-center justify-center"
           >
-            <X size={18} strokeWidth={1.75} />
+            <CloseOutlined style={{ fontSize: 18 }} />
           </Button>
         )}
       </div>
