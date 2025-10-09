@@ -11,6 +11,7 @@ const { Text } = Typography;
 export interface TransferItem {
   id: string;
   name: string;
+  description?: string;
 }
 
 export interface TransferColumnProps {
@@ -126,12 +127,19 @@ function TransferColumn({
             items.map((item) => (
               <label
                 key={item.id}
-                className="flex items-center gap-2"
-                style={{ padding: '4px 16px', cursor: 'pointer', fontFamily: 'Source Sans 3, sans-serif' }}
+                className="flex items-start gap-2"
+                style={{ padding: '8px 16px', cursor: 'pointer', fontFamily: 'Source Sans 3, sans-serif' }}
                 onClick={() => onItemClick(item)}
               >
-                <Checkbox checked={itemCheckboxChecked} style={{ pointerEvents: 'none' }} />
-                <Text style={{ fontSize: 14 }}>{item.name}</Text>
+                <Checkbox checked={itemCheckboxChecked} style={{ pointerEvents: 'none', marginTop: 2 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Text style={{ fontSize: 14, lineHeight: '20px' }}>{item.name}</Text>
+                  {item.description && (
+                    <Text type="secondary" style={{ fontSize: 12, lineHeight: '18px' }}>
+                      {item.description}
+                    </Text>
+                  )}
+                </div>
               </label>
             ))
           )}
