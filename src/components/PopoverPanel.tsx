@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from './ui/button';
 import { X } from 'lucide-react';
+import { cn } from './ui/utils';
 
 interface PopoverBaseProps {
   children: ReactNode;
@@ -27,7 +28,7 @@ interface PopoverFooterProps {
 
 function Base({ children, className = '' }: PopoverBaseProps) {
   return (
-    <div className={`flex flex-col ${className}`} style={{ fontFamily: "'Source Sans 3', sans-serif" }}>
+    <div className={cn('flex flex-col bg-white', className)} style={{ fontFamily: "'Source Sans 3', sans-serif" }}>
       {children}
     </div>
   );
@@ -39,7 +40,7 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
   }
 
   return (
-    <div className={`flex items-center justify-between px-4 py-4 border-b border-gray-200 ${className}`}>
+    <div className={cn('flex items-center justify-between px-4 py-4 border-b border-gray-200', className)}>
       <div className="flex items-center gap-2">
         {title && <h3 className="text-[16px] font-semibold text-gray-900 leading-6">{title}</h3>}
       </div>
@@ -50,7 +51,7 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-9 w-9 text-gray-400 hover:text-gray-600 hover:bg-transparent"
+            className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-transparent"
           >
             <X className="h-[18px] w-[18px]" />
           </Button>
@@ -61,15 +62,11 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
 }
 
 function Content({ children, className = '' }: PopoverContentProps) {
-  return <div className={className}>{children}</div>;
+  return <div className={cn('px-4 py-4', className)}>{children}</div>;
 }
 
 function Footer({ children, className = '' }: PopoverFooterProps) {
-  return (
-    <div className={`border-t border-gray-200 ${className}`}>
-      {children}
-    </div>
-  );
+  return <div className={cn('border-t border-gray-200 px-4 py-4', className)}>{children}</div>;
 }
 
 export const PopoverBase = Object.assign(Base, {

@@ -108,10 +108,15 @@ export function EtiquetasSelectorInput({
             <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
           </div>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
+        <PopoverContent
+          className="w-full"
+          align="start"
+          style={{ padding: 0 }}
+          innerStyle={{ padding: 0 }}
+        >
           <PopoverBase>
             <PopoverBase.Header title="Etiquetas de unidades" onClose={() => setIsOpen(false)} />
-            <PopoverBase.Content className="p-4">
+            <PopoverBase.Content>
               {/* Search */}
               <div className="flex items-center gap-2 mb-4">
                 <div className="relative flex-1">

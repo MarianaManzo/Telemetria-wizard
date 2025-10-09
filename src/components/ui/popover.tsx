@@ -25,6 +25,10 @@ type PopoverContextValue = {
   setOverlayClassName: (value?: string) => void;
   overlayStyle?: React.CSSProperties;
   setOverlayStyle: (value?: React.CSSProperties) => void;
+  overlayInnerClassName?: string;
+  setOverlayInnerClassName: (value?: string) => void;
+  overlayInnerStyle?: React.CSSProperties;
+  setOverlayInnerStyle: (value?: React.CSSProperties) => void;
 };
 
 const PopoverContext = createContext<PopoverContextValue | null>(null);
@@ -49,6 +53,8 @@ export function Popover({ open, defaultOpen, onOpenChange, children }: PopoverPr
   const [placement, setPlacement] = useState<AntdPopoverProps["placement"]>("bottom");
   const [overlayClassName, setOverlayClassName] = useState<string | undefined>();
   const [overlayStyle, setOverlayStyle] = useState<CSSProperties | undefined>();
+  const [overlayInnerClassName, setOverlayInnerClassName] = useState<string | undefined>();
+  const [overlayInnerStyle, setOverlayInnerStyle] = useState<CSSProperties | undefined>();
 
   const isControlled = open !== undefined;
   const actualOpen = isControlled ? open : internalOpen;
@@ -75,8 +81,21 @@ export function Popover({ open, defaultOpen, onOpenChange, children }: PopoverPr
       setOverlayClassName,
       overlayStyle,
       setOverlayStyle,
+      overlayInnerClassName,
+      setOverlayInnerClassName,
+      overlayInnerStyle,
+      setOverlayInnerStyle,
     }),
-    [actualOpen, setOpen, content, placement, overlayClassName, overlayStyle],
+    [
+      actualOpen,
+      setOpen,
+      content,
+      placement,
+      overlayClassName,
+      overlayStyle,
+      overlayInnerClassName,
+      overlayInnerStyle,
+    ],
   );
 
   return <PopoverContext.Provider value={contextValue}>{children}</PopoverContext.Provider>;
@@ -102,6 +121,8 @@ export function PopoverTrigger({ children, asChild = false, ...props }: PopoverT
       placement={ctx.placement}
       overlayClassName={ctx.overlayClassName}
       overlayStyle={ctx.overlayStyle}
+      overlayInnerStyle={ctx.overlayInnerStyle}
+      overlayInnerClassName={ctx.overlayInnerClassName}
       {...props}
     >
       {triggerNode}
@@ -113,9 +134,11 @@ type PopoverContentProps = PropsWithChildren<{
   className?: string;
   align?: "start" | "center" | "end";
   style?: CSSProperties;
+  innerClassName?: string;
+  innerStyle?: CSSProperties;
 }>;
 
-export function PopoverContent({ className, align = "center", style, children }: PopoverContentProps) {
+export function PopoverContent({ className, align = "center", style, innerClassName, innerStyle, children }: PopoverContentProps) {
   const ctx = usePopoverContext("PopoverContent");
 
   useEffect(() => {
@@ -127,12 +150,16 @@ export function PopoverContent({ className, align = "center", style, children }:
     ctx.setPlacement(mapAlignToPlacement(align));
     ctx.setOverlayClassName(className);
     ctx.setOverlayStyle(style);
+    ctx.setOverlayInnerClassName(innerClassName);
+    ctx.setOverlayInnerStyle(innerStyle);
     return () => {
       ctx.setContent(null);
       ctx.setOverlayClassName(undefined);
       ctx.setOverlayStyle(undefined);
+      ctx.setOverlayInnerClassName(undefined);
+      ctx.setOverlayInnerStyle(undefined);
     };
-  }, [ctx, children, className, align, style]);
+  }, [ctx, children, className, align, style, innerClassName, innerStyle]);
 
   return null;
 }
