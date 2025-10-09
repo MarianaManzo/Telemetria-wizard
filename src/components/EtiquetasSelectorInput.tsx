@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { ChevronDown, Search, X } from "lucide-react"
-import { PopoverPanel } from "./PopoverPanel"
+import { PopoverBase } from "./PopoverPanel"
 
 interface TagData {
   id: string
@@ -109,83 +109,86 @@ export function EtiquetasSelectorInput({
           </div>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
-          <PopoverPanel title="Etiquetas de unidades" onClose={() => setIsOpen(false)}>
-            {/* Search */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar etiquetas..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-9"
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  onSelectionChange([])
-                  setSearchTerm("")
-                }}
-                className="text-[12px] text-blue-600 hover:text-blue-800 h-9 px-3 whitespace-nowrap"
-                disabled={selectedTags.length === 0}
-              >
-                Limpiar
-              </Button>
-            </div>
-
-            {/* Items List */}
-            <div className="max-h-64 overflow-y-auto">
-              {filteredTags.length === 0 ? (
-                <div className="flex items-center justify-center h-20 text-[14px] text-gray-500">
-                  {searchTerm ? "No se encontraron etiquetas" : "No hay etiquetas disponibles"}
+          <PopoverBase>
+            <PopoverBase.Header title="Etiquetas de unidades" onClose={() => setIsOpen(false)} />
+            <PopoverBase.Content className="p-4">
+              {/* Search */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="Buscar etiquetas..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-9"
+                  />
                 </div>
-              ) : (
-                <div className="space-y-1">
-                  {filteredTags.map((tag) => {
-                    const isSelected = selectedTags.some(selected => selected.id === tag.id)
-                    return (
-                      <div
-                        key={tag.id}
-                        className={`flex items-center justify-between py-0.5 px-3 rounded cursor-pointer transition-colors ${
-                          isSelected 
-                            ? 'bg-blue-50 border border-blue-200' 
-                            : 'hover:bg-gray-50 border border-transparent'
-                        }`}
-                        onClick={() => {
-                          if (isSelected) {
-                            onSelectionChange(selectedTags.filter(selected => selected.id !== tag.id))
-                          } else {
-                            onSelectionChange([...selectedTags, tag])
-                          }
-                        }}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div 
-                            className="w-3 h-3 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: tag.color }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-[14px] truncate ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                              {tag.name}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    onSelectionChange([])
+                    setSearchTerm("")
+                  }}
+                  className="text-[12px] text-blue-600 hover:text-blue-800 h-9 px-3 whitespace-nowrap"
+                  disabled={selectedTags.length === 0}
+                >
+                  Limpiar
+                </Button>
+              </div>
+
+              {/* Items List */}
+              <div className="max-h-64 overflow-y-auto">
+                {filteredTags.length === 0 ? (
+                  <div className="flex items-center justify-center h-20 text-[14px] text-gray-500">
+                    {searchTerm ? "No se encontraron etiquetas" : "No hay etiquetas disponibles"}
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {filteredTags.map((tag) => {
+                      const isSelected = selectedTags.some(selected => selected.id === tag.id)
+                      return (
+                        <div
+                          key={tag.id}
+                          className={`flex items-center justify-between py-0.5 px-3 rounded cursor-pointer transition-colors ${
+                            isSelected 
+                              ? 'bg-blue-50 border border-blue-200' 
+                              : 'hover:bg-gray-50 border border-transparent'
+                          }`}
+                          onClick={() => {
+                            if (isSelected) {
+                              onSelectionChange(selectedTags.filter(selected => selected.id !== tag.id))
+                            } else {
+                              onSelectionChange([...selectedTags, tag])
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div 
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: tag.color }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-[14px] truncate ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+                                {tag.name}
+                              </div>
                             </div>
                           </div>
+                          {isSelected && (
+                            <div className="ml-2 flex-shrink-0">
+                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                        {isSelected && (
-                          <div className="ml-2 flex-shrink-0">
-                            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </PopoverPanel>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </PopoverBase.Content>
+          </PopoverBase>
         </PopoverContent>
       </Popover>
     </div>
