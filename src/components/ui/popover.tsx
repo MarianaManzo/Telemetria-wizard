@@ -148,7 +148,7 @@ export function PopoverContent({ className, align = "center", style, innerClassN
       </div>,
     );
     ctx.setPlacement(mapAlignToPlacement(align));
-    ctx.setOverlayClassName(className);
+    ctx.setOverlayClassName(cn('nm-popover-base', className));
     ctx.setOverlayStyle(style);
     ctx.setOverlayInnerClassName(innerClassName);
     ctx.setOverlayInnerStyle(innerStyle);

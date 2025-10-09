@@ -4664,3 +4664,8 @@ input[type="radio"]:focus {
 .bg-background, .bg-white { background-color: var(--color-bg-base); }
 .text-foreground { color: var(--color-text-base); }
 .text-muted-foreground { color: var(--color-gray-600); }
+
+.nm-popover-base .ant-popover-inner,
+.nm-popover-base .ant-popover-inner-content {
+  padding: 0 !important;
+}
