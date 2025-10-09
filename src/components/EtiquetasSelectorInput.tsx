@@ -3,6 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { ChevronDown, Search, X } from "lucide-react"
+import { PopoverPanel } from "./PopoverPanel"
 
 interface TagData {
   id: string
@@ -108,27 +109,14 @@ export function EtiquetasSelectorInput({
           </div>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
-          <div className="flex flex-col" style={{ fontFamily: "'Source Sans 3', sans-serif" }}>
-            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
-              <h3 className="text-[16px] font-semibold text-gray-900 leading-6">Etiquetas de unidades</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(false)}
-                className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-transparent"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="p-4">
-              {/* Search */}
-              <div className="flex items-center gap-2 mb-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar etiquetas..."
-                    value={searchTerm}
+          <PopoverPanel title="Etiquetas de unidades" onClose={() => setIsOpen(false)}>
+            {/* Search */}
+            <div className="flex items-center gap-2 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Buscar etiquetas..."
+                  value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-9"
                 />
@@ -197,8 +185,7 @@ export function EtiquetasSelectorInput({
                 </div>
               )}
             </div>
-            </div>
-          </div>
+          </PopoverPanel>
         </PopoverContent>
       </Popover>
     </div>
