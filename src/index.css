@@ -559,6 +559,33 @@ body :is(button, input, optgroup, select, textarea),
   font-size: 14px;
 }
 
+.severity-select .ant-select-selector {
+  display: flex !important;
+  align-items: center !important;
+  padding-block: 0 !important;
+}
+
+.severity-select .ant-select-selection-item,
+.severity-select .ant-select-selection-placeholder {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  height: 100% !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+}
+
+.severity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 10px;
+  border-radius: 8px;
+  border-width: 1px;
+  border-style: solid;
+  box-sizing: border-box;
+}
+
 body :is(input:not([type='checkbox']):not([type='radio']),
   select,
   .ant-input,

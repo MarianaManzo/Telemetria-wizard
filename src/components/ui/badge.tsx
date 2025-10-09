@@ -20,7 +20,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   ({ variant = "default", className, ...props }, ref) => {
     const color = props.color ?? variantToColor[variant];
 
-    return <Tag ref={ref} color={color} className={cn(className)} {...props} />;
+    return <Tag ref={ref} color={color} className={cn('inline-flex items-center gap-1', className)} {...props} />;
   },
 );
 

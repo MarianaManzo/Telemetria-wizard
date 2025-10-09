@@ -27,6 +27,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collap
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
+import type { LucideIcon } from 'lucide-react'
+
 import { 
   ArrowLeft, 
   X, 
@@ -261,31 +263,94 @@ const telemetrySensors = [...systemTelemetrySensors, ...customTelemetrySensors]
 
 // Severity configuration with colors
 const severityConfig = {
-  high: { 
-    label: 'Alta', 
+  high: {
+    label: 'Alta',
     bgColor: 'bg-red-100',
     textColor: 'text-red-700',
-    borderColor: 'border-red-200'
+    borderColor: 'border-red-200',
   },
-  medium: { 
-    label: 'Media', 
+  medium: {
+    label: 'Media',
     bgColor: 'bg-orange-100',
     textColor: 'text-orange-700',
-    borderColor: 'border-orange-200'
+    borderColor: 'border-orange-200',
   },
-  low: { 
-    label: 'Baja', 
+  low: {
+    label: 'Baja',
     bgColor: 'bg-blue-100',
     textColor: 'text-blue-700',
-    borderColor: 'border-blue-200'
+    borderColor: 'border-blue-200',
   },
-  informative: { 
-    label: 'Informativo', 
+  informative: {
+    label: 'Informativo',
     bgColor: 'bg-cyan-100',
     textColor: 'text-cyan-700',
-    borderColor: 'border-cyan-200'
-  }
-}
+    borderColor: 'border-cyan-200',
+  },
+} as const
+
+const eventIconOptions = [
+  { id: 'info', icon: Info },
+  { id: 'warning', icon: AlertTriangle },
+  { id: 'alert', icon: AlertCircle },
+  { id: 'critical', icon: AlertOctagon },
+  { id: 'thermometer', icon: Thermometer },
+  { id: 'zap', icon: Zap },
+  { id: 'fuel', icon: Fuel },
+  { id: 'shield', icon: Shield },
+  { id: 'lock', icon: Lock },
+  { id: 'unlock', icon: Unlock },
+  { id: 'key', icon: Key },
+  { id: 'eye', icon: Eye },
+  { id: 'eyeoff', icon: EyeOff },
+  { id: 'signal', icon: Signal },
+  { id: 'wifi', icon: Wifi },
+  { id: 'battery', icon: Battery },
+  { id: 'batterylow', icon: BatteryLow },
+  { id: 'navigation', icon: Navigation },
+  { id: 'target', icon: Target },
+  { id: 'activity', icon: Activity },
+  { id: 'radio', icon: Radio },
+  { id: 'satellite', icon: Satellite },
+  { id: 'power', icon: Power },
+  { id: 'smartphone', icon: Smartphone },
+  { id: 'monitor', icon: Monitor },
+  { id: 'car', icon: Car },
+  { id: 'plane', icon: Plane },
+  { id: 'ship', icon: Ship },
+  { id: 'train', icon: Train },
+  { id: 'bike', icon: Bike },
+  { id: 'bus', icon: Bus },
+  { id: 'home', icon: Home },
+  { id: 'building', icon: Building },
+  { id: 'factory', icon: Factory },
+  { id: 'wrench', icon: Wrench },
+  { id: 'cog', icon: Cog },
+  { id: 'database', icon: Database },
+  { id: 'harddrive', icon: HardDrive },
+  { id: 'cpu', icon: Cpu },
+  { id: 'memorystick', icon: MemoryStick },
+  { id: 'router', icon: Router },
+  { id: 'globe', icon: Globe },
+  { id: 'cloud', icon: Cloud },
+  { id: 'sun', icon: Sun },
+  { id: 'moon', icon: Moon },
+  { id: 'star', icon: Star },
+  { id: 'heart', icon: Heart },
+  { id: 'checkcircle', icon: CheckCircle },
+  { id: 'xsquare', icon: XSquare },
+  { id: 'triangle', icon: Triangle },
+  { id: 'square', icon: Square },
+  { id: 'circle', icon: Circle },
+  { id: 'diamond', icon: Diamond },
+  { id: 'hexagon', icon: Hexagon },
+  { id: 'pentagon', icon: Pentagon },
+]
+
+const eventIconMap = eventIconOptions.reduce<Record<string, LucideIcon>>((acc, option) => {
+  acc[option.id] = option.icon
+  return acc
+}, {})
 
 const operatorOptions = [
   { value: 'eq', label: 'es igual a' },
@@ -420,7 +485,7 @@ function DraggableConditionInGroup({
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'operator', value)}
             disabled={!condition.sensor}
           >
-            <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+            <SelectTrigger className="w-full flex items-center justify-start px-1" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
               <SelectValue placeholder="Seleccionar operador" />
             </SelectTrigger>
             <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -443,7 +508,7 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectTrigger className="w-full flex items-center justify-start px-1" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -987,6 +1052,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [instructions, setInstructions] = useState(rule?.eventSettings?.instructions || '')
   const [assignResponsible, setAssignResponsible] = useState(!!rule?.eventSettings?.responsible)
   const [eventIcon, setEventIcon] = useState(rule?.eventSettings?.icon || 'info')
+  const EventIconComponent = eventIcon ? eventIconMap[eventIcon] : undefined
   const [eventSeverity, setEventSeverity] = useState(rule?.eventSettings?.severity || 'low')
   const [eventTags, setEventTags] = useState<Array<{id: string, name: string, color: string}>>(
     rule?.eventSettings?.tags ? rule.eventSettings.tags.map((tag: string) => ({ 
@@ -2684,126 +2750,19 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button variant="outline" className="w-fit justify-start">
-                              {eventIcon ? (
-                                <div className="flex items-center gap-2">
-                                  {eventIcon === 'info' && <Info className="h-4 w-4" />}
-                                  {eventIcon === 'warning' && <AlertTriangle className="h-4 w-4" />}
-                                  {eventIcon === 'alert' && <AlertCircle className="h-4 w-4" />}
-                                  {eventIcon === 'critical' && <AlertOctagon className="h-4 w-4" />}
-                                  {eventIcon === 'thermometer' && <Thermometer className="h-4 w-4" />}
-                                  {eventIcon === 'zap' && <Zap className="h-4 w-4" />}
-                                  {eventIcon === 'fuel' && <Fuel className="h-4 w-4" />}
-                                  {eventIcon === 'shield' && <Shield className="h-4 w-4" />}
-                                  {eventIcon === 'lock' && <Lock className="h-4 w-4" />}
-                                  {eventIcon === 'unlock' && <Unlock className="h-4 w-4" />}
-                                  {eventIcon === 'key' && <Key className="h-4 w-4" />}
-                                  {eventIcon === 'eye' && <Eye className="h-4 w-4" />}
-                                  {eventIcon === 'eyeoff' && <EyeOff className="h-4 w-4" />}
-                                  {eventIcon === 'signal' && <Signal className="h-4 w-4" />}
-                                  {eventIcon === 'wifi' && <Wifi className="h-4 w-4" />}
-                                  {eventIcon === 'battery' && <Battery className="h-4 w-4" />}
-                                  {eventIcon === 'batterylow' && <BatteryLow className="h-4 w-4" />}
-                                  {eventIcon === 'navigation' && <Navigation className="h-4 w-4" />}
-                                  {eventIcon === 'target' && <Target className="h-4 w-4" />}
-                                  {eventIcon === 'activity' && <Activity className="h-4 w-4" />}
-                                  {eventIcon === 'radio' && <Radio className="h-4 w-4" />}
-                                  {eventIcon === 'satellite' && <Satellite className="h-4 w-4" />}
-                                  {eventIcon === 'power' && <Power className="h-4 w-4" />}
-                                  {eventIcon === 'smartphone' && <Smartphone className="h-4 w-4" />}
-                                  {eventIcon === 'monitor' && <Monitor className="h-4 w-4" />}
-                                  {eventIcon === 'car' && <Car className="h-4 w-4" />}
-                                  {eventIcon === 'plane' && <Plane className="h-4 w-4" />}
-                                  {eventIcon === 'ship' && <Ship className="h-4 w-4" />}
-                                  {eventIcon === 'train' && <Train className="h-4 w-4" />}
-                                  {eventIcon === 'bike' && <Bike className="h-4 w-4" />}
-                                  {eventIcon === 'bus' && <Bus className="h-4 w-4" />}
-                                  {eventIcon === 'home' && <Home className="h-4 w-4" />}
-                                  {eventIcon === 'building' && <Building className="h-4 w-4" />}
-                                  {eventIcon === 'factory' && <Factory className="h-4 w-4" />}
-                                  {eventIcon === 'wrench' && <Wrench className="h-4 w-4" />}
-                                  {eventIcon === 'cog' && <Cog className="h-4 w-4" />}
-                                  {eventIcon === 'database' && <Database className="h-4 w-4" />}
-                                  {eventIcon === 'harddrive' && <HardDrive className="h-4 w-4" />}
-                                  {eventIcon === 'cpu' && <Cpu className="h-4 w-4" />}
-                                  {eventIcon === 'memorystick' && <MemoryStick className="h-4 w-4" />}
-                                  {eventIcon === 'router' && <Router className="h-4 w-4" />}
-                                  {eventIcon === 'globe' && <Globe className="h-4 w-4" />}
-                                  {eventIcon === 'cloud' && <Cloud className="h-4 w-4" />}
-                                  {eventIcon === 'sun' && <Sun className="h-4 w-4" />}
-                                  {eventIcon === 'moon' && <Moon className="h-4 w-4" />}
-                                  {eventIcon === 'star' && <Star className="h-4 w-4" />}
-                                  {eventIcon === 'heart' && <Heart className="h-4 w-4" />}
-                                  {eventIcon === 'checkcircle' && <CheckCircle className="h-4 w-4" />}
-                                  {eventIcon === 'xsquare' && <XSquare className="h-4 w-4" />}
-                                  {eventIcon === 'triangle' && <Triangle className="h-4 w-4" />}
-                                  {eventIcon === 'square' && <Square className="h-4 w-4" />}
-                                  {eventIcon === 'circle' && <Circle className="h-4 w-4" />}
-                                  {eventIcon === 'diamond' && <Diamond className="h-4 w-4" />}
-                                  {eventIcon === 'hexagon' && <Hexagon className="h-4 w-4" />}
-                                  {eventIcon === 'pentagon' && <Pentagon className="h-4 w-4" />}
-
-                                </div>
-                              ) : (
-                                <span>Seleccionar icono</span>
-                              )}
+                              <div className="flex items-center gap-2">
+                                {EventIconComponent ? (
+                                  <EventIconComponent className="h-4 w-4" />
+                                ) : (
+                                  <span>Seleccionar icono</span>
+                                )}
+                              </div>
                               <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-96 p-4" align="start">
                             <div className="grid grid-cols-10 gap-2">
-                              {[
-                                { id: 'info', icon: Info },
-                                { id: 'warning', icon: AlertTriangle },
-                                { id: 'alert', icon: AlertCircle },
-                                { id: 'critical', icon: AlertOctagon },
-                                { id: 'thermometer', icon: Thermometer },
-                                { id: 'zap', icon: Zap },
-                                { id: 'fuel', icon: Fuel },
-                                { id: 'shield', icon: Shield },
-                                { id: 'lock', icon: Lock },
-                                { id: 'unlock', icon: Unlock },
-                                { id: 'key', icon: Key },
-                                { id: 'eye', icon: Eye },
-                                { id: 'eyeoff', icon: EyeOff },
-                                { id: 'signal', icon: Signal },
-                                { id: 'wifi', icon: Wifi },
-                                { id: 'battery', icon: Battery },
-                                { id: 'batterylow', icon: BatteryLow },
-                                { id: 'navigation', icon: Navigation },
-                                { id: 'target', icon: Target },
-                                { id: 'activity', icon: Activity },
-                                { id: 'radio', icon: Radio },
-                                { id: 'satellite', icon: Satellite },
-                                { id: 'power', icon: Power },
-                                { id: 'smartphone', icon: Smartphone },
-                                { id: 'monitor', icon: Monitor },
-                                { id: 'car', icon: Car },
-                                { id: 'plane', icon: Plane },
-                                { id: 'ship', icon: Ship },
-                                { id: 'train', icon: Train },
-                                { id: 'bike', icon: Bike },
-                                { id: 'bus', icon: Bus },
-                                { id: 'home', icon: Home },
-                                { id: 'building', icon: Building },
-                                { id: 'factory', icon: Factory },
-                                { id: 'wrench', icon: Wrench },
-                                { id: 'cog', icon: Cog },
-                                { id: 'database', icon: Database },
-                                { id: 'harddrive', icon: HardDrive },
-                                { id: 'cpu', icon: Cpu },
-                                { id: 'memorystick', icon: MemoryStick },
-                                { id: 'router', icon: Router },
-                                { id: 'globe', icon: Globe },
-                                { id: 'cloud', icon: Cloud },
-                                { id: 'sun', icon: Sun },
-                                { id: 'moon', icon: Moon },
-                                { id: 'star', icon: Star },
-                                { id: 'heart', icon: Heart },
-                                { id: 'checkcircle', icon: CheckCircle },
-                                { id: 'xsquare', icon: XSquare },
-                                { id: 'triangle', icon: Triangle },
-                                { id: 'square', icon: Square }
-                              ].map(({ id, icon: IconComponent }) => (
+                              {eventIconOptions.map(({ id, icon: IconOption }) => (
                                 <button
                                   key={id}
                                   type="button"
@@ -2814,77 +2773,21 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                       : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
                                   }`}
                                 >
-                                  <IconComponent className="h-4 w-4" />
+                                  <IconOption className="h-4 w-4" />
                                 </button>
                               ))}
                             </div>
                           </PopoverContent>
                         </Popover>
                         <Select value={eventSeverity} onValueChange={setEventSeverity}>
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full severity-select px-2">
                             <SelectValue placeholder="Seleccionar severidad">
                               {eventSeverity && severityConfig[eventSeverity] && (
-                                <div className="flex items-center gap-2">
-                                  <Badge 
-                                    className={`${severityConfig[eventSeverity].bgColor} ${severityConfig[eventSeverity].textColor} ${severityConfig[eventSeverity].borderColor} border text-[12px] px-2 py-1 flex items-center gap-1`}
-                                  >
-                                    {eventIcon && (
-                                      <>
-                                        {eventIcon === 'info' && <Info className="h-3 w-3" />}
-                                        {eventIcon === 'warning' && <AlertTriangle className="h-3 w-3" />}
-                                        {eventIcon === 'alert' && <AlertCircle className="h-3 w-3" />}
-                                        {eventIcon === 'critical' && <AlertOctagon className="h-3 w-3" />}
-                                        {eventIcon === 'thermometer' && <Thermometer className="h-3 w-3" />}
-                                        {eventIcon === 'zap' && <Zap className="h-3 w-3" />}
-                                        {eventIcon === 'fuel' && <Fuel className="h-3 w-3" />}
-                                        {eventIcon === 'shield' && <Shield className="h-3 w-3" />}
-                                        {eventIcon === 'lock' && <Lock className="h-3 w-3" />}
-                                        {eventIcon === 'unlock' && <Unlock className="h-3 w-3" />}
-                                        {eventIcon === 'key' && <Key className="h-3 w-3" />}
-                                        {eventIcon === 'eye' && <Eye className="h-3 w-3" />}
-                                        {eventIcon === 'eyeoff' && <EyeOff className="h-3 w-3" />}
-                                        {eventIcon === 'signal' && <Signal className="h-3 w-3" />}
-                                        {eventIcon === 'wifi' && <Wifi className="h-3 w-3" />}
-                                        {eventIcon === 'battery' && <Battery className="h-3 w-3" />}
-                                        {eventIcon === 'batterylow' && <BatteryLow className="h-3 w-3" />}
-                                        {eventIcon === 'navigation' && <Navigation className="h-3 w-3" />}
-                                        {eventIcon === 'target' && <Target className="h-3 w-3" />}
-                                        {eventIcon === 'activity' && <Activity className="h-3 w-3" />}
-                                        {eventIcon === 'radio' && <Radio className="h-3 w-3" />}
-                                        {eventIcon === 'satellite' && <Satellite className="h-3 w-3" />}
-                                        {eventIcon === 'power' && <Power className="h-3 w-3" />}
-                                        {eventIcon === 'smartphone' && <Smartphone className="h-3 w-3" />}
-                                        {eventIcon === 'monitor' && <Monitor className="h-3 w-3" />}
-                                        {eventIcon === 'car' && <Car className="h-3 w-3" />}
-                                        {eventIcon === 'plane' && <Plane className="h-3 w-3" />}
-                                        {eventIcon === 'ship' && <Ship className="h-3 w-3" />}
-                                        {eventIcon === 'train' && <Train className="h-3 w-3" />}
-                                        {eventIcon === 'bike' && <Bike className="h-3 w-3" />}
-                                        {eventIcon === 'bus' && <Bus className="h-3 w-3" />}
-                                        {eventIcon === 'home' && <Home className="h-3 w-3" />}
-                                        {eventIcon === 'building' && <Building className="h-3 w-3" />}
-                                        {eventIcon === 'factory' && <Factory className="h-3 w-3" />}
-                                        {eventIcon === 'wrench' && <Wrench className="h-3 w-3" />}
-                                        {eventIcon === 'cog' && <Cog className="h-3 w-3" />}
-                                        {eventIcon === 'database' && <Database className="h-3 w-3" />}
-                                        {eventIcon === 'harddrive' && <HardDrive className="h-3 w-3" />}
-                                        {eventIcon === 'cpu' && <Cpu className="h-3 w-3" />}
-                                        {eventIcon === 'memorystick' && <MemoryStick className="h-3 w-3" />}
-                                        {eventIcon === 'router' && <Router className="h-3 w-3" />}
-                                        {eventIcon === 'globe' && <Globe className="h-3 w-3" />}
-                                        {eventIcon === 'cloud' && <Cloud className="h-3 w-3" />}
-                                        {eventIcon === 'sun' && <Sun className="h-3 w-3" />}
-                                        {eventIcon === 'moon' && <Moon className="h-3 w-3" />}
-                                        {eventIcon === 'star' && <Star className="h-3 w-3" />}
-                                        {eventIcon === 'heart' && <Heart className="h-3 w-3" />}
-                                        {eventIcon === 'checkcircle' && <CheckCircle className="h-3 w-3" />}
-                                        {eventIcon === 'xsquare' && <XSquare className="h-3 w-3" />}
-                                        {eventIcon === 'triangle' && <Triangle className="h-3 w-3" />}
-                                        {eventIcon === 'square' && <Square className="h-3 w-3" />}
-                                      </>
-                                    )}
-                                    {severityConfig[eventSeverity].label}
-                                  </Badge>
+                                <div
+                                  className={`severity-chip ${severityConfig[eventSeverity].bgColor} ${severityConfig[eventSeverity].textColor} ${severityConfig[eventSeverity].borderColor}`}
+                                >
+                                  {EventIconComponent && <EventIconComponent className="h-4 w-4" />}
+                                  <span className="text-[14px] leading-none">{severityConfig[eventSeverity].label}</span>
                                 </div>
                               )}
                             </SelectValue>
@@ -2892,67 +2795,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           <SelectContent>
                             {['high', 'medium', 'low', 'informative'].map((severity) => (
                               <SelectItem key={severity} value={severity}>
-                                <div className="flex items-center gap-2 w-full">
-                                  <Badge 
-                                    className={`${severityConfig[severity].bgColor} ${severityConfig[severity].textColor} ${severityConfig[severity].borderColor} border text-[12px] px-2 py-1 flex items-center gap-1`}
-                                  >
-                                    {eventIcon && (
-                                      <>
-                                        {eventIcon === 'info' && <Info className="h-3 w-3" />}
-                                        {eventIcon === 'warning' && <AlertTriangle className="h-3 w-3" />}
-                                        {eventIcon === 'alert' && <AlertCircle className="h-3 w-3" />}
-                                        {eventIcon === 'critical' && <AlertOctagon className="h-3 w-3" />}
-                                        {eventIcon === 'thermometer' && <Thermometer className="h-3 w-3" />}
-                                        {eventIcon === 'zap' && <Zap className="h-3 w-3" />}
-                                        {eventIcon === 'fuel' && <Fuel className="h-3 w-3" />}
-                                        {eventIcon === 'shield' && <Shield className="h-3 w-3" />}
-                                        {eventIcon === 'lock' && <Lock className="h-3 w-3" />}
-                                        {eventIcon === 'unlock' && <Unlock className="h-3 w-3" />}
-                                        {eventIcon === 'key' && <Key className="h-3 w-3" />}
-                                        {eventIcon === 'eye' && <Eye className="h-3 w-3" />}
-                                        {eventIcon === 'eyeoff' && <EyeOff className="h-3 w-3" />}
-                                        {eventIcon === 'signal' && <Signal className="h-3 w-3" />}
-                                        {eventIcon === 'wifi' && <Wifi className="h-3 w-3" />}
-                                        {eventIcon === 'battery' && <Battery className="h-3 w-3" />}
-                                        {eventIcon === 'batterylow' && <BatteryLow className="h-3 w-3" />}
-                                        {eventIcon === 'navigation' && <Navigation className="h-3 w-3" />}
-                                        {eventIcon === 'target' && <Target className="h-3 w-3" />}
-                                        {eventIcon === 'activity' && <Activity className="h-3 w-3" />}
-                                        {eventIcon === 'radio' && <Radio className="h-3 w-3" />}
-                                        {eventIcon === 'satellite' && <Satellite className="h-3 w-3" />}
-                                        {eventIcon === 'power' && <Power className="h-3 w-3" />}
-                                        {eventIcon === 'smartphone' && <Smartphone className="h-3 w-3" />}
-                                        {eventIcon === 'monitor' && <Monitor className="h-3 w-3" />}
-                                        {eventIcon === 'car' && <Car className="h-3 w-3" />}
-                                        {eventIcon === 'plane' && <Plane className="h-3 w-3" />}
-                                        {eventIcon === 'ship' && <Ship className="h-3 w-3" />}
-                                        {eventIcon === 'train' && <Train className="h-3 w-3" />}
-                                        {eventIcon === 'bike' && <Bike className="h-3 w-3" />}
-                                        {eventIcon === 'bus' && <Bus className="h-3 w-3" />}
-                                        {eventIcon === 'home' && <Home className="h-3 w-3" />}
-                                        {eventIcon === 'building' && <Building className="h-3 w-3" />}
-                                        {eventIcon === 'factory' && <Factory className="h-3 w-3" />}
-                                        {eventIcon === 'wrench' && <Wrench className="h-3 w-3" />}
-                                        {eventIcon === 'cog' && <Cog className="h-3 w-3" />}
-                                        {eventIcon === 'database' && <Database className="h-3 w-3" />}
-                                        {eventIcon === 'harddrive' && <HardDrive className="h-3 w-3" />}
-                                        {eventIcon === 'cpu' && <Cpu className="h-3 w-3" />}
-                                        {eventIcon === 'memorystick' && <MemoryStick className="h-3 w-3" />}
-                                        {eventIcon === 'router' && <Router className="h-3 w-3" />}
-                                        {eventIcon === 'globe' && <Globe className="h-3 w-3" />}
-                                        {eventIcon === 'cloud' && <Cloud className="h-3 w-3" />}
-                                        {eventIcon === 'sun' && <Sun className="h-3 w-3" />}
-                                        {eventIcon === 'moon' && <Moon className="h-3 w-3" />}
-                                        {eventIcon === 'star' && <Star className="h-3 w-3" />}
-                                        {eventIcon === 'heart' && <Heart className="h-3 w-3" />}
-                                        {eventIcon === 'checkcircle' && <CheckCircle className="h-3 w-3" />}
-                                        {eventIcon === 'xsquare' && <XSquare className="h-3 w-3" />}
-                                        {eventIcon === 'triangle' && <Triangle className="h-3 w-3" />}
-                                        {eventIcon === 'square' && <Square className="h-3 w-3" />}
-                                      </>
-                                    )}
-                                    {severityConfig[severity].label}
-                                  </Badge>
+                                <div
+                                  className={`severity-chip ${severityConfig[severity].bgColor} ${severityConfig[severity].textColor} ${severityConfig[severity].borderColor}`}
+                                >
+                                  {EventIconComponent && <EventIconComponent className="h-4 w-4" />}
+                                  <span className="text-[14px] leading-none">{severityConfig[severity].label}</span>
                                 </div>
                               </SelectItem>
                             ))}
