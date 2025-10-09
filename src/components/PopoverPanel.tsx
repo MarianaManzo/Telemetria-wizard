@@ -51,9 +51,9 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-transparent"
+            className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-transparent flex items-center justify-center"
           >
-            <X className="h-[18px] w-[18px]" />
+            <X size={18} strokeWidth={1.75} />
           </Button>
         )}
       </div>
