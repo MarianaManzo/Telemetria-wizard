@@ -52,27 +52,12 @@
     },
     build: {
       target: 'esnext',
+  // Disable sourcemaps for production builds (do not expose source maps in public prod).
+  sourcemap: false,
       outDir: 'dist',
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) return undefined;
-
-            if (id.includes('antd')) return 'chunk-antd';
-            if (id.includes('@ant-design/icons')) return 'chunk-antd-icons';
-            if (id.includes('@radix-ui')) return 'chunk-radix-ui';
-            if (id.includes('recharts')) return 'chunk-recharts';
-            if (id.includes('react-dnd')) return 'chunk-react-dnd';
-            if (id.includes('lucide-react')) return 'chunk-lucide';
-            if (id.includes('embla-carousel-react')) return 'chunk-embla';
-            if (id.includes('cmdk')) return 'chunk-cmdk';
-
-            if (id.includes('react')) return 'chunk-react';
-
-            return 'chunk-vendor';
-          },
-        },
-      },
+      // Use Vite/Rollup default chunking to avoid manual split order issues.
+      // If needed we can reintroduce a conservative manualChunks configuration later.
+      rollupOptions: {},
     },
     server: {
       port: 3000,
