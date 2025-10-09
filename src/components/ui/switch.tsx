@@ -10,20 +10,13 @@ type SwitchProps = Omit<AntdSwitchProps, "onChange"> & {
 };
 
 export const Switch = forwardRef<SwitchRef, SwitchProps>(
-  ({ className, onCheckedChange, onChange, ...props }, ref) => {
+  ({ className, onChange, onCheckedChange, ...props }, ref) => {
     const handleChange: SwitchChangeEventHandler = (checked, event) => {
       onCheckedChange?.(checked);
       onChange?.(checked, event);
     };
 
-    return (
-      <AntdSwitch
-        ref={ref}
-        className={cn(className)}
-        onChange={handleChange}
-        {...props}
-      />
-    );
+    return <AntdSwitch ref={ref} className={cn(className)} onChange={handleChange} {...props} />;
   },
 );
 
