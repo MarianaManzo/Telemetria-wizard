@@ -4715,4 +4715,8 @@ input[type="radio"]:focus {
 .ant-select .ant-select-arrow {
   display: flex;
   align-items: center;
+  inset-inline-end: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
