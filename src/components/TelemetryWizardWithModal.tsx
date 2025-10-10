@@ -11,8 +11,7 @@ import { Checkbox } from "./ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group"
 import { Switch } from "./ui/switch"
 import { Textarea } from "./ui/textarea"
-import { VariableTextarea, VariableButton } from "./VariableTextarea"
-import { VariableInput } from "./VariableInput"
+import { VariableTextarea, VariableButton, type VariableTextareaHandle, type MessageVariableDescriptor } from "./VariableTextarea"
 import { NotificationExampleModal } from "./NotificationExampleModal"
 import { useNotifications } from "../contexts/NotificationContext"
 import { 
@@ -72,7 +71,6 @@ import {
   Power,
   Smartphone,
   Monitor,
-  MessageSquare,
   Car,
   Plane,
   Ship,
@@ -113,7 +111,6 @@ import { ZonasSelectorInput } from "./ZonasSelectorInput"
 import { GenericSelectorInput } from "./GenericSelectorInput"
 import { SearchableUserSelect } from "./SearchableUserSelect"
 import { SaveRuleModal } from "./SaveRuleModal"
-import { RecipientsSelector } from "./RecipientsSelector"
 import { ExitRuleConfirmationModal } from "./ExitRuleConfirmationModal"
 import { SensorSelectorWithSearch } from "./SensorSelectorWithSearch"
 import { initialTags } from "../constants/data"
@@ -260,6 +257,559 @@ const customTelemetrySensors = [
 
 // Combined sensors for backward compatibility
 const telemetrySensors = [...systemTelemetrySensors, ...customTelemetrySensors]
+
+type VariablePreviewValue = string | (() => string)
+
+type EventMessageVariable = MessageVariableDescriptor & {
+  preview: VariablePreviewValue
+  category: 'vehicle' | 'context' | 'sensor' | 'system'
+}
+
+const EVENT_MESSAGE_VARIABLES: EventMessageVariable[] = [
+  {
+    key: '{unidad}',
+    label: 'Unidad',
+    description: 'Nombre o identificador de la unidad que generó el evento',
+    preview: 'Unidad ABC-123',
+    category: 'vehicle',
+  },
+  {
+    key: '{chofer}',
+    label: 'Chofer',
+    description: 'Nombre del chofer asociado a la unidad',
+    preview: 'Juan Pérez',
+    category: 'vehicle',
+  },
+  {
+    key: '{conductor}',
+    label: 'Conductor',
+    description: 'Identificador del conductor (sensor o llave iButton)',
+    preview: 'Carlos Martínez',
+    category: 'vehicle',
+  },
+  {
+    key: '{patente}',
+    label: 'Patente',
+    description: 'Patente o matrícula de la unidad',
+    preview: 'ABC123',
+    category: 'vehicle',
+  },
+  {
+    key: '{modelo}',
+    label: 'Modelo',
+    description: 'Modelo del vehículo reportado en el evento',
+    preview: 'Ford Transit',
+    category: 'vehicle',
+  },
+  {
+    key: '{empresa}',
+    label: 'Empresa',
+    description: 'Empresa propietaria o asignada a la unidad',
+    preview: 'Numaris Logistics',
+    category: 'vehicle',
+  },
+  {
+    key: '{ubicacion_link}',
+    label: 'Ubicación con enlace',
+    description: 'Dirección con enlace a mapas donde sucedió el evento',
+    preview: 'Av. Corrientes 1234, Buenos Aires',
+    category: 'context',
+  },
+  {
+    key: '{direccion}',
+    label: 'Dirección',
+    description: 'Dirección textual del evento',
+    preview: 'Av. Corrientes 1234',
+    category: 'context',
+  },
+  {
+    key: '{ciudad}',
+    label: 'Ciudad',
+    description: 'Ciudad detectada para la ubicación del evento',
+    preview: 'Buenos Aires',
+    category: 'context',
+  },
+  {
+    key: '{zona}',
+    label: 'Zona',
+    description: 'Zona geográfica o geocerca involucrada',
+    preview: 'Zona Centro',
+    category: 'context',
+  },
+  {
+    key: '{fecha_hora}',
+    label: 'Fecha y hora',
+    description: 'Fecha y hora en la que se generó el evento',
+    preview: () => new Date().toLocaleString('es-AR'),
+    category: 'context',
+  },
+  {
+    key: '{fecha}',
+    label: 'Fecha',
+    description: 'Fecha formateada del evento',
+    preview: () => new Date().toLocaleDateString('es-AR'),
+    category: 'context',
+  },
+  {
+    key: '{hora}',
+    label: 'Hora',
+    description: 'Hora local del evento',
+    preview: () => new Date().toLocaleTimeString('es-AR'),
+    category: 'context',
+  },
+  {
+    key: '{timestamp}',
+    label: 'Timestamp',
+    description: 'Marca de tiempo en milisegundos',
+    preview: () => Date.now().toString(),
+    category: 'context',
+  },
+  {
+    key: '{velocidad}',
+    label: 'Velocidad',
+    description: 'Velocidad registrada por el sensor (km/h)',
+    preview: '85 km/h',
+    category: 'sensor',
+  },
+  {
+    key: '{temperatura}',
+    label: 'Temperatura',
+    description: 'Temperatura de motor o ambiente registrada',
+    preview: '25 °C',
+    category: 'sensor',
+  },
+  {
+    key: '{combustible}',
+    label: 'Combustible',
+    description: 'Nivel de combustible disponible',
+    preview: '75 %',
+    category: 'sensor',
+  },
+  {
+    key: '{rpm}',
+    label: 'RPM',
+    description: 'Revoluciones por minuto del motor',
+    preview: '2.450 RPM',
+    category: 'sensor',
+  },
+  {
+    key: '{voltaje}',
+    label: 'Voltaje',
+    description: 'Voltaje de la batería del vehículo',
+    preview: '12,4 V',
+    category: 'sensor',
+  },
+  {
+    key: '{bateria}',
+    label: 'Batería',
+    description: 'Nivel de batería del dispositivo',
+    preview: '89 %',
+    category: 'sensor',
+  },
+  {
+    key: '{senal_gsm}',
+    label: 'Señal GSM',
+    description: 'Potencia de la señal GSM reportada',
+    preview: '78 %',
+    category: 'sensor',
+  },
+  {
+    key: '{satelites}',
+    label: 'Satélites',
+    description: 'Cantidad de satélites utilizados en el fix',
+    preview: '12',
+    category: 'sensor',
+  },
+  {
+    key: '{odometro}',
+    label: 'Odómetro',
+    description: 'Kilometraje acumulado de la unidad',
+    preview: '125.340 km',
+    category: 'sensor',
+  },
+  {
+    key: '{latitud}',
+    label: 'Latitud',
+    description: 'Latitud donde se registró el evento',
+    preview: '-34.6037',
+    category: 'sensor',
+  },
+  {
+    key: '{longitud}',
+    label: 'Longitud',
+    description: 'Longitud donde se registró el evento',
+    preview: '-58.3816',
+    category: 'sensor',
+  },
+  {
+    key: '{distancia}',
+    label: 'Distancia relativa',
+    description: 'Distancia acumulada respecto de la condición configurada',
+    preview: '320 m',
+    category: 'sensor',
+  },
+  {
+    key: '{fecha_servidor}',
+    label: 'Fecha del servidor',
+    description: 'Fecha y hora registradas en el servidor',
+    preview: () => new Date().toLocaleString('es-AR'),
+    category: 'sensor',
+  },
+  {
+    key: '{fecha_dispositivo}',
+    label: 'Fecha del dispositivo',
+    description: 'Fecha y hora reportadas por el dispositivo',
+    preview: () => new Date().toLocaleString('es-AR'),
+    category: 'sensor',
+  },
+  {
+    key: '{ignicion}',
+    label: 'Ignición',
+    description: 'Estado de ignición del vehículo',
+    preview: 'Encendido',
+    category: 'sensor',
+  },
+  {
+    key: '{movimiento}',
+    label: 'Movimiento',
+    description: 'Estado de movimiento de la unidad',
+    preview: 'En movimiento',
+    category: 'sensor',
+  },
+  {
+    key: '{conexion}',
+    label: 'Conexión',
+    description: 'Estado de conexión del dispositivo',
+    preview: 'Activa',
+    category: 'sensor',
+  },
+  {
+    key: '{sensor_puerta}',
+    label: 'Sensor de puerta',
+    description: 'Estado del sensor de puerta configurado',
+    preview: 'Cerrada',
+    category: 'sensor',
+  },
+  {
+    key: '{sensor_carga}',
+    label: 'Sensor de carga',
+    description: 'Estado del sensor de carga o compuerta',
+    preview: 'Con carga',
+    category: 'sensor',
+  },
+  {
+    key: '{humedad}',
+    label: 'Humedad',
+    description: 'Nivel de humedad reportado por sensores ambientales',
+    preview: '68 %',
+    category: 'sensor',
+  },
+  {
+    key: '{aceleracion}',
+    label: 'Aceleración',
+    description: 'Aceleración instantánea detectada',
+    preview: '2,3 m/s²',
+    category: 'sensor',
+  },
+  {
+    key: '{frenado}',
+    label: 'Frenado',
+    description: 'Intensidad del frenado detectado',
+    preview: 'Suave',
+    category: 'sensor',
+  },
+  {
+    key: '{giro}',
+    label: 'Giro',
+    description: 'Dirección del giro detectado',
+    preview: 'Izquierda',
+    category: 'sensor',
+  },
+  {
+    key: '{inclinacion}',
+    label: 'Inclinación',
+    description: 'Ángulo de inclinación reportado',
+    preview: '5°',
+    category: 'sensor',
+  },
+  {
+    key: '{peso}',
+    label: 'Peso',
+    description: 'Peso total reportado por sensores de balanza',
+    preview: '2.840 kg',
+    category: 'sensor',
+  },
+  {
+    key: '{peso_carga}',
+    label: 'Peso de carga',
+    description: 'Peso específico de la carga detectada',
+    preview: '1.250 kg',
+    category: 'sensor',
+  },
+  {
+    key: '{altura}',
+    label: 'Altura',
+    description: 'Altura sobre el nivel del mar reportada',
+    preview: '156 m',
+    category: 'sensor',
+  },
+  {
+    key: '{toma_fuerza}',
+    label: 'Toma de fuerza',
+    description: 'Estado de la toma de fuerza del vehículo',
+    preview: 'Inactiva',
+    category: 'sensor',
+  },
+  {
+    key: '{eje_x}',
+    label: 'Eje X',
+    description: 'Lectura del eje X del acelerómetro',
+    preview: '1,2 g',
+    category: 'sensor',
+  },
+  {
+    key: '{panico}',
+    label: 'Botón de pánico',
+    description: 'Estado del botón de pánico',
+    preview: 'No activado',
+    category: 'sensor',
+  },
+  {
+    key: '{evento_id}',
+    label: 'ID de evento',
+    description: 'Identificador interno del evento generado',
+    preview: 'EVT-001',
+    category: 'system',
+  },
+  {
+    key: '{regla_nombre}',
+    label: 'Nombre de la regla',
+    description: 'Nombre de la regla que disparó el evento',
+    preview: 'Exceso de velocidad',
+    category: 'system',
+  },
+  {
+    key: '{severidad}',
+    label: 'Severidad',
+    description: 'Nivel de severidad configurado para la regla',
+    preview: 'Alta',
+    category: 'system',
+  },
+  {
+    key: '{duracion}',
+    label: 'Duración',
+    description: 'Duración que se cumplió para disparar el evento',
+    preview: '5 minutos',
+    category: 'system',
+  },
+  {
+    key: '{usuario}',
+    label: 'Usuario',
+    description: 'Usuario responsable asignado al evento',
+    preview: 'supervisor-flota',
+    category: 'system',
+  },
+  {
+    key: '{plataforma}',
+    label: 'Plataforma',
+    description: 'Nombre de la plataforma que envía la notificación',
+    preview: 'Numaris',
+    category: 'system',
+  },
+  {
+    key: '{version}',
+    label: 'Versión',
+    description: 'Versión del sistema o plantilla utilizada',
+    preview: 'v2.1',
+    category: 'system',
+  },
+  {
+    key: '{estado_motor}',
+    label: 'Estado del motor',
+    description: 'Estado operativo del motor',
+    preview: 'En funcionamiento',
+    category: 'sensor',
+  },
+  {
+    key: '{nivel_aceite}',
+    label: 'Nivel de aceite',
+    description: 'Nivel de aceite registrado por sensores',
+    preview: '85 %',
+    category: 'sensor',
+  },
+  {
+    key: '{presion}',
+    label: 'Presión',
+    description: 'Presión detectada por sensores hidráulicos o neumáticos',
+    preview: '32 PSI',
+    category: 'sensor',
+  },
+  {
+    key: '{evento}',
+    label: 'Nombre del evento',
+    description: 'Descripción corta del evento generado',
+    preview: 'Alerta de exceso de velocidad',
+    category: 'system',
+  },
+]
+
+const EVENT_MESSAGE_VARIABLES_MAP = new Map<string, EventMessageVariable>()
+EVENT_MESSAGE_VARIABLES.forEach((variable) => {
+  EVENT_MESSAGE_VARIABLES_MAP.set(variable.key, variable)
+})
+
+const SENSOR_TO_VARIABLE_KEY: Record<string, string> = {
+  speed: '{velocidad}',
+  fuel_level: '{combustible}',
+  temperature: '{temperatura}',
+  cargo_temp: '{temperatura}',
+  engine_temp: '{temperatura}',
+  battery: '{bateria}',
+  gsm_signal: '{senal_gsm}',
+  satellites_count: '{satelites}',
+  location: '{ubicacion_link}',
+  relative_distance: '{distancia}',
+  server_date: '{fecha_servidor}',
+  device_date: '{fecha_dispositivo}',
+  speed_limit: '{velocidad}',
+  odometer: '{odometro}',
+  latitude: '{latitud}',
+  longitude: '{longitud}',
+  power_takeoff: '{toma_fuerza}',
+  temperature_axis: '{temperatura}',
+  axis_x: '{eje_x}',
+  panic_button: '{panico}',
+  movement_status: '{movimiento}',
+  ignition: '{ignicion}',
+  connection_status: '{conexion}',
+  custom_fuel_sensor: '{combustible}',
+  custom_door_sensor: '{sensor_puerta}',
+  custom_cargo_weight: '{peso_carga}',
+  custom_driver_id: '{conductor}',
+}
+
+const CONTEXT_VARIABLE_PRIORITY = [
+  '{unidad}',
+  '{conductor}',
+  '{chofer}',
+  '{fecha_hora}',
+  '{ubicacion_link}',
+  '{zona}',
+]
+
+const VARIABLE_TOKEN_REGEX = /\{[^}]+\}/g
+
+const getUniqueVariablesInText = (text: string): string[] => {
+  if (!text) return []
+  const matches = text.match(VARIABLE_TOKEN_REGEX)
+  if (!matches) return []
+  const result: string[] = []
+  const seen = new Set<string>()
+  matches.forEach((match) => {
+    if (!seen.has(match)) {
+      seen.add(match)
+      result.push(match)
+    }
+  })
+  return result
+}
+
+interface SuggestionContext {
+  geographicZone: string
+  appliesTo: string
+  eventTiming: string
+}
+
+const buildSuggestedVariables = (
+  conditionGroups: RuleConditionGroup[],
+  eventMessage: string,
+  context: SuggestionContext
+): EventMessageVariable[] => {
+  const suggestions: EventMessageVariable[] = []
+  const seen = new Set<string>()
+
+  const pushVariable = (key: string) => {
+    const normalizedKey = key.startsWith('{') ? key : `{${key}}`
+    if (seen.has(normalizedKey)) return
+    const variable = EVENT_MESSAGE_VARIABLES_MAP.get(normalizedKey)
+    if (!variable) return
+    seen.add(normalizedKey)
+    suggestions.push(variable)
+  }
+
+  conditionGroups.forEach((group) => {
+    group.conditions.forEach((condition) => {
+      if (!condition.sensor) return
+      const variableKey = SENSOR_TO_VARIABLE_KEY[condition.sensor]
+      if (variableKey) {
+        pushVariable(variableKey)
+      }
+    })
+  })
+
+  const contextualKeys = [...CONTEXT_VARIABLE_PRIORITY]
+
+  if (context.geographicZone && context.geographicZone !== 'cualquier-lugar') {
+    contextualKeys.push('{zona}', '{direccion}')
+  }
+
+  if (context.appliesTo && context.appliesTo !== 'all-units') {
+    contextualKeys.push('{unidad}', '{conductor}', '{chofer}')
+  }
+
+  if (context.eventTiming && context.eventTiming !== 'cumplan-condiciones') {
+    contextualKeys.push('{duracion}', '{hora}')
+  }
+
+  contextualKeys.forEach(pushVariable)
+
+  getUniqueVariablesInText(eventMessage).forEach(pushVariable)
+
+  if (suggestions.length < 6) {
+    for (const variable of EVENT_MESSAGE_VARIABLES) {
+      if (suggestions.length >= 6) break
+      pushVariable(variable.key)
+    }
+  }
+
+  return suggestions.slice(0, 6)
+}
+
+const resolveVariablePreview = (key: string): string => {
+  const normalizedKey = key.startsWith('{') ? key : `{${key}}`
+  const variable = EVENT_MESSAGE_VARIABLES_MAP.get(normalizedKey)
+  if (!variable) {
+    return normalizedKey
+  }
+
+  const { preview } = variable
+  return typeof preview === 'function' ? preview() : preview
+}
+
+const SuggestedVariableDragIcon = () => (
+  <svg
+    width="12"
+    height="16"
+    viewBox="0 0 12 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="shrink-0"
+  >
+    {[0, 1, 2, 3].map((row) => (
+      <g key={row} transform={`translate(0, ${row * 4})`}>
+        {[2, 8].map((cx) => (
+          <circle
+            key={cx}
+            cx={cx}
+            cy={2}
+            r={1.4}
+            fill="#BEA5F5"
+          />
+        ))}
+      </g>
+    ))}
+  </svg>
+)
 
 // Severity configuration with colors
 const severityConfig = {
@@ -1082,6 +1632,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const defaultEventMessage = rule?.notifications?.eventMessage || 'La unidad {unidad} ha registrado una alerta en {ubicacion_link} a las {fecha_hora}.'
   const [eventMessage, setEventMessage] = useState(defaultEventMessage)
   const [eventMessageCharCount, setEventMessageCharCount] = useState(defaultEventMessage.length)
+  const eventMessageEditorRef = useRef<VariableTextareaHandle>(null)
   const [emailEnabled, setEmailEnabled] = useState(rule?.notifications?.email?.enabled || false)
   const [emailRecipients, setEmailRecipients] = useState(
     rule?.notifications?.email?.recipients || ['usuario@email.com', 'usuario@email.com', 'usuario@email.com']
@@ -1093,15 +1644,50 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [descriptionCharCount, setDescriptionCharCount] = useState(defaultEventMessage.length)
   
   // Email personalization states
-  const [showEmailPersonalizer, setShowEmailPersonalizer] = useState(false)
   const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || defaultEventMessage)
-  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(null)
-  const [showUserTemplates, setShowUserTemplates] = useState(false)
+  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(rule?.notifications?.email?.templateId || null)
 
   
   const [pushNotificationEnabled, setPushNotificationEnabled] = useState(rule?.notifications?.push?.enabled || false)
   const [showNotificationExample, setShowNotificationExample] = useState(false)
   const [notificationExampleType, setNotificationExampleType] = useState<'web' | 'mobile'>('web')
+
+  const suggestedEventVariables = useMemo(
+    () =>
+      buildSuggestedVariables(conditionGroups, eventMessage, {
+        geographicZone,
+        appliesTo,
+        eventTiming,
+      }),
+    [conditionGroups, eventMessage, geographicZone, appliesTo, eventTiming]
+  )
+
+  const hasConfiguredSensors = useMemo(
+    () =>
+      conditionGroups.some((group) =>
+        group.conditions.some((condition) => Boolean(condition.sensor))
+      ),
+    [conditionGroups]
+  )
+
+  const handleInsertEventVariable = useCallback(
+    (variableKey: string) => {
+      if (eventMessageEditorRef.current) {
+        eventMessageEditorRef.current.focus()
+        eventMessageEditorRef.current.insertVariable(variableKey)
+        return
+      }
+
+      setEventMessage((prev) => {
+        const next = (prev + variableKey).slice(0, 120)
+        setEventMessageCharCount(next.length)
+        setEmailDescription(next)
+        setDescriptionCharCount(next.length)
+        return next
+      })
+    },
+    [setEmailDescription, setDescriptionCharCount, setEventMessageCharCount]
+  )
   
   // Function to add a web notification example
   const addWebNotificationExample = () => {
@@ -1166,127 +1752,28 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [webhookNotificationEnabled, setWebhookNotificationEnabled] = useState(rule?.notifications?.webhook?.enabled || false)
   const [platformNotificationEnabled, setPlatformNotificationEnabled] = useState(rule?.notifications?.platform?.enabled || false)
 
-  // Email selector state
-  const [inputValue, setInputValue] = useState('')
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  // Email validation function
-  const isValidEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
-
-  // Calculate visible and hidden tags for email selector
-  const maxVisibleTags = 2
-  const visibleTags = emailRecipients.slice(0, maxVisibleTags)
-  const hiddenTags = emailRecipients.slice(maxVisibleTags)
-
-  // Email management functions
-  const addEmail = (email: string) => {
-    const trimmedEmail = email.trim()
-    if (trimmedEmail && isValidEmail(trimmedEmail) && !emailRecipients.includes(trimmedEmail)) {
-      setEmailRecipients(prev => [...prev, trimmedEmail])
-      setInputValue('')
-    }
-  }
-
-  const removeEmail = (emailToRemove: string) => {
-    setEmailRecipients(prev => prev.filter(email => email !== emailToRemove))
-  }
-
-  const clearAllEmails = () => {
-    setEmailRecipients([])
-    setInputValue('')
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value)
-  }
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      if (inputValue.trim()) {
-        addEmail(inputValue.trim())
-      }
-    } else if (e.key === 'Backspace' && !inputValue && emailRecipients.length > 0) {
-      // Remove last email if input is empty and backspace is pressed
-      setEmailRecipients(prev => prev.slice(0, -1))
-    }
-  }
-
   // Optimized template selection handler
   const handleTemplateSelection = useCallback((template: UserEmailTemplate) => {
     setEmailRecipients(template.recipients)
     setEmailSubject(template.subject)
     setCustomEmailMessage(template.message)
+    setEmailDescription(template.message)
     setSelectedEmailTemplate(template.id)
-    setShowUserTemplates(false)
-    setShowEmailPersonalizer(true)
   }, [])
 
-  // Memoized template cards to prevent re-renders
-  const templateCards = useMemo(() => 
-    userEmailTemplates.map((template) => (
-      <div
-        key={template.id}
-        className="border border-gray-200 rounded-lg p-3 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
-        onClick={() => handleTemplateSelection(template)}
-      >
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h5 className="text-[13px] font-medium text-gray-800 truncate">{template.name}</h5>
-              <Badge 
-                variant={template.category === 'company' ? 'default' : template.category === 'shared' ? 'secondary' : 'outline'}
-                className="text-[10px] px-1.5 py-0.5"
-              >
-                {template.category === 'company' ? 'Empresa' : 
-                 template.category === 'shared' ? 'Compartida' : 
-                 'Personal'}
-              </Badge>
-            </div>
-            <p className="text-[11px] text-gray-600 line-clamp-2 mb-2">{template.description}</p>
-            
-            <div className="flex items-center justify-between text-[10px] text-gray-500">
-              <div className="flex items-center gap-3">
-                <span>Por: {template.createdBy}</span>
-                <span>{template.createdAt}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Heart className="w-3 h-3" />
-                <span>{template.usageCount}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Vista previa compacta */}
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <div className="text-[10px] text-gray-500 space-y-1">
-            <div><span className="font-medium">Para:</span> {template.recipients.slice(0, 2).join(', ')}{template.recipients.length > 2 ? ` +${template.recipients.length - 2}` : ''}</div>
-            <div><span className="font-medium">Asunto:</span> {template.subject.length > 40 ? template.subject.substring(0, 40) + '...' : template.subject}</div>
-            <div><span className="font-medium">Mensaje:</span> {template.message.length > 60 ? template.message.substring(0, 60) + '...' : template.message}</div>
-          </div>
-        </div>
-      </div>
-    )), [handleTemplateSelection])
+  const selectedEmailTemplateData = useMemo(() => {
+    if (!selectedEmailTemplate) return null
+    return userEmailTemplates.find((template) => template.id === selectedEmailTemplate) || null
+  }, [selectedEmailTemplate, userEmailTemplates])
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    const pastedText = e.clipboardData.getData('text')
-    const emails = pastedText.split(/[,;\s]+/).filter(email => email.trim())
-    
-    emails.forEach(email => {
-      const trimmedEmail = email.trim()
-      if (isValidEmail(trimmedEmail) && !emailRecipients.includes(trimmedEmail)) {
-        setEmailRecipients(prev => [...prev, trimmedEmail])
-      }
-    })
-    setInputValue('')
-  }
+  useEffect(() => {
+    if (!emailEnabled) return
+    if (selectedEmailTemplate) return
+    if (rule?.notifications?.email?.templateId) return
+    const defaultTemplate = userEmailTemplates[0]
+    if (!defaultTemplate) return
+    handleTemplateSelection(defaultTemplate)
+  }, [emailEnabled, selectedEmailTemplate, handleTemplateSelection, rule?.notifications?.email?.templateId])
 
   const handleZonesChange = (zones) => {
     setSelectedZonesData(zones)
@@ -1369,7 +1856,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
           setEmailEnabled(rule.notifications.email.enabled || false)
           setEmailSubject(rule.notifications.email.subject || '')
           setEmailRecipients(rule.notifications.email.recipients || [])
-          setEmailDescription(rule.notifications.email.body || rule.notifications.eventMessage || '')
+          const emailBody = rule.notifications.email.body || rule.notifications.eventMessage || ''
+          setEmailDescription(emailBody)
+          setCustomEmailMessage(emailBody)
+          setSelectedEmailTemplate(rule.notifications.email.templateId || null)
         }
         
         if (rule.notifications.push) {
@@ -1885,9 +2375,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
           enabled: emailEnabled,
           recipients: emailRecipients,
           subject: emailSubject,
-          body: showEmailPersonalizer ? customEmailMessage : (emailDescription || eventMessage),
-          customMessage: showEmailPersonalizer ? customEmailMessage : undefined,
-          useCustomMessage: showEmailPersonalizer
+          body: customEmailMessage,
+          templateId: selectedEmailTemplate
         },
         push: {
           enabled: pushNotificationEnabled
@@ -2620,7 +3109,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
               <TabsContent value="actions" className="mt-6 space-y-6">
                 {/* Section 1 - Instrucciones a realizar */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <ClipboardList className="h-4 w-4 text-gray-600" />
                     <h3 className="text-[14px] font-medium text-gray-700">Instrucciones a realizar</h3>
@@ -2648,7 +3137,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Section 2 - Asignar responsable al evento */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <UserCheck className="h-4 w-4 text-gray-600" />
@@ -2716,7 +3205,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Section 3 - Clasificación del evento */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-gray-600" />
                     <h3 className="text-[14px] font-medium text-gray-700">Clasificación del evento</h3>
@@ -2855,7 +3344,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Section 4 - Cierre del evento */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <XCircle className="h-4 w-4 text-gray-600" />
                     <h3 className="text-[14px] font-medium text-gray-700">Cierre del evento</h3>
@@ -2961,7 +3450,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Section 5 - Asignar etiqueta a la unidad */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Tag className="h-4 w-4 text-gray-600" />
@@ -3033,7 +3522,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Section 5.1 - Desasignar etiqueta a la unidad */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Tag className="h-4 w-4 text-gray-600" />
@@ -3105,7 +3594,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Section 6 - Enviar comando al dispositivo */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Tag className="h-4 w-4 text-gray-600" />
@@ -3151,7 +3640,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
               <TabsContent value="notifications" className="mt-6 space-y-6">
                 {/* Section 1 - Mensaje del evento */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Bell className="h-4 w-4 text-gray-600" />
                     <h3 className="text-[14px] font-medium text-gray-700">Mensaje del evento</h3>
@@ -3162,121 +3651,118 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   <div className="-mx-4 border-b border-gray-200 mb-4"></div>
                   
                   <div className="space-y-4">
-                    {/* Variables de acceso rápido */}
+                    <div className="border border-gray-200 rounded-lg bg-gray-50 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <Zap className="h-4 w-4 text-blue-600" />
+                          <h4 className="text-[13px] font-medium text-gray-700">Variables sugeridas</h4>
+                          <span className="text-[11px] text-gray-500">
+                            Arrastra o haz clic para insertar la variable en tu mensaje.
+                          </span>
+                        </div>
+                        <VariableButton
+                          label="Más variables"
+                          variables={EVENT_MESSAGE_VARIABLES}
+                          onInsertVariable={handleInsertEventVariable}
+                          triggerClassName="inline-flex items-center gap-1 text-[14px] font-normal text-[#1677FF] hover:text-[#125FCC]"
+                        />
+                      </div>
+                      {!hasConfiguredSensors && (
+                        <p className="text-[11px] text-gray-500 mt-2">
+                          Configura condiciones con sensores para obtener recomendaciones más precisas.
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {suggestedEventVariables.length > 0 ? (
+                          suggestedEventVariables.map((variable) => (
+                            <button
+                              key={variable.key}
+                              type="button"
+                              className="inline-flex items-center gap-2 cursor-grab active:cursor-grabbing transition-colors"
+                              style={{
+                                backgroundColor: '#F9F0FF',
+                                borderColor: '#BEA5F5',
+                                color: '#7839EE',
+                                borderRadius: '8px',
+                                borderWidth: '1px',
+                                borderStyle: 'solid',
+                                padding: '4px 12px',
+                              }}
+                              draggable
+                              onDragStart={(event) => {
+                                event.dataTransfer.setData('application/x-variable-key', variable.key)
+                                event.dataTransfer.setData('text/plain', variable.key)
+                                event.dataTransfer.effectAllowed = 'copy'
+                              }}
+                              onClick={() => handleInsertEventVariable(variable.key)}
+                            >
+                              <span className="flex items-center justify-center">
+                                <SuggestedVariableDragIcon />
+                              </span>
+                              <span className="text-[13px] leading-none" style={{ color: '#7839EE' }}>
+                                {variable.key}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <span className="text-[12px] text-gray-500">
+                            Aún no hay variables sugeridas. Configura condiciones con sensores para ver recomendaciones.
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-                    {/* Todas las variables del sistema */}
-
-
-                    {/* Mensaje del evento */}
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-between">
                         <label className="text-[14px] font-medium text-gray-700">
                           <span className="text-red-500">*</span> Mensaje del evento
                         </label>
-                        <VariableButton 
-                          onInsertVariable={(variable) => {
-                            // Simplemente agregar al final del texto actual
-                            const newText = (eventMessage + variable).slice(0, 120)
-                            setEventMessage(newText)
-                            setEventMessageCharCount(newText.length)
-                            setEmailDescription(newText)
-                            setDescriptionCharCount(newText.length)
-                          }}
-                        />
+                        <span className={`text-[12px] ${eventMessageCharCount > 110 ? 'text-red-500' : 'text-gray-500'}`}>
+                          {eventMessageCharCount}/120
+                        </span>
                       </div>
-                      <div className="relative">
-                        <VariableTextarea
-                          name="event-message"
-                          value={eventMessage}
-                          onChange={(text) => {
-                            setEventMessage(text)
-                            setEventMessageCharCount(text.length)
-                            // Also update email description if it's the same
-                            setEmailDescription(text)
-                            setDescriptionCharCount(text.length)
-                          }}
-                          showVariableButton={false}
-                          placeholder="Escribe el mensaje que se enviará cuando ocurra este evento (máx. 120 caracteres). Usa variables como {unidad}, {velocidad}, {ubicacion_link} para personalizar el contenido."
-                          maxLength={120}
-                          className="min-h-[100px]"
-                        />
-
-                      </div>
+                      <VariableTextarea
+                        ref={eventMessageEditorRef}
+                        name="event-message"
+                        value={eventMessage}
+                        onChange={(text) => {
+                          setEventMessage(text)
+                          setEventMessageCharCount(text.length)
+                          setEmailDescription(text)
+                          setDescriptionCharCount(text.length)
+                        }}
+                        showVariableButton={false}
+                        placeholder={
+                          hasConfiguredSensors
+                            ? 'Escribe el mensaje (máx. 120 caracteres) o arrastra variables desde la barra superior.'
+                            : 'Escribe el mensaje del evento (máx. 120 caracteres). Puedes insertar variables desde "Más variables".'
+                        }
+                        maxLength={120}
+                        className="min-h-[120px]"
+                      />
 
                       {eventMessage && (
                         <div className="bg-gray-50 border border-gray-200 rounded p-3">
-                          <div className="text-[12px] font-medium text-gray-600 mb-1">Vista previa:</div>
-                          <div className="text-[13px] text-gray-700">
+                          <div className="text-[12px] font-medium text-gray-600 mb-1">Vista previa</div>
+                          <div className="text-[13px] text-gray-700 leading-relaxed">
                             {(() => {
-                              // Variable replacement mapping
-                              const variableReplacements = {
-                                '{unidad}': 'Unidad ABC-123',
-                                '{velocidad}': '85 km/h',
-                                '{ubicacion_link}': 'Av. Corrientes 1234, Buenos Aires',
-                                '{fecha_hora}': new Date().toLocaleString('es-AR'),
-                                '{chofer}': 'Juan Pérez',
-                                '{patente}': 'ABC123',
-                                '{temperatura}': '25°C',
-                                '{combustible}': '75%',
-                                '{ignicion}': 'Encendido',
-                                '{fecha}': new Date().toLocaleDateString('es-AR'),
-                                '{hora}': new Date().toLocaleTimeString('es-AR'),
-                                '{timestamp}': Date.now().toString(),
-                                '{direccion}': 'Av. Corrientes 1234',
-                                '{ciudad}': 'Buenos Aires',
-                                '{coordenadas}': '-34.6037, -58.3816',
-                                '{modelo}': 'Ford Transit',
-                                '{evento_id}': 'EVT-001',
-                                '{regla_nombre}': 'Exceso de velocidad',
-                                '{severidad}': 'Alta',
-                                '{duracion}': '5 minutos',
-                                '{empresa}': 'Mi Empresa',
-                                '{usuario}': 'supervisor-flota',
-                                '{plataforma}': 'Numaris',
-                                '{version}': 'v2.1',
-                                // Variables técnicas con ejemplos
-                                '{voltaje}': '12.4V',
-                                '{zona}': 'Zona Centro',
-                                '{rpm}': '2,450 RPM',
-                                '{conductor}': 'Carlos Martínez',
-                                '{presion}': '32 PSI',
-                                '{nivel_aceite}': '85%',
-                                '{odometro}': '125,340 km',
-                                '{estado_motor}': 'En funcionamiento',
-                                '{bateria}': '89%',
-                                '{sensor_puerta}': 'Cerrada',
-                                '{sensor_carga}': 'Con carga',
-                                '{humedad}': '68%',
-                                '{aceleracion}': '2.3 m/s²',
-                                '{frenado}': 'Suave',
-                                '{giro}': 'Izquierda',
-                                '{inclinacion}': '5°',
-                                '{peso}': '2,840 kg',
-                                '{altura}': '156 m'
-                              }
-                              
-                              // Split the message by variables to render them in blue
-                              const variablePattern = /\{[^}]+\}/g
-                              const parts = eventMessage.split(variablePattern)
-                              const variables = eventMessage.match(variablePattern) || []
-                              
-                              const result = []
+                              const parts = eventMessage.split(VARIABLE_TOKEN_REGEX)
+                              const variables = eventMessage.match(VARIABLE_TOKEN_REGEX) || []
+                              const fragments: React.ReactNode[] = []
                               for (let i = 0; i < parts.length; i++) {
-                                // Add text part
                                 if (parts[i]) {
-                                  result.push(<span key={`text-${i}`}>{parts[i]}</span>)
+                                  fragments.push(<span key={`text-${i}`}>{parts[i]}</span>)
                                 }
-                                // Add variable part in blue with example value
                                 if (variables[i]) {
-                                  const exampleValue = variableReplacements[variables[i]] || variables[i]
-                                  result.push(
+                                  const exampleValue = resolveVariablePreview(variables[i])
+                                  fragments.push(
                                     <span key={`var-${i}`} className="text-purple-600 font-medium">
                                       {exampleValue}
                                     </span>
                                   )
                                 }
                               }
-                              return result
+                              return fragments
                             })()}
                           </div>
                         </div>
@@ -3286,7 +3772,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Section 2 - Canales de notificación */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Bell className="h-4 w-4 text-gray-600" />
                     <h3 className="text-[14px] font-medium text-gray-700">Canales de notificación</h3>
@@ -3369,258 +3855,97 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           <Mail className="h-5 w-5 text-gray-600" />
                           <div>
                             <div className="text-[14px] font-medium text-gray-700">Correo electrónico</div>
-                            <div className="text-[12px] text-gray-600">Envío por email con asunto personalizable</div>
+                            <div className="text-[12px] text-gray-600">Usa plantillas guardadas para automatizar el mensaje</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {/* Dropdown para seleccionar tipo de personalización */}
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="text-[11px] h-6 px-2"
-                              >
-                                <MessageSquare className="w-3 h-3 mr-1" />
-                                Plantilla
-                                <ChevronDown className="w-3 h-3 ml-1" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-48 p-1" align="end">
-                              <div className="space-y-1">
-                                <button
-                                  onClick={() => {
-                                    setShowUserTemplates(true)
-                                    setShowEmailPersonalizer(false)
-                                  }}
-                                  className="w-full text-left px-2 py-1.5 text-[12px] hover:bg-gray-100 rounded flex items-center gap-2"
-                                >
-                                  <Star className="w-3 h-3 text-blue-500" />
-                                  Plantillas de usuarios
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setShowEmailPersonalizer(true)
-                                    setShowUserTemplates(false)
-                                  }}
-                                  className="w-full text-left px-2 py-1.5 text-[12px] hover:bg-gray-100 rounded flex items-center gap-2"
-                                >
-                                  <MessageSquare className="w-3 h-3 text-blue-500" />
-                                  Personalizar mensaje
-                                </button>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                          <Switch
-                            checked={emailEnabled}
-                            onCheckedChange={setEmailEnabled}
-                            className="switch-blue"
-                          />
-                        </div>
+                        <Switch
+                          checked={emailEnabled}
+                          onCheckedChange={setEmailEnabled}
+                          className="switch-blue"
+                        />
                       </div>
-                      
-                      {emailEnabled && (
-                        <div className="border-t border-gray-200 p-3 bg-gray-50 space-y-3">
-                          {/* Destinatarios */}
-                          <div className="space-y-1">
-                            <label className="text-[13px] font-medium text-gray-700">Destinatarios</label>
-                            <RecipientsSelector
-                              value={emailRecipients}
-                              onChange={setEmailRecipients}
-                              className="w-full"
-                            />
-                          </div>
-                          
-                          {/* Asunto del email */}
-                          <div className="space-y-1">
-                            <label className="text-[13px] font-medium text-gray-700">Asunto del email</label>
-                            <VariableInput
-                              value={emailSubject}
-                              onChange={(value) => setEmailSubject(value)}
-                              placeholder="Ej: [ALERTA] {unidad} - {regla_nombre}"
-                              className="mt-6"
-                              maxLength={100}
-                              showVariableButton={true}
-                            />
-                            <div className="text-[11px] text-gray-500">
-                              {showEmailPersonalizer 
-                                 ? 'Se usará el mensaje personalizado configurado abajo'
-                                 : 'El mensaje configurado arriba se usará como cuerpo del email'
-                               }
-                            </div>
-                          </div>
-                          
-                          {/* Email Message Personalizer - Show when personalizer is open */}
-                          {showEmailPersonalizer && (
-                            <div className="border border-gray-200 rounded-lg p-3 bg-blue-50 space-y-3 mt-4">
-                              <div className="flex items-center gap-2 mb-2">
-                                <MessageSquare className="h-4 w-4 text-blue-600" />
-                                <h4 className="text-[13px] font-medium text-gray-700">Mensaje personalizado para correo electrónico</h4>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                {/* Selector de plantilla */}
-                                <div className="space-y-1">
-                                  <label className="text-[13px] font-medium text-gray-700">Selecciona plantilla</label>
-                                  <Select
-                                    value={selectedEmailTemplate || ""}
-                                    onValueChange={(value) => {
-                                      setSelectedEmailTemplate(value)
-                                      // Aplicar plantilla seleccionada
-                                      const templates = {
-                                        'basic': 'Se ha registrado un evento en {unidad}:\n\nUbicación: {ubicacion_link}\nFecha y hora: {fecha_hora}\nVelocidad: {velocidad}\n\nSaludos,\nSistema de Monitoreo',
-                                        'detailed': 'ALERTA: {regla_nombre}\n\nUnidad: {unidad}\nConductor: {conductor}\nUbicación: {ubicacion_link}\nFecha y hora: {fecha_hora}\nVelocidad: {velocidad}\nTemperatura: {temperatura}\nCombustible: {combustible}\n\nPor favor revise este evento lo antes posible.\n\nSistema de Monitoreo Numaris',
-                                        'summary': 'Evento registrado en {unidad} el {fecha_hora}. Ubicación: {ubicacion_link}. Velocidad: {velocidad}.',
-                                        'formal': 'Estimado/a,\n\nLe informamos que se ha registrado el siguiente evento:\n\nUnidad: {unidad}\nUbicación: {ubicacion_link}\nFecha: {fecha_hora}\nVelocidad registrada: {velocidad}\n\nPara más detalles, por favor consulte el sistema.\n\nAtentamente,\nEquipo de Monitoreo',
-                                        'custom': customEmailMessage
-                                      }
-                                      if (value !== 'custom') {
-                                        setCustomEmailMessage(templates[value] || '')
-                                      }
-                                    }}
-                                  >
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue placeholder="Selecciona una plantilla de mensaje" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="basic">Básica</SelectItem>
-                                      <SelectItem value="detailed">Detallada</SelectItem>
-                                      <SelectItem value="summary">Resumen</SelectItem>
-                                      <SelectItem value="formal">Formal</SelectItem>
-                                      <SelectItem value="custom">Personalizada</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <div className="text-[11px] text-gray-500">
-                                    Selecciona una plantilla predefinida o "Personalizada" para crear tu propio mensaje
-                                  </div>
-                                </div>
 
-                                <div className="flex justify-between items-center">
-                                  <label className="text-[13px] font-medium text-gray-700">
-                                    <span className="text-red-500">*</span> Mensaje personalizado
-                                  </label>
-                                  <VariableButton 
-                                    onInsertVariable={(variable) => {
-                                      
-                                      setCustomEmailMessage(customEmailMessage + variable)
-                                      
-                                    }}
-                                  />
-                                </div>
-                                <div className="relative">
-                                  <VariableTextarea
-                                    name="custom-email-message"
-                                    value={customEmailMessage}
-                                    onChange={(text) => {
-                                      setCustomEmailMessage(text)
-                                      // Si el usuario modifica el mensaje manualmente, cambiar a plantilla personalizada
-                                      if (selectedEmailTemplate && selectedEmailTemplate !== 'custom') {
-                                        setSelectedEmailTemplate('custom')
-                                      }
-                                    }}
-                                    showVariableButton={false}
-                                    placeholder="Escribe un mensaje específico para el correo electrónico. Usa variables como {unidad}, {velocidad}, {ubicacion_link} para personalizar el contenido."
-                                    maxLength={120}
-                                    className="min-h-[80px]"
-                                  />
-                                  <div className="absolute bottom-2 right-2 text-[11px] text-gray-500 bg-white px-1 rounded">
-                                    
+                      {emailEnabled && (
+                        <div className="border-t border-gray-200 p-3 bg-gray-50 space-y-4">
+                          <div className="space-y-1">
+                            <label className="text-[13px] font-medium text-gray-700">Plantilla de correo</label>
+                            <Select
+                              value={selectedEmailTemplate || ''}
+                              onValueChange={(value) => {
+                                const template = userEmailTemplates.find((tpl) => tpl.id === value)
+                                if (template) {
+                                  handleTemplateSelection(template)
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecciona una plantilla guardada" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {userEmailTemplates.map((template) => (
+                                  <SelectItem key={template.id} value={template.id}>
+                                    {template.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-[11px] text-gray-500">
+                              Selecciona una plantilla para reutilizar asunto, destinatarios y mensaje guardados.
+                            </p>
+                          </div>
+
+                          {selectedEmailTemplateData && (
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <span className="text-[12px] font-medium text-gray-600">Asunto</span>
+                                <div className="text-[13px] text-gray-800">{emailSubject}</div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <span className="text-[12px] font-medium text-gray-600">Destinatarios</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {emailRecipients.length > 0 ? (
+                                      emailRecipients.map((recipient) => (
+                                        <span
+                                          key={recipient}
+                                          className="inline-flex items-center rounded-full border border-[#E0E7FF] bg-white px-2.5 py-1 text-[12px] text-gray-700"
+                                        >
+                                          {recipient}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span className="text-[12px] text-gray-500">
+                                        Sin destinatarios guardados.
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
-                                
-                                {/* Preview */}
-                                {customEmailMessage && (
-                                  <div className="mt-3 p-2 bg-white border border-gray-200 rounded-md">
-                                    <div className="text-[11px] font-medium text-gray-600 mb-1">Vista previa del mensaje de email:</div>
-                                    <div className="text-[12px] text-gray-700">
-                                      {(() => {
-                                        // Variable replacements for preview
-                                        const variableReplacements = {
-                                          '{unidad}': 'Camión C-1402',
-                                          '{ubicacion}': 'Av. Libertador 1234, CABA',
-                                          '{ubicacion_link}': 'Ver ubicación',
-                                          '{velocidad}': '85 km/h',
-                                          '{fecha}': '15/03/2024',
-                                          '{hora}': '14:30',
-                                          '{fecha_hora}': '15/03/2024 14:30',
-                                          '{regla_nombre}': 'Exceso de velocidad',
-                                          '{evento_id}': 'EV-2024-001234',
-                                          '{temperatura}': '78°C',
-                                          '{combustible}': '34%',
-                                          '{presion}': '32 PSI',
-                                          '{nivel_aceite}': '85%',
-                                          '{odometro}': '125,340 km',
-                                          '{estado_motor}': 'En funcionamiento',
-                                          '{bateria}': '89%',
-                                          '{sensor_puerta}': 'Cerrada',
-                                          '{sensor_carga}': 'Con carga',
-                                          '{humedad}': '68%',
-                                          '{aceleracion}': '2.3 m/s²',
-                                          '{frenado}': 'Suave',
-                                          '{giro}': 'Izquierda',
-                                          '{inclinacion}': '5°',
-                                          '{peso}': '2,840 kg',
-                                          '{altura}': '156 m',
-                                          '{conductor}': 'Juan Pérez'
-                                        }
-                                        
-                                        // Split the message by variables to render them in blue
-                                        const variablePattern = /\{[^}]+\}/g
-                                        const parts = customEmailMessage.split(variablePattern)
-                                        const variables = customEmailMessage.match(variablePattern) || []
-                                        
-                                        const result = []
-                                        for (let i = 0; i < parts.length; i++) {
-                                          // Add text part
-                                          if (parts[i]) {
-                                            result.push(<span key={`text-${i}`}>{parts[i]}</span>)
-                                          }
-                                          // Add variable part in blue with example value
-                                          if (variables[i]) {
-                                            const exampleValue = variableReplacements[variables[i]] || variables[i]
-                                            result.push(
-                                              <span key={`var-${i}`} className="text-purple-600 font-medium">
-                                                {exampleValue}
-                                              </span>
-                                            )
-                                          }
-                                        }
-                                        return result
-                                      })()}
-                                    </div>
+                                <div className="space-y-1">
+                                  <span className="text-[12px] font-medium text-gray-600">Remitentes</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {selectedEmailTemplateData?.sender && selectedEmailTemplateData.sender.length > 0 ? (
+                                      selectedEmailTemplateData.sender.map((sender: string) => (
+                                        <span
+                                          key={sender}
+                                          className="inline-flex items-center rounded-full border border-[#E0E7FF] bg-white px-2.5 py-1 text-[12px] text-gray-700"
+                                        >
+                                          {sender}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span className="text-[12px] text-gray-500">
+                                        {selectedEmailTemplateData ? 'Sin remitentes guardados.' : 'Selecciona una plantilla para ver remitentes.'}
+                                      </span>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* User Templates View - Show when user templates is open */}
-                          {showUserTemplates && (
-                            <div className="border border-gray-200 rounded-lg p-3 bg-purple-50 space-y-3 mt-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Star className="h-4 w-4 text-purple-600" />
-                                  <h4 className="text-[13px] font-medium text-gray-700">Plantillas creadas por usuarios</h4>
                                 </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setShowUserTemplates(false)}
-                                  className="text-[11px] h-6 px-2 text-gray-500 hover:text-gray-700"
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
                               </div>
-                              
-                              <div className="space-y-2 max-h-80 overflow-y-auto">
-                                {templateCards}
-                              </div>
-                              
-                              <div className="pt-2 border-t border-gray-200">
-                                <div className="text-[11px] text-gray-500 text-center">
-                                  💡 Selecciona una plantilla para aplicarla y personalizarla
+
+                              <div className="space-y-1">
+                                <span className="text-[12px] font-medium text-gray-600">Mensaje de la plantilla</span>
+                                <div className="rounded-lg border border-gray-200 bg-white p-3 text-[12px] text-gray-700 whitespace-pre-wrap">
+                                  {customEmailMessage || 'Esta plantilla no tiene mensaje definido.'}
                                 </div>
                               </div>
                             </div>
@@ -3629,22 +3954,21 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       )}
                     </div>
 
-
                   </div>
                 </div>
 
-                {/* Section 3 - Webhook */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Link className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Webhook</h3>
-                    </div>
-                    <Switch
-                      checked={webhookEnabled}
-                      onCheckedChange={setWebhookEnabled}
-                      className="switch-blue"
-                    />
+                    {/* Section 3 - Webhook */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Link className="h-4 w-4 text-gray-600" />
+                          <h3 className="text-[14px] font-medium text-gray-700">Webhook</h3>
+                        </div>
+                        <Switch
+                          checked={webhookEnabled}
+                          onCheckedChange={setWebhookEnabled}
+                          className="switch-blue"
+                        />
                   </div>
                   <p className="text-[14px] text-gray-600 mb-4">
                     Configura un webhook para enviar datos del evento a sistemas externos

@@ -133,6 +133,7 @@ export interface RuleNotifications {
     recipients: string[]
     subject: string
     body: string
+    templateId?: string | null
   }
 }
 
