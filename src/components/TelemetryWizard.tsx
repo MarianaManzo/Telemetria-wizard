@@ -51,6 +51,7 @@ import { GenericSelectorInput } from "./GenericSelectorInput"
 import { SearchableUserSelect } from "./SearchableUserSelect"
 import { SaveRuleModal } from "./SaveRuleModal"
 import { RecipientsSelector } from "./RecipientsSelector"
+import SectionCard from "./SectionCard"
 
 interface UnidadData {
   id: string
@@ -541,34 +542,16 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsList>
               
               <TabsContent value="parameters" className="mt-6 space-y-6">
-                <div
-                  className="bg-white border border-gray-200 rounded-lg p-4"
-                  style={{
-                    background: "var(--color-bg-base)",
-                    border: "1px solid var(--color-gray-200)",
-                    borderRadius: toPx(radii.base),
-                    padding: toPx(spacing.sm),
-                  }}
+                <SectionCard
+                  icon={<Gauge className="h-4 w-4" />}
+                  title="Parámetros a evaluar"
+                  description="¿Qué condiciones evalúa esta regla?"
+                  contentClassName="space-y-4"
                 >
-                  <Flex align="center" style={{ gap: toPx(spacing.xs) }}>
-                    <Gauge className="h-4 w-4" style={{ color: "var(--color-gray-600)" }} />
-                    <Title level={5} style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "var(--color-gray-700)" }}>
-                      Parámetros a evaluar
-                    </Title>
-                  </Flex>
-                  <Paragraph style={{ margin: 0, color: "var(--color-gray-600)" }}>
-                    ¿Qué condiciones evalúa esta regla?
-                  </Paragraph>
                   {conditions.length > 0 && (
-                    <div
-                      style={{
-                        borderBottom: "1px solid var(--color-gray-200)",
-                        marginBlock: toPx(spacing.sm),
-                        marginInline: "calc(-1 * var(--size-sm))",
-                      }}
-                    />
+                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
                   )}
-                  
+
                   <div className="space-y-4">
                     {conditions.map((condition, index) => {
                       const sensor = telemetrySensors.find(s => s.value === condition.sensor)
@@ -646,9 +629,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       )
                     })}
 
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-6">
-                        <Button
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center gap-6">
+                      <Button
                           variant="link"
                           onClick={addCondition}
                           className="p-0 h-auto text-blue-600 hover:text-blue-700"
@@ -675,26 +658,18 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </Button>
                     </div>
                   </div>
-                </div>
+                </SectionCard>
 
                 {/* Apply this rule to */}
-                <div className="bg-white border border-gray-200 rounded-lg">
-                  <div className="flex items-start gap-3 px-4 py-4 bg-gray-100 rounded-t-lg border-b border-gray-200">
-                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
-                      <Truck className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-[14px] font-semibold text-gray-900">Aplica esta regla a</h3>
-                      <p className="text-[14px] text-gray-600">
-                        Elige a cuáles unidades o etiquetas esta regla debe aplicar
-                      </p>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    {(selectedUnitsLocal.length > 0 || selectedTags.length > 0) && (
-                      <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                    )}
-                  
+                <SectionCard
+                  icon={<Truck className="h-4 w-4" />}
+                  title="Aplica esta regla a"
+                  description="Elige a cuáles unidades o etiquetas esta regla debe aplicar"
+                >
+                  {(selectedUnitsLocal.length > 0 || selectedTags.length > 0) && (
+                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-4">
                     {/* Unidades */}
                     <div>
@@ -734,8 +709,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       />
                     </div>
                   </div>
-                  </div>
-                </div>
+                </SectionCard>
 
                 {/* Advanced Configuration */}
                 <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
