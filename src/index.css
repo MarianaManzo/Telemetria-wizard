@@ -4717,28 +4717,3 @@ input[type="radio"]:focus {
   color: #9CA3AF !important;
   line-height: 1;
 }
-
-.nm-selector-trigger {
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
-  background-color: #fff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.nm-selector-trigger:hover:not(.opacity-50) {
-  border-color: #bfc4ce;
-}
-
-.nm-selector-trigger:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-.nm-selector-trigger__icon {
-  font-size: 14px;
-  color: #9CA3AF;
-}
