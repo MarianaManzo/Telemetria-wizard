@@ -2,9 +2,8 @@ import { useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { Search, X } from "lucide-react"
+import { ChevronDown, Search, X } from "lucide-react"
 import { PopoverBase } from "./PopoverPanel"
-import SelectorTrigger from "./SelectorTrigger"
 
 interface TagData {
   id: string
@@ -99,9 +98,15 @@ export function EtiquetasSelectorInput({
     <div className={`w-full ${className}`}>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
-          <SelectorTrigger as="div" onClick={() => setIsOpen(true)}>
-            {renderDisplayContent()}
-          </SelectorTrigger>
+          <div className="relative">
+            <div
+              className="w-full min-h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center"
+              onClick={() => setIsOpen(true)}
+            >
+              {renderDisplayContent()}
+            </div>
+            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+          </div>
         </PopoverTrigger>
         <PopoverContent
           className="w-full"

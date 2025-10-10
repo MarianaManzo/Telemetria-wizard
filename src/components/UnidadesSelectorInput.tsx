@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { VehicleSelector } from "./VehicleSelector"
-import SelectorTrigger from "./SelectorTrigger"
+import { ChevronDown } from "lucide-react"
 
 interface UnidadData {
   id: string
@@ -129,9 +129,17 @@ export function UnidadesSelectorInput({
 
   return (
     <div className={`w-full ${className}`}>
-      <SelectorTrigger onClick={() => !disabled && setIsModalOpen(true)} disabled={disabled}>
-        {renderDisplayContent()}
-      </SelectorTrigger>
+      <div className="relative">
+        <div
+          className={`w-full min-h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
+            disabled ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          onClick={() => !disabled && setIsModalOpen(true)}
+        >
+          {renderDisplayContent()}
+        </div>
+        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+      </div>
 
       <VehicleSelector
         isOpen={isModalOpen}
