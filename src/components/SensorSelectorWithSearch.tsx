@@ -1,11 +1,12 @@
 import { useState, useMemo, type CSSProperties } from "react"
+import { Button } from "./ui/button"
 import { Input } from "./ui/input"
+import { Label } from "./ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "./ui/command"
 import { Separator } from "./ui/separator"
-import { Check, Search, Gauge, User } from "lucide-react"
+import { Check, ChevronDown, Search, Gauge, User } from "lucide-react"
 import { cn } from "./ui/utils"
-import SelectorTrigger from "./SelectorTrigger"
 
 interface SensorOption {
   value: string
@@ -75,18 +76,25 @@ export function SensorSelectorWithSearch({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <SelectorTrigger
-          as="button"
-          onClick={() => setOpen((prev) => !prev)}
-          className={cn('max-w-[180px] justify-between', className)}
-          disabled={false}
+        <Button
+          variant="outline"
+          size="lg"
+          role="combobox"
+          aria-expanded={open}
+          style={{ fontSize: '14px', borderRadius: '8px', height: '40px', maxWidth: '180px', width: '100%', paddingLeft: '12px', paddingRight: '12px', ...style }}
+          className={cn(
+            "w-full justify-between bg-white hover:bg-gray-50 text-[14px]",
+            !value && "text-muted-foreground",
+            className
+          )}
         >
           {selectedSensor ? (
             <span className="truncate text-gray-900">{selectedSensor.label}</span>
           ) : (
-            <span className="text-gray-500 truncate">{placeholder}</span>
+            <span className="ant-typography ant-typography-secondary truncate">{placeholder}</span>
           )}
-        </SelectorTrigger>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-lg" align="start" style={{ borderRadius: '8px' }}>
         <Command>
