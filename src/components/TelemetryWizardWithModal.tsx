@@ -2226,17 +2226,19 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Apply this rule to */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Truck className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Aplica esta regla a</h3>
+                <div className="bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-start gap-3 px-4 py-4 bg-gray-100 rounded-t-lg">
+                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
+                      <Truck className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-[14px] font-semibold text-gray-900">Aplica esta regla a</h3>
+                      <p className="text-[14px] text-gray-600">
+                        Elige a cuáles unidades o etiquetas esta regla debe aplicar
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Elige a cuáles unidades o etiquetas esta regla debe aplicar
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="flex flex-col gap-4">
+                  <div className="p-4 flex flex-col gap-4">
                     {/* Main selector */}
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
