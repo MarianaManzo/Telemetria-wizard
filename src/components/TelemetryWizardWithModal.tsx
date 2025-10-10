@@ -508,7 +508,7 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full flex items-center justify-start px-1" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -525,7 +525,7 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccionar opción" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -542,8 +542,7 @@ function DraggableConditionInGroup({
                 placeholder="Valor"
                 value={condition.value}
                 onChange={(e) => updateConditionInGroup(groupId, condition.id, 'value', e.target.value)}
-                className="w-full text-[14px]"
-                style={{ height: '40px', borderRadius: '8px' }}
+                className="w-full text-[14px] nm-input"
                 disabled={!condition.sensor}
               />
             )}
