@@ -47,7 +47,20 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
       <div className="flex items-center gap-2">
         {actions}
         {!hideCloseButton && (
-          <AntdButton type="text" aria-label="Cerrar" icon={<CloseOutlined style={{ fontSize: 18 }} />} onClick={onClose} />
+          <AntdButton
+            type="text"
+            aria-label="Cerrar"
+            icon={<CloseOutlined style={{ fontSize: 16 }} />}
+            onClick={onClose}
+            style={{
+              color: '#9CA3AF',
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
         )}
       </div>
     </div>
