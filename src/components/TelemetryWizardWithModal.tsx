@@ -2027,37 +2027,22 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsList>
               
               <TabsContent value="parameters" className="mt-6 space-y-6">
-                <div
-                  className="bg-white border border-gray-200 rounded-lg p-4"
-                  style={{
-                    background: "var(--color-bg-base)",
-                    border: "1px solid var(--color-gray-200)",
-                    borderRadius: toPx(radii.base),
-                    padding: toPx(spacing.sm),
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: toPx(spacing.xs) }}>
-                    <Gauge className="h-4 w-4 mt-1" style={{ color: "var(--color-gray-600)" }} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <Title level={5} style={{ margin: 0, fontSize: "14px", color: "var(--color-gray-700)" }}>
-                        Parámetros a evaluar
-                      </Title>
-                      <Paragraph style={{ margin: 0, color: "var(--color-gray-600)", fontSize: "14px" }}>
-                        ¿Qué condiciones evalúa esta regla?
-                      </Paragraph>
+                <div className="bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-start gap-3 px-4 py-4 bg-gray-100 border-b border-gray-200 rounded-t-lg">
+                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
+                      <Gauge className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-[14px] font-semibold text-gray-900">Parámetros a evaluar</h3>
+                      <p className="text-[14px] text-gray-600">¿Qué condiciones evalúa esta regla?</p>
                     </div>
                   </div>
-                  {conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0) && (
-                    <div
-                      style={{
-                        borderBottom: "1px solid var(--color-gray-200)",
-                        marginBlock: toPx(spacing.sm),
-                        marginInline: "calc(-1 * var(--size-sm))",
-                      }}
-                    />
-                  )}
-                  
-                  <DndProvider backend={HTML5Backend}>
+                  <div className="p-4">
+                    {conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0) && (
+                      <div className="-mx-4 border-b border-gray-200 mb-4"></div>
+                    )}
+
+                    <DndProvider backend={HTML5Backend}>
                     <div className="space-y-6 relative">
                       {conditionGroups.map((group, groupIndex) => (
                         <div key={group.id}>
@@ -2131,7 +2116,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </Button>
                       </div>
                     </div>
-                  </DndProvider>
+                    </DndProvider>
 
                   {/* Rule Summary */}
                   {conditionGroups.some(group => group.conditions.some(c => c.sensor && c.operator && c.value)) && (
@@ -2223,6 +2208,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </div>
                     </div>
                   )}
+                  </div>
                 </div>
 
                 {/* Apply this rule to */}
