@@ -1,6 +1,4 @@
 import type { ReactNode } from 'react';
-import { Button as AntdButton } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
 import { cn } from './ui/utils';
 
 interface PopoverBaseProps {
@@ -46,22 +44,7 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
       </div>
       <div className="flex items-center gap-2">
         {actions}
-        {!hideCloseButton && (
-          <AntdButton
-            type="text"
-            aria-label="Cerrar"
-            icon={<CloseOutlined style={{ fontSize: 16 }} />}
-            onClick={onClose}
-            style={{
-              color: '#9CA3AF',
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          />
-        )}
+        {!hideCloseButton && null}
       </div>
     </div>
   );
