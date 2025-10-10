@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { Button as AntdButton } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
 import { cn } from './ui/utils';
 
 interface PopoverBaseProps {
@@ -22,6 +24,14 @@ interface PopoverContentProps {
 interface PopoverFooterProps {
   children: ReactNode;
   className?: string;
+}
+
+function Base({ children, className = '' }: PopoverBaseProps) {
+  return (
+    <div className={cn('flex flex-col bg-white', className)} style={{ fontFamily: "'Source Sans 3', sans-serif" }}>
+      {children}
+    </div>
+  );
 }
 
 function Header({ title, onClose, hideCloseButton, actions, className = '' }: PopoverHeaderProps) {
@@ -59,13 +69,3 @@ export const PopoverBase = Object.assign(Base, {
 });
 
 export type { PopoverBaseProps, PopoverHeaderProps, PopoverContentProps, PopoverFooterProps };
-import { Button as AntdButton } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
-
-function Base({ children, className = '' }: PopoverBaseProps) {
-  return (
-    <div className={cn('flex flex-col bg-white', className)} style={{ fontFamily: "'Source Sans 3', sans-serif" }}>
-      {children}
-    </div>
-  );
-}
