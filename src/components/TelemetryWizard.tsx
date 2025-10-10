@@ -575,8 +575,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       
                       return (
                         <div key={condition.id} className="flex items-center gap-3">
-                          <div className="min-w-0 flex-1">
-                            <label className="text-[14px] font-medium text-gray-700 block mb-1">Sensor</label>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <label className="text-[14px] font-medium text-gray-700 block">Sensor</label>
                             <Select
                               value={condition.sensor}
                               onValueChange={(value) => updateCondition(condition.id, 'sensor', value)}
@@ -594,8 +594,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             </Select>
                           </div>
 
-                          <div className="min-w-0 flex-1">
-                            <label className="text-[14px] font-medium text-gray-700 block mb-1">Operador</label>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <label className="text-[14px] font-medium text-gray-700 block">Operador</label>
                             <Select
                               value={condition.operator}
                               onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
@@ -614,7 +614,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             </Select>
                           </div>
 
-                          <div className="min-w-0 flex-1">
+                          <div className="min-w-0 flex-1 space-y-1">
                             <label className="text-[14px] font-medium text-gray-700 block mb-1">Valor</label>
                             <div className="flex items-center gap-2">
                               <Input
@@ -622,7 +622,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 placeholder="Valor"
                                 value={condition.value}
                                 onChange={(e) => updateCondition(condition.id, 'value', e.target.value)}
-                                className="w-full"
+                                className="w-full nm-input"
                               />
                               {sensor && (
                                 <span className="text-[14px] text-gray-600 whitespace-nowrap">
