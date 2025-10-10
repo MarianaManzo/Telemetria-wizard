@@ -4675,7 +4675,6 @@ input[type="radio"]:focus {
   border-radius: 8px !important;
   display: flex !important;
   align-items: center !important;
-  justify-content: flex-start !important;
   padding: 0 36px 0 12px !important;
   position: relative;
 }
@@ -4685,17 +4684,10 @@ input[type="radio"]:focus {
   line-height: 32px !important;
   display: flex !important;
   align-items: center;
-  padding: 0 !important;
-  margin: 0 !important;
 }
 
 .nm-select .ant-select-selection-search-input {
   height: 32px !important;
-}
-
-.nm-select .ant-select-selection-search {
-  display: flex !important;
-  align-items: center !important;
 }
 
 .nm-select .ant-select-arrow {
@@ -4706,8 +4698,6 @@ input[type="radio"]:focus {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 100% !important;
-  margin: 0 !important;
   pointer-events: none;
 }
 
