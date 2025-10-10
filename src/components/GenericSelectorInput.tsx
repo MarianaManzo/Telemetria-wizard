@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { Search, ChevronDown, X } from "lucide-react"
+import { Search, X } from "lucide-react"
 import { TruncatedText } from "./TruncatedText"
+import SelectorTrigger from "./SelectorTrigger"
 
 interface GenericSelectorInputProps<T = any> {
   selectedItems: T[]
@@ -337,7 +338,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
             {showPillsDisplay && showColorPills && selectedItems.length > 0 && selectedItems.some(item => item.color) ? (
               <div
                 ref={containerRef}
-                className={`w-full h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
+                className={`w-full h-8 px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
                   disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 onClick={() => !disabled && setIsOpen(true)}
@@ -372,7 +373,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
               </div>
             ) : showPillsDisplay ? (
               <div
-                className={`w-full h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
+                className={`w-full h-8 px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center ${
                   disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 onClick={() => !disabled && setIsOpen(true)}
@@ -381,7 +382,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
               </div>
             ) : (
               <div
-                className={`w-full h-[40px] px-3 py-2 text-sm border border-gray-300 rounded-md bg-white cursor-pointer text-gray-900 flex items-center ${
+                className={`w-full h-8 px-3 text-sm border border-gray-300 rounded-lg bg-white cursor-pointer text-gray-900 flex items-center ${
                   disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 onClick={() => !disabled && setIsOpen(true)}
