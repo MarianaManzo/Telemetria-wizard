@@ -1,5 +1,6 @@
 import { Select as AntdSelect } from "antd";
 import type { SelectProps as AntdSelectProps, SelectRef } from "antd";
+import { DownOutlined } from "@ant-design/icons";
 import {
   createContext,
   forwardRef,
@@ -120,26 +121,28 @@ type TriggerProps = Omit<AntdSelectProps<string>, "options" | "value" | "onChang
 };
 
 export const SelectTrigger = forwardRef<SelectRef, TriggerProps>(
-  ({ className, size = "default", dropdownClassName, children, ...props }, ref) => {
+  ({ className, size = "default", dropdownClassName, children, suffixIcon, ...props }, ref) => {
     const ctx = useSelectContext("SelectTrigger");
 
     const antdSize: AntdSelectProps<string>["size"] = size === "sm" ? "small" : "middle";
 
     const currentValue = ctx.value === '' ? undefined : ctx.value;
+    const defaultIcon = <DownOutlined className="nm-select__arrow-icon" />;
 
     return (
       <>
         {children ? <span className="hidden">{children}</span> : null}
         <AntdSelect
           ref={ref}
-          className={cn("text-[14px]", className)}
+          className={cn("text-[14px] nm-select", className)}
           size={antdSize}
           value={currentValue}
           onChange={value => ctx.setValue(value)}
           options={ctx.options}
           placeholder={ctx.placeholder}
           disabled={ctx.disabled}
-          dropdownClassName={cn(ctx.dropdownClassName, dropdownClassName)}
+          dropdownClassName={cn("nm-select__dropdown", ctx.dropdownClassName, dropdownClassName)}
+          suffixIcon={suffixIcon ?? defaultIcon}
           {...props}
         />
       </>

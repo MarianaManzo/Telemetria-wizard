@@ -4669,3 +4669,41 @@ input[type="radio"]:focus {
 .nm-popover-base .ant-popover-inner-content {
   padding: 0 !important;
 }
+
+.nm-select .ant-select-selector {
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 36px 0 12px !important;
+  position: relative;
+}
+
+.nm-select .ant-select-selection-item,
+.nm-select .ant-select-selection-placeholder {
+  line-height: 32px !important;
+  display: flex !important;
+  align-items: center;
+}
+
+.nm-select .ant-select-selection-search-input {
+  height: 32px !important;
+}
+
+.nm-select .ant-select-arrow {
+  position: absolute !important;
+  inset-inline-end: 12px !important;
+  inset-block-start: 50% !important;
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: none;
+}
+
+.nm-select .nm-select__arrow-icon,
+.nm-select .ant-select-arrow .anticon {
+  font-size: 14px !important;
+  color: #9CA3AF !important;
+  line-height: 1;
+}
