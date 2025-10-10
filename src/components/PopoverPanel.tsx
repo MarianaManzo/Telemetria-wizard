@@ -24,14 +24,6 @@ interface PopoverFooterProps {
   className?: string;
 }
 
-function Base({ children, className = '' }: PopoverBaseProps) {
-  return (
-    <div className={cn('flex flex-col bg-white', className)} style={{ fontFamily: "'Source Sans 3', sans-serif" }}>
-      {children}
-    </div>
-  );
-}
-
 function Header({ title, onClose, hideCloseButton, actions, className = '' }: PopoverHeaderProps) {
   if (!title && hideCloseButton && !actions) {
     return null;
@@ -44,7 +36,9 @@ function Header({ title, onClose, hideCloseButton, actions, className = '' }: Po
       </div>
       <div className="flex items-center gap-2">
         {actions}
-        {!hideCloseButton && null}
+        {!hideCloseButton && (
+          <AntdButton type="text" aria-label="Cerrar" icon={<CloseOutlined style={{ fontSize: 18 }} />} onClick={onClose} />
+        )}
       </div>
     </div>
   );
@@ -65,3 +59,13 @@ export const PopoverBase = Object.assign(Base, {
 });
 
 export type { PopoverBaseProps, PopoverHeaderProps, PopoverContentProps, PopoverFooterProps };
+import { Button as AntdButton } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
+
+function Base({ children, className = '' }: PopoverBaseProps) {
+  return (
+    <div className={cn('flex flex-col bg-white', className)} style={{ fontFamily: "'Source Sans 3', sans-serif" }}>
+      {children}
+    </div>
+  );
+}

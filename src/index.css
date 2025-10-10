@@ -4669,7 +4669,3 @@ input[type="radio"]:focus {
 .nm-popover-base .ant-popover-inner-content {
   padding: 0 !important;
 }
-
-.nm-popover-base svg.lucide-x {
-  display: none !important;
-}
