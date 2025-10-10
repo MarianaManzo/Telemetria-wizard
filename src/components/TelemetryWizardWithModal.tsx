@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "./ui/select"
+import ApplyRuleCard from "./ApplyRuleCard"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
@@ -2226,103 +2227,79 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
 
                 {/* Apply this rule to */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Truck className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Aplica esta regla a</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Elige a cuáles unidades o etiquetas esta regla debe aplicar
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="flex flex-col gap-4">
-                    {/* Main selector */}
-                    <div className="grid grid-cols-2 gap-8 items-center">
-                      <div>
-                        <label className="text-[14px] font-medium text-gray-700">¿A qué unidades aplicará la regla?</label>
+                <ApplyRuleCard
+                  icon={<Truck className="h-5 w-5 text-gray-600" />}
+                  title="Aplica esta regla a"
+                  description="Elige a cuáles unidades o etiquetas esta regla debe aplicar"
+                  question="¿A qué unidades aplicará la regla?"
+                  action={
+                    <Select value={appliesTo} onValueChange={setAppliesTo}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Seleccionar alcance" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all-units">Todas las unidades</SelectItem>
+                        <SelectItem value="custom">Personalizado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  }
+                >
+                  {appliesTo === 'custom' && (
+                    <div className="space-y-6">
+                      <div className="grid gap-3">
+                        <div className="flex items-center gap-2">
+                          <Truck className="h-4 w-4 text-gray-600" />
+                          <label className="text-[14px] font-medium text-gray-700">Unidades</label>
+                        </div>
+                        <UnidadesSelectorInput
+                          selectedUnits={selectedUnitsLocal}
+                          onSelectionChange={handleUnitsChange}
+                          placeholder="Seleccionar unidades"
+                        />
                       </div>
-                      <div>
-                        <Select value={appliesTo} onValueChange={setAppliesTo}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all-units">Todas las unidades</SelectItem>
-                            <SelectItem value="custom">Personalizado</SelectItem>
-                          </SelectContent>
-                        </Select>
+
+                      <div className="grid gap-3">
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-gray-600" />
+                          <label className="text-[14px] font-medium text-gray-700">Etiquetas</label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center hover:bg-gray-400 transition-colors cursor-help">
+                                <span className="text-[10px] text-gray-600">i</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-[12px]">
+                                Se aplicará a cualquier unidad que tenga al menos 1 de esas etiquetas
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <GenericSelectorInput
+                          selectedItems={selectedTags}
+                          onSelectionChange={handleTagsChange}
+                          placeholder="Seleccionar etiquetas"
+                          title="Etiquetas para aplicar regla"
+                          items={initialTags.map((tag, index) => ({
+                            id: tag.id,
+                            name: tag.name,
+                            color: tag.color,
+                            key: `tag-${tag.id}-${index}`
+                          }))}
+                          searchPlaceholder="Buscar etiquetas..."
+                          getDisplayText={(count) => {
+                            if (count === 0) return "Seleccionar etiquetas"
+                            if (count === 1) return "1 etiqueta seleccionada"
+                            return `${count} etiquetas seleccionadas`
+                          }}
+                          multiSelect={true}
+                          showColorPills={true}
+                          showPillsDisplay={true}
+                        />
                       </div>
                     </div>
-
-                    {/* Conditional selectors */}
-                    {appliesTo === 'custom' && (
-                      <>
-                        {/* Unidades */}
-                        <div className="grid grid-cols-2 gap-8 items-center">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Truck className="h-4 w-4 text-gray-600" />
-                              <label className="text-[14px] font-medium text-gray-700">Unidades</label>
-                            </div>
-                          </div>
-                          <div>
-                            <UnidadesSelectorInput
-                              selectedUnits={selectedUnitsLocal}
-                              onSelectionChange={handleUnitsChange}
-                              placeholder="Seleccionar unidades"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Etiquetas */}
-                        <div className="grid grid-cols-2 gap-8 items-center">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Tag className="h-4 w-4 text-gray-600" />
-                              <label className="text-[14px] font-medium text-gray-700">Etiquetas</label>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center hover:bg-gray-400 transition-colors cursor-help">
-                                    <span className="text-[10px] text-gray-600">i</span>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="text-[12px]">
-                                    Se aplicará a cualquier unidad que tenga al menos 1 de esas etiquetas
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </div>
-                          <div>
-                            <GenericSelectorInput
-                              selectedItems={selectedTags}
-                              onSelectionChange={handleTagsChange}
-                              placeholder="Seleccionar etiquetas"
-                              title="Etiquetas para aplicar regla"
-                              items={initialTags.map((tag, index) => ({
-                                id: tag.id,
-                                name: tag.name,
-                                color: tag.color,
-                                key: `tag-${tag.id}-${index}`
-                              }))}
-                              searchPlaceholder="Buscar etiquetas..."
-                              getDisplayText={(count) => {
-                                if (count === 0) return "Seleccionar etiquetas"
-                                if (count === 1) return "1 etiqueta seleccionada"
-                                return `${count} etiquetas seleccionadas`
-                              }}
-                              multiSelect={true}
-                              showColorPills={true}
-                              showPillsDisplay={true}
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
+                  )}
+                </ApplyRuleCard>
 
                 {/* Advanced Configuration */}
                 <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
