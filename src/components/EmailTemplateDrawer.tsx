@@ -133,17 +133,37 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
             }}
           >
             {/* COLUMNA PRINCIPAL */}
-            <ConfigProvider theme={{ components: { Collapse: { headerPadding: "16px" } } }}>
+            <ConfigProvider
+              theme={{
+                components: {
+                  Collapse: { headerPadding: "16px" },
+                  Form: { itemMarginBottom: 8, verticalLabelPadding: "0 0 4px" },
+                },
+              }}
+            >
               <div>
                 <Collapse defaultActiveKey={["cfg"]} ghost expandIconPosition="end">
                   <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Configuración de plantilla</span>} key="cfg">
                     <Text>Diseña tu plantilla con componentes y variables dinámicas.</Text>
                     <div style={{ height: 12 }} />
-                    <Form layout="vertical" requiredMark="optional">
-                      <Form.Item label="Nombre de la plantilla" required><Input /></Form.Item>
-                      <Form.Item label="Asunto" required><Input /></Form.Item>
-                      <Form.Item label="Remitentes"><Select placeholder="Select" options={[]} /></Form.Item>
-                      <Form.Item label="Destinatarios"><Select placeholder="Select" options={[]} /></Form.Item>
+                    <Form
+                      layout="vertical"
+                      requiredMark
+                      style={{ display: "grid", gap: 8 }}
+                      labelCol={{ style: { fontWeight: 500 } }}
+                    >
+                      <Form.Item label="Nombre de la plantilla" required>
+                        <Input />
+                      </Form.Item>
+                      <Form.Item label="Asunto" required>
+                        <Input />
+                      </Form.Item>
+                      <Form.Item label="Remitentes" required>
+                        <Select placeholder="Select" options={[]} />
+                      </Form.Item>
+                      <Form.Item label="Destinatarios" required>
+                        <Select placeholder="Select" options={[]} />
+                      </Form.Item>
                     </Form>
                   </Panel>
                 </Collapse>
