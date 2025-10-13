@@ -3901,51 +3901,55 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 <div className="text-[13px] text-gray-800">{emailSubject}</div>
                               </div>
 
+                              <div className="space-y-1">
+                                <span className="text-[12px] font-medium text-gray-600">Mensaje de la plantilla</span>
+                                <div className="rounded-lg border border-gray-200 bg-white p-3 text-[12px] text-gray-700 whitespace-pre-wrap">
+                                  {customEmailMessage || 'Esta plantilla no tiene mensaje definido.'}
+                                </div>
+                              </div>
+
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                   <span className="text-[12px] font-medium text-gray-600">Destinatarios</span>
-                                  <div className="flex flex-wrap gap-2">
+                                  <div className="rounded-lg border border-gray-200 bg-white p-3">
                                     {emailRecipients.length > 0 ? (
-                                      emailRecipients.map((recipient) => (
-                                        <span
-                                          key={recipient}
-                                          className="inline-flex items-center rounded-full border border-[#E0E7FF] bg-white px-2.5 py-1 text-[12px] text-gray-700"
-                                        >
-                                          {recipient}
-                                        </span>
-                                      ))
+                                      <div className="flex flex-wrap gap-2">
+                                        {emailRecipients.map((recipient) => (
+                                          <div
+                                            key={recipient}
+                                            className="inline-flex items-center rounded-full border border-[#E0E7FF] bg-white px-2.5 py-1 text-[12px] text-gray-700"
+                                          >
+                                            {recipient}
+                                          </div>
+                                        ))}
+                                      </div>
                                     ) : (
-                                      <span className="text-[12px] text-gray-500">
+                                      <div className="text-[12px] text-gray-500">
                                         Sin destinatarios guardados.
-                                      </span>
+                                      </div>
                                     )}
                                   </div>
                                 </div>
                                 <div className="space-y-1">
                                   <span className="text-[12px] font-medium text-gray-600">Remitentes</span>
-                                  <div className="flex flex-wrap gap-2">
+                                  <div className="rounded-lg border border-gray-200 bg-white p-3">
                                     {selectedEmailTemplateData?.sender && selectedEmailTemplateData.sender.length > 0 ? (
-                                      selectedEmailTemplateData.sender.map((sender: string) => (
-                                        <span
-                                          key={sender}
-                                          className="inline-flex items-center rounded-full border border-[#E0E7FF] bg-white px-2.5 py-1 text-[12px] text-gray-700"
-                                        >
-                                          {sender}
-                                        </span>
-                                      ))
+                                      <div className="flex flex-wrap gap-2">
+                                        {selectedEmailTemplateData.sender.map((sender: string) => (
+                                          <div
+                                            key={sender}
+                                            className="inline-flex items-center rounded-full border border-[#E0E7FF] bg-white px-2.5 py-1 text-[12px] text-gray-700"
+                                          >
+                                            {sender}
+                                          </div>
+                                        ))}
+                                      </div>
                                     ) : (
-                                      <span className="text-[12px] text-gray-500">
+                                      <div className="text-[12px] text-gray-500">
                                         {selectedEmailTemplateData ? 'Sin remitentes guardados.' : 'Selecciona una plantilla para ver remitentes.'}
-                                      </span>
+                                      </div>
                                     )}
                                   </div>
-                                </div>
-                              </div>
-
-                              <div className="space-y-1">
-                                <span className="text-[12px] font-medium text-gray-600">Mensaje de la plantilla</span>
-                                <div className="rounded-lg border border-gray-200 bg-white p-3 text-[12px] text-gray-700 whitespace-pre-wrap">
-                                  {customEmailMessage || 'Esta plantilla no tiene mensaje definido.'}
                                 </div>
                               </div>
                             </div>
