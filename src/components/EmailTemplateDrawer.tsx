@@ -3,7 +3,7 @@ import { CloseOutlined } from "@ant-design/icons";
 import { Drawer, Button, Form, Input, Select, Collapse, Typography, Divider } from "antd";
 
 const { Panel } = Collapse;
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 export default function TemplateDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const MIN = 726;
@@ -79,7 +79,7 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
             {/* COLUMNA PRINCIPAL */}
             <div>
               <Collapse defaultActiveKey={["cfg"]} ghost expandIconPosition="end">
-                <Panel header="Configuración de plantilla" key="cfg">
+                <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Configuración de plantilla</span>} key="cfg">
                   <Text>Diseña tu plantilla con componentes y variables dinámicas.</Text>
                   <div style={{ height: 12 }} />
                   <Form layout="vertical" requiredMark="optional">
@@ -98,7 +98,7 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
 
               <Collapse defaultActiveKey={["body"]} ghost expandIconPosition="end">
                 {/* 2ª sección: título solicitado */}
-                <Panel header="Contenido del mensaje" key="body">
+                <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Contenido del mensaje</span>} key="body">
                   <Text>Usa “#” para autocompletar variables</Text>
                   <div style={{ height: 8 }} />
                   {/* Toolbar simple */}
@@ -114,15 +114,6 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                   </div>
                   <Input.TextArea rows={10} placeholder="Escribe el contenido..." />
                   <div style={{ height: 12 }} />
-                  {/* Ejemplo con variables */}
-                  <div style={{ border: "1px solid #f0f0f0", borderRadius: 8, padding: 12 }}>
-                    <Title level={5} style={{ marginTop: 0 }}>ALERTA DETECTADA</Title>
-                    <div>Velocidad: <span className="chip">{`{presion}`}</span></div>
-                    <div>Ubicación: <span className="chip">{`{ubicacion}`}</span></div>
-                    <div>Temperatura: <span className="chip">{`{temperatura}`}</span></div>
-                    <div>Presión: <span className="chip">{`{unidad}`}</span></div>
-                    <div style={{ marginTop: 8 }}>Por favor revise este evento</div>
-                  </div>
                 </Panel>
               </Collapse>
             </div>
@@ -136,7 +127,7 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
               <Divider style={{ margin: "0 0 12px" }} />
 
               <Collapse defaultActiveKey={["comp", "vars"]} ghost expandIconPosition="end">
-                <Panel header="Componentes" key="comp">
+                <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Componentes</span>} key="comp">
                   <div style={{ display: "grid", gap: 8 }}>
                     {["Encabezado","Bloque de texto","Mensaje de alerta","Botón de acción","Divisor","Imagen"].map((t) => (
                       <div key={t} style={{ border: "1px solid #f0f0f0", borderRadius: 8, padding: 10, display:"flex", alignItems:"center", gap:8, background: "#fff" }}>
@@ -150,7 +141,7 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                   </div>
                 </Panel>
 
-                <Panel header="Variables" key="vars">
+                <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Variables</span>} key="vars">
                   <Input.Search placeholder="Search" style={{ marginBottom: 8 }} />
                   <div style={{ display: "grid", gap: 8 }}>
                     {["{unidad}","{presion}","{presion}","{temperatura}","{unidad}","{unidad}"].map((v,i)=>(
