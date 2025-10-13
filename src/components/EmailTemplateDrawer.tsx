@@ -20,6 +20,7 @@ import {
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import { Drawer, Button, Form, Input, Select, Collapse, Typography, Divider } from "antd";
+import { EyeOutlined } from "@ant-design/icons";
 
 const { Panel } = Collapse;
 const { Text } = Typography;
@@ -104,7 +105,13 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
       }}
       footer={
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <a>👁️ Vista previa</a>
+          <Button
+            type="link"
+            icon={<EyeOutlined />}
+            style={{ paddingLeft: 0, paddingRight: 0, fontWeight: 500 }}
+          >
+            Vista previa
+          </Button>
           <div style={{ display: "flex", gap: 8 }}>
             <Button onClick={onClose}>Cancelar</Button>
             <Button type="primary">Guardar</Button>
