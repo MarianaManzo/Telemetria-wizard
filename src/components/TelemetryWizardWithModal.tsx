@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback, Fragment } from 'react'
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { Flex, Typography } from "antd";
@@ -13,6 +13,7 @@ import { Switch } from "./ui/switch"
 import { Textarea } from "./ui/textarea"
 import { VariableTextarea, VariableButton, type VariableTextareaHandle, type MessageVariableDescriptor } from "./VariableTextarea"
 import { NotificationExampleModal } from "./NotificationExampleModal"
+import { EmailTemplateDrawer } from "./EmailTemplateDrawer"
 import { useNotifications } from "../contexts/NotificationContext"
 import { 
   Select,
@@ -1765,6 +1766,40 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     if (!selectedEmailTemplate) return null
     return userEmailTemplates.find((template) => template.id === selectedEmailTemplate) || null
   }, [selectedEmailTemplate, userEmailTemplates])
+
+  const renderedEmailTemplateMessage = useMemo(() => {
+    if (!customEmailMessage) return []
+
+    const tokenRegex = /(\{[^}]+\})/g
+
+    return customEmailMessage.split(tokenRegex).map((segment, index) => {
+      if (!segment) return null
+
+      if (/^\{[^}]+\}$/.test(segment)) {
+        return (
+          <span
+            key={`token-${index}`}
+            className="inline-flex items-center rounded-md bg-[#EFE7FF] px-2 py-0.5 text-[12px] font-medium text-[#5B34B6]"
+          >
+            {segment}
+          </span>
+        )
+      }
+
+      const lines = segment.split('\n')
+
+      return (
+        <Fragment key={`text-${index}`}>
+          {lines.map((line, lineIndex) => (
+            <Fragment key={`text-${index}-${lineIndex}`}>
+              {line}
+              {lineIndex < lines.length - 1 && <br />}
+            </Fragment>
+          ))}
+        </Fragment>
+      )
+    }).filter(Boolean) as React.ReactNode[]
+  }, [customEmailMessage])
 
   useEffect(() => {
     if (!emailEnabled) return
@@ -3858,100 +3893,127 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             <div className="text-[12px] text-gray-600">Usa plantillas guardadas para automatizar el mensaje</div>
                           </div>
                         </div>
-                        <Switch
-                          checked={emailEnabled}
-                          onCheckedChange={setEmailEnabled}
-                          className="switch-blue"
-                        />
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={emailEnabled}
+                            onCheckedChange={setEmailEnabled}
+                            className="switch-blue"
+                          />
+                        </div>
                       </div>
 
                       {emailEnabled && (
-                        <div className="border-t border-gray-200 p-3 bg-gray-50 space-y-4">
-                          <div className="space-y-1">
-                            <label className="text-[13px] font-medium text-gray-700">Plantilla de correo</label>
-                            <Select
-                              value={selectedEmailTemplate || ''}
-                              onValueChange={(value) => {
-                                const template = userEmailTemplates.find((tpl) => tpl.id === value)
-                                if (template) {
-                                  handleTemplateSelection(template)
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Selecciona una plantilla guardada" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {userEmailTemplates.map((template) => (
-                                  <SelectItem key={template.id} value={template.id}>
-                                    {template.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <p className="text-[11px] text-gray-500">
-                              Selecciona una plantilla para reutilizar asunto, destinatarios y mensaje guardados.
-                            </p>
+                        <div className="border-t border-gray-200 bg-gray-50 p-3 space-y-4">
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#2B3075]">
+                              <span className="text-[#4C6FFF]">*</span>
+                              Seleccionar plantilla
+                            </label>
+                            <div className="flex flex-wrap items-center gap-3">
+                              <div className="min-w-[240px] flex-1">
+                                <Select
+                                  value={selectedEmailTemplate || ''}
+                                  onValueChange={(value) => {
+                                    const template = userEmailTemplates.find((tpl) => tpl.id === value)
+                                    if (template) {
+                                      handleTemplateSelection(template)
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full [&_.ant-select-selector]:!h-[44px] [&_.ant-select-selector]:!rounded-xl [&_.ant-select-selector]:!border-[#CBD3FF] [&_.ant-select-selector]:!px-4 [&_.ant-select-selector]:!py-2 [&_.ant-select-selector]:!text-[13px] [&_.ant-select-selector:hover]:!border-[#7B8CFF] [&_.ant-select-selector:focus-within]:!border-[#4C6FFF]">
+                                    <SelectValue placeholder="Selecciona una plantilla guardada" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {userEmailTemplates.map((template) => (
+                                      <SelectItem key={template.id} value={template.id}>
+                                        {template.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <EmailTemplateDrawer variant="inline" />
+                            </div>
                           </div>
 
-                          {selectedEmailTemplateData && (
-                            <div className="space-y-3">
-                              <div className="space-y-1">
-                                <span className="text-[12px] font-medium text-gray-600">Asunto</span>
-                                <div className="text-[13px] text-gray-800">{emailSubject}</div>
-                              </div>
-
-                              <div className="space-y-1">
-                                <span className="text-[12px] font-medium text-gray-600">Mensaje de la plantilla</span>
-                                <div className="rounded-lg border border-gray-200 bg-white p-3 text-[12px] text-gray-700 whitespace-pre-wrap">
-                                  {customEmailMessage || 'Esta plantilla no tiene mensaje definido.'}
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-4">
+                          {selectedEmailTemplateData ? (
+                            <div className="space-y-4">
+                              <div className="rounded-lg border border-[#E1E6FF] bg-white p-4 shadow-[0px_8px_20px_rgba(76,111,255,0.08)] space-y-4">
                                 <div className="space-y-1">
-                                  <span className="text-[12px] font-medium text-gray-600">Destinatarios</span>
-                                  <div className="rounded-lg border border-gray-200 bg-white p-3">
-                                    {emailRecipients.length > 0 ? (
-                                      <div className="flex flex-wrap gap-2">
-                                        {emailRecipients.map((recipient) => (
-                                          <div
-                                            key={recipient}
-                                            className="inline-flex items-center rounded-full border border-[#E0E7FF] bg-white px-2.5 py-1 text-[12px] text-gray-700"
-                                          >
-                                            {recipient}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <div className="text-[12px] text-gray-500">
-                                        Sin destinatarios guardados.
-                                      </div>
-                                    )}
-                                  </div>
+                                  <span className="text-[13px] font-semibold text-[#1C2452]">
+                                    Plantilla - {selectedEmailTemplateData.name}
+                                  </span>
+                                  <span className="text-[12px] text-[#6F7390]">{selectedEmailTemplateData.description}</span>
                                 </div>
-                                <div className="space-y-1">
-                                  <span className="text-[12px] font-medium text-gray-600">Remitentes</span>
-                                  <div className="rounded-lg border border-gray-200 bg-white p-3">
-                                    {selectedEmailTemplateData?.sender && selectedEmailTemplateData.sender.length > 0 ? (
-                                      <div className="flex flex-wrap gap-2">
-                                        {selectedEmailTemplateData.sender.map((sender: string) => (
-                                          <div
+
+                                <div className="rounded-lg border border-[#EEF1FF] bg-[#FAFBFF] p-4 shadow-inner">
+                                  {renderedEmailTemplateMessage.length > 0 ? (
+                                    <div className="text-[13px] leading-[22px] text-[#313655]">
+                                      {renderedEmailTemplateMessage.map((node, index) => (
+                                        <Fragment key={index}>{node}</Fragment>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-[12px] text-gray-500">Esta plantilla no tiene mensaje definido.</span>
+                                  )}
+                                </div>
+
+                                <div className="grid gap-3 md:grid-cols-2">
+                                  <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-3">
+                                    <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
+                                      Remitentes
+                                    </span>
+                                    <div className="flex flex-wrap gap-2">
+                                      {selectedEmailTemplateData?.sender && selectedEmailTemplateData.sender.length > 0 ? (
+                                        selectedEmailTemplateData.sender.map((sender: string) => (
+                                          <span
                                             key={sender}
-                                            className="inline-flex items-center rounded-full border border-[#E0E7FF] bg-white px-2.5 py-1 text-[12px] text-gray-700"
+                                            className="inline-flex items-center rounded-full border border-[#D5DCFF] bg-white px-3 py-1 text-[12px] font-medium text-[#394074]"
                                           >
                                             {sender}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      <div className="text-[12px] text-gray-500">
-                                        {selectedEmailTemplateData ? 'Sin remitentes guardados.' : 'Selecciona una plantilla para ver remitentes.'}
-                                      </div>
-                                    )}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <span className="text-[12px] text-gray-500">
+                                          {selectedEmailTemplateData ? 'Sin remitentes guardados.' : 'Selecciona una plantilla para ver remitentes.'}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-3">
+                                    <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
+                                      Destinatarios
+                                    </span>
+                                    <div className="flex flex-wrap gap-2">
+                                      {emailRecipients.length > 0 ? (
+                                        emailRecipients.map((recipient) => (
+                                          <span
+                                            key={recipient}
+                                            className="inline-flex items-center rounded-full border border-[#D5DCFF] bg-white px-3 py-1 text-[12px] font-medium text-[#394074]"
+                                          >
+                                            {recipient}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <span className="text-[12px] text-gray-500">Sin destinatarios guardados.</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-3">
+                                  <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
+                                    Asunto del correo
+                                  </span>
+                                  <div className="rounded-md border border-[#D6DDFF] bg-white px-3 py-2 text-[13px] font-medium text-[#1C2452]">
+                                    {emailSubject || 'Sin asunto definido.'}
                                   </div>
                                 </div>
                               </div>
+                            </div>
+                          ) : (
+                            <div className="rounded-lg border border-dashed border-[#C5CCF7] bg-white px-4 py-8 text-center text-[13px] text-[#6F7390]">
+                              Selecciona una plantilla para visualizar el detalle guardado.
                             </div>
                           )}
                         </div>
