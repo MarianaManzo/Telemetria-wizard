@@ -134,7 +134,12 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
           >
             {/* COLUMNA PRINCIPAL */}
             <div>
-              <Collapse defaultActiveKey={["cfg"]} ghost expandIconPosition="end">
+              <Collapse
+                defaultActiveKey={["cfg"]}
+                ghost
+                expandIconPosition="end"
+                styles={{ header: { padding: "16px" } }}
+              >
                 <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Configuración de plantilla</span>} key="cfg">
                   <Text>Diseña tu plantilla con componentes y variables dinámicas.</Text>
                   <div style={{ height: 12 }} />
@@ -152,7 +157,12 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
 
               <div style={{ height: 12 }} />
 
-              <Collapse defaultActiveKey={["body"]} ghost expandIconPosition="end">
+              <Collapse
+                defaultActiveKey={["body"]}
+                ghost
+                expandIconPosition="end"
+                styles={{ header: { padding: "16px" } }}
+              >
                 {/* 2ª sección: título solicitado */}
                 <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Contenido del mensaje</span>} key="body">
                   <Text>Usa “#” para autocompletar variables</Text>
@@ -212,7 +222,12 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
               {/* Divider horizontal de la columna */}
               <Divider style={{ margin: "0 0 12px" }} />
 
-              <Collapse defaultActiveKey={["comp", "vars"]} ghost expandIconPosition="end">
+              <Collapse
+                defaultActiveKey={["comp", "vars"]}
+                ghost
+                expandIconPosition="end"
+                styles={{ header: { padding: "16px" } }}
+              >
                 <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Componentes</span>} key="comp">
                   <div style={{ display: "grid", gap: 8 }}>
                     {["Encabezado","Bloque de texto","Mensaje de alerta","Botón de acción","Divisor","Imagen"].map((t) => (
