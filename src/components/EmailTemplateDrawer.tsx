@@ -254,7 +254,21 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                     <Input.Search placeholder="Search" style={{ marginBottom: 8 }} />
                     <div style={{ display: "grid", gap: 8 }}>
                       {["{unidad}","{presion}","{presion}","{temperatura}","{unidad}","{unidad}"].map((v,i)=>(
-                        <div key={i} style={{ border:"1px solid #e6e6e6", borderRadius: 8, padding: 8, background:"#faf5ff" }}>
+                        <div
+                          key={i}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            border: "1px solid #c792ff",
+                            background: "#f4e8ff",
+                            color: "#5b34b6",
+                            borderRadius: 12,
+                            padding: "6px 10px",
+                            fontWeight: 500,
+                          }}
+                        >
+                          <span style={{ fontSize: 18, lineHeight: 1 }}>⋮⋮</span>
                           {v}
                         </div>
                       ))}
