@@ -1,9 +1,60 @@
 import React, { useRef, useState, useCallback } from "react";
-import { CloseOutlined } from "@ant-design/icons";
+import {
+  AlignCenterOutlined,
+  AlignJustifyOutlined,
+  AlignLeftOutlined,
+  AlignRightOutlined,
+  AtOutlined,
+  BoldOutlined,
+  CloseOutlined,
+  CodeOutlined,
+  HighlightOutlined,
+  IndentOutlined,
+  ItalicOutlined,
+  LinkOutlined,
+  MinusOutlined,
+  OrderedListOutlined,
+  OutdentOutlined,
+  RedoOutlined,
+  StrikethroughOutlined,
+  UnderlineOutlined,
+  UndoOutlined,
+  UnorderedListOutlined,
+} from "@ant-design/icons";
 import { Drawer, Button, Form, Input, Select, Collapse, Typography, Divider } from "antd";
 
 const { Panel } = Collapse;
 const { Text } = Typography;
+
+type ToolbarItem =
+  | { type: "button"; key: string; icon: React.ReactNode; ariaLabel: string }
+  | { type: "divider"; key: string };
+
+const textToolbarItems: ToolbarItem[] = [
+  { type: "button", key: "bold", icon: <BoldOutlined />, ariaLabel: "Negrita" },
+  { type: "button", key: "italic", icon: <ItalicOutlined />, ariaLabel: "Cursiva" },
+  { type: "button", key: "underline", icon: <UnderlineOutlined />, ariaLabel: "Subrayado" },
+  { type: "button", key: "strike", icon: <StrikethroughOutlined />, ariaLabel: "Tachado" },
+  { type: "button", key: "mention", icon: <AtOutlined />, ariaLabel: "Mención" },
+  { type: "divider", key: "divider-1" },
+  { type: "button", key: "link", icon: <LinkOutlined />, ariaLabel: "Insertar enlace" },
+  { type: "button", key: "code", icon: <CodeOutlined />, ariaLabel: "Insertar código" },
+  { type: "button", key: "quote", icon: <HighlightOutlined />, ariaLabel: "Destacar texto" },
+  { type: "divider", key: "divider-2" },
+  { type: "button", key: "unordered", icon: <UnorderedListOutlined />, ariaLabel: "Lista con viñetas" },
+  { type: "button", key: "ordered", icon: <OrderedListOutlined />, ariaLabel: "Lista numerada" },
+  { type: "button", key: "indent", icon: <IndentOutlined />, ariaLabel: "Aumentar sangría" },
+  { type: "button", key: "outdent", icon: <OutdentOutlined />, ariaLabel: "Reducir sangría" },
+  { type: "divider", key: "divider-3" },
+  { type: "button", key: "align-left", icon: <AlignLeftOutlined />, ariaLabel: "Alinear a la izquierda" },
+  { type: "button", key: "align-center", icon: <AlignCenterOutlined />, ariaLabel: "Centrar" },
+  { type: "button", key: "align-right", icon: <AlignRightOutlined />, ariaLabel: "Alinear a la derecha" },
+  { type: "button", key: "align-justify", icon: <AlignJustifyOutlined />, ariaLabel: "Justificar" },
+  { type: "divider", key: "divider-4" },
+  { type: "button", key: "separator", icon: <MinusOutlined />, ariaLabel: "Separador" },
+  { type: "button", key: "undo", icon: <UndoOutlined />, ariaLabel: "Deshacer" },
+  { type: "button", key: "redo", icon: <RedoOutlined />, ariaLabel: "Rehacer" },
+];
 
 export default function TemplateDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const MIN = 726;
@@ -101,17 +152,45 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                 <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Contenido del mensaje</span>} key="body">
                   <Text>Usa “#” para autocompletar variables</Text>
                   <div style={{ height: 8 }} />
-                  {/* Toolbar simple */}
-                  <div style={{ display: "flex", gap: 8, padding: "8px 0" }}>
-                    <Button size="small">B</Button>
-                    <Button size="small">I</Button>
-                    <Button size="small">U</Button>
-                    <Divider type="vertical" />
-                    <Button size="small">Izq</Button>
-                    <Button size="small">Cen</Button>
-                    <Button size="small">Der</Button>
-                    <Button size="small">Just</Button>
+                  {/* Toolbar de formato */}
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      border: "1px solid #d9d9d9",
+                      borderRadius: 999,
+                      overflow: "hidden",
+                      background: "#fff",
+                    }}
+                  >
+                    {textToolbarItems.map((item) =>
+                      item.type === "divider" ? (
+                        <div
+                          key={item.key}
+                          style={{ width: 1, margin: "6px 4px", background: "#e5e5e5" }}
+                        />
+                      ) : (
+                        <button
+                          key={item.key}
+                          type="button"
+                          aria-label={item.ariaLabel}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            padding: "6px 10px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 16,
+                            lineHeight: 1,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {item.icon}
+                        </button>
+                      ),
+                    )}
                   </div>
+                  <div style={{ height: 12 }} />
                   <Input.TextArea rows={10} placeholder="Escribe el contenido..." />
                   <div style={{ height: 12 }} />
                 </Panel>
