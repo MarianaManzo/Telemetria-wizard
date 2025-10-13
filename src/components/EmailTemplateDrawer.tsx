@@ -57,12 +57,12 @@ const textToolbarItems: ToolbarItem[] = [
 ];
 
 const componentItems = [
-  { label: "Encabezado", helper: "Título principal", snippet: "\n[Encabezado]\n" },
-  { label: "Bloque de texto", helper: "Párrafo descriptivo", snippet: "\n[Texto]\n" },
-  { label: "Mensaje de alerta", helper: "Resalta eventos", snippet: "\n[Alerta]\n" },
-  { label: "Botón de acción", helper: "CTA destacado", snippet: "\n[boton texto=\"Acción\" url=\"\"]\n" },
-  { label: "Divisor", helper: "Separador visual", snippet: "\n---\n" },
-  { label: "Imagen", helper: "Elemento gráfico", snippet: "\n![Imagen](url)\n" },
+  { label: "Encabezado", helper: "Título principal", snippet: "ALERTA DETECTADA\n\n" },
+  { label: "Bloque de texto", helper: "Párrafo descriptivo", snippet: "Escribe aquí el cuerpo del mensaje.\n\n" },
+  { label: "Mensaje de alerta", helper: "Resalta eventos", snippet: "Mensaje de alerta: describe la situación detectada.\n\n" },
+  { label: "Botón de acción", helper: "CTA destacado", snippet: "Botón de acción: [Ver detalle](https://tu-enlace.com)\n\n" },
+  { label: "Divisor", helper: "Separador visual", snippet: "---\n\n" },
+  { label: "Imagen", helper: "Elemento gráfico", snippet: "![Imagen descriptiva](https://tu-imagen.com/ejemplo.png)\n\n" },
 ];
 
 const variableItems = ["{unidad}", "{presion}", "{presion}", "{temperatura}", "{unidad}", "{unidad}"];
