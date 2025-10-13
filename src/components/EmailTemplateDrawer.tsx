@@ -55,9 +55,21 @@ const textToolbarItems: ToolbarItem[] = [
   { type: "button", key: "redo", icon: <RedoOutlined />, ariaLabel: "Rehacer" },
 ];
 
+const componentItems = [
+  { label: "Encabezado", helper: "Título principal", snippet: "\n[Encabezado]\n" },
+  { label: "Bloque de texto", helper: "Párrafo descriptivo", snippet: "\n[Texto]\n" },
+  { label: "Mensaje de alerta", helper: "Resalta eventos", snippet: "\n[Alerta]\n" },
+  { label: "Botón de acción", helper: "CTA destacado", snippet: "\n[boton texto=\"Acción\" url=\"\"]\n" },
+  { label: "Divisor", helper: "Separador visual", snippet: "\n---\n" },
+  { label: "Imagen", helper: "Elemento gráfico", snippet: "\n![Imagen](url)\n" },
+];
+
+const variableItems = ["{unidad}", "{presion}", "{presion}", "{temperatura}", "{unidad}", "{unidad}"];
+
 export default function TemplateDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const MIN = 726;
   const [width, setWidth] = useState(MIN);
+  const [bodyContent, setBodyContent] = useState("");
   const dragging = useRef(false);
 
   const onMouseMove = useCallback((e: MouseEvent) => {
@@ -78,6 +90,42 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", stopDrag);
   }, [onMouseMove, stopDrag]);
+
+  const allowDrop = useCallback((event: React.DragEvent<HTMLTextAreaElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const handleDropIntoBody = useCallback(
+    (event: React.DragEvent<HTMLTextAreaElement>) => {
+      event.preventDefault();
+      const text = event.dataTransfer.getData("text/plain");
+      if (!text) return;
+      const target = event.currentTarget;
+      const { selectionStart, selectionEnd } = target;
+      const start = selectionStart ?? bodyContent.length;
+      const end = selectionEnd ?? start;
+      const nextValue = `${bodyContent.slice(0, start)}${text}${bodyContent.slice(end)}`;
+      setBodyContent(nextValue);
+      const cursor = start + text.length;
+      requestAnimationFrame(() => {
+        target.selectionStart = cursor;
+        target.selectionEnd = cursor;
+      });
+    },
+    [bodyContent],
+  );
+
+  const handleBodyChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setBodyContent(event.target.value);
+  }, []);
+
+  const handleDragStart = useCallback((payload: string) => {
+    return (event: React.DragEvent<HTMLDivElement>) => {
+      event.dataTransfer.setData("text/plain", payload);
+      event.dataTransfer.effectAllowed = "copyMove";
+    };
+  }, []);
 
   return (
     <Drawer
@@ -219,7 +267,14 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                     )}
                   </div>
                     <div style={{ height: 12 }} />
-                    <Input.TextArea rows={10} placeholder="Escribe el contenido..." />
+                    <Input.TextArea
+                      rows={10}
+                      placeholder="Escribe el contenido..."
+                      value={bodyContent}
+                      onChange={handleBodyChange}
+                      onDrop={handleDropIntoBody}
+                      onDragOver={allowDrop}
+                    />
                     <div style={{ height: 12 }} />
                   </Panel>
                 </Collapse>
@@ -238,12 +293,26 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                 <Collapse defaultActiveKey={["comp", "vars"]} ghost expandIconPosition="end">
                   <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Componentes</span>} key="comp">
                     <div style={{ display: "grid", gap: 8 }}>
-                      {["Encabezado","Bloque de texto","Mensaje de alerta","Botón de acción","Divisor","Imagen"].map((t) => (
-                        <div key={t} style={{ border: "1px solid #f0f0f0", borderRadius: 8, padding: 10, display:"flex", alignItems:"center", gap:8, background: "#fff" }}>
-                          <span style={{ cursor:"grab" }}>⋮⋮</span>
+                      {componentItems.map(({ label, helper, snippet }) => (
+                        <div
+                          key={label}
+                          draggable
+                          onDragStart={handleDragStart(snippet)}
+                          style={{
+                            border: "1px solid #f0f0f0",
+                            borderRadius: 8,
+                            padding: 10,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            background: "#fff",
+                            cursor: "grab",
+                          }}
+                        >
+                          <span style={{ fontSize: 18, lineHeight: 1 }}>⋮⋮</span>
                           <div>
-                            <div>{t}</div>
-                            <Text type="secondary">Título principal</Text>
+                            <div>{label}</div>
+                            <Text type="secondary">{helper}</Text>
                           </div>
                         </div>
                       ))}
@@ -253,9 +322,11 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                   <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Variables</span>} key="vars">
                     <Input.Search placeholder="Search" style={{ marginBottom: 8 }} />
                     <div style={{ display: "grid", gap: 8 }}>
-                      {["{unidad}","{presion}","{presion}","{temperatura}","{unidad}","{unidad}"].map((v,i)=>(
+                      {variableItems.map((v, i) => (
                         <div
                           key={i}
+                          draggable
+                          onDragStart={handleDragStart(v)}
                           style={{
                             display: "flex",
                             alignItems: "center",
@@ -266,6 +337,7 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                             borderRadius: 12,
                             padding: "6px 10px",
                             fontWeight: 500,
+                            cursor: "grab",
                           }}
                         >
                           <span style={{ fontSize: 18, lineHeight: 1 }}>⋮⋮</span>
