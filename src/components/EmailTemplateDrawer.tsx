@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useMemo } from "react";
 import {
   AlignCenterOutlined,
   AlignLeftOutlined,
@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import { ConfigProvider, Drawer, Button, Form, Input, Select, Collapse, Typography, Divider } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
+import ModalBase from "./ModalBase";
 
 const { Panel } = Collapse;
 const { Text } = Typography;
@@ -66,10 +67,57 @@ const componentItems = [
 
 const variableItems = ["{unidad}", "{presion}", "{presion}", "{temperatura}", "{unidad}", "{unidad}"];
 
+type PreviewBlock =
+  | { type: "title"; text: string }
+  | { type: "row"; label: string; value: string }
+  | { type: "text"; text: string }
+  | { type: "divider" };
+
+const defaultPreviewBlocks: PreviewBlock[] = [
+  { type: "title", text: "ALERTA DETECTADA" },
+  { type: "row", label: "Velocidad", value: "{presion}" },
+  { type: "row", label: "Ubicación", value: "{ubicacion}" },
+  { type: "row", label: "Temperatura", value: "{temperatura}" },
+  { type: "row", label: "Presión", value: "{unidad}" },
+  { type: "divider" },
+  { type: "text", text: "Por favor revise este evento" },
+  { type: "divider" },
+  { type: "text", text: "Sistema de Monitoreo Numaris" },
+];
+
+const chipStyle: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  borderRadius: 12,
+  padding: "2px 6px",
+  background: "#f4e8ff",
+  color: "#5b34b6",
+  border: "1px solid #c792ff",
+  fontWeight: 500,
+};
+
+function renderTextWithChips(text: string) {
+  return text.split(/(\{[^}]+\})/g).map((segment, index) => {
+    if (segment.startsWith("{") && segment.endsWith("}")) {
+      return (
+        <span key={`chip-${segment}-${index}`} style={{ ...chipStyle, marginRight: 4 }}>
+          {segment}
+        </span>
+      );
+    }
+    return (
+      <span key={`text-${index}`} style={{ whiteSpace: "pre-wrap" }}>
+        {segment}
+      </span>
+    );
+  });
+}
+
 export default function TemplateDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const MIN = 726;
   const [width, setWidth] = useState(MIN);
   const [bodyContent, setBodyContent] = useState("");
+  const [previewVisible, setPreviewVisible] = useState(false);
   const dragging = useRef(false);
 
   const onMouseMove = useCallback((e: MouseEvent) => {
@@ -127,8 +175,43 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
     };
   }, []);
 
+  const openPreview = useCallback(() => {
+    setPreviewVisible(true);
+  }, []);
+
+  const closePreview = useCallback(() => {
+    setPreviewVisible(false);
+  }, []);
+
+  const previewBlocks = useMemo<PreviewBlock[]>(() => {
+    if (!bodyContent.trim()) {
+      return defaultPreviewBlocks;
+    }
+
+    return bodyContent
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map<PreviewBlock>((text, index) => {
+        if (index === 0) {
+          return { type: "title", text };
+        }
+        if (text === "---") {
+          return { type: "divider" };
+        }
+        const colonIndex = text.indexOf(":");
+        if (colonIndex > -1) {
+          const label = text.slice(0, colonIndex).trim();
+          const value = text.slice(colonIndex + 1).trim();
+          return { type: "row", label, value };
+        }
+        return { type: "text", text };
+      });
+  }, [bodyContent]);
+
   return (
-    <Drawer
+    <>
+      <Drawer
       open={open}
       onClose={onClose}
       placement="right"
@@ -157,6 +240,7 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
             type="link"
             icon={<EyeOutlined />}
             style={{ paddingLeft: 0, paddingRight: 0, fontWeight: 500 }}
+            onClick={openPreview}
           >
             Vista previa
           </Button>
@@ -364,7 +448,61 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
       >
         <div style={{ position: "absolute", top: 0, right: 1, width: 2, height: "100%", background: "#d9d9d9" }} />
       </div>
-    </Drawer>
+      </Drawer>
+      <ModalBase
+        open={previewVisible}
+        onClose={closePreview}
+        title="Vista previa"
+        size="md"
+        customFooter={
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button onClick={closePreview}>Cerrar</Button>
+          </div>
+        }
+      >
+        <div
+          style={{
+            borderRadius: 12,
+            border: "1px solid #e5e5e5",
+            padding: 16,
+            background: "#fff",
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          {previewBlocks.map((block, index) => {
+            switch (block.type) {
+              case "title":
+                return (
+                  <Text key={`title-${index}`} strong style={{ fontSize: 16 }}>
+                    {renderTextWithChips(block.text)}
+                  </Text>
+                );
+              case "row":
+                return (
+                  <div
+                    key={`row-${block.label}-${index}`}
+                    style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+                  >
+                    <Text strong style={{ minWidth: 105 }}>{block.label}:</Text>
+                    {renderTextWithChips(block.value)}
+                  </div>
+                );
+              case "text":
+                return (
+                  <div key={`text-${index}`} style={{ color: index === previewBlocks.length - 1 ? "#6f7390" : undefined }}>
+                    {renderTextWithChips(block.text)}
+                  </div>
+                );
+              case "divider":
+                return <Divider key={`divider-${index}`} style={{ margin: 0 }} />;
+              default:
+                return null;
+            }
+          })}
+        </div>
+      </ModalBase>
+    </>
   );
 }
 
