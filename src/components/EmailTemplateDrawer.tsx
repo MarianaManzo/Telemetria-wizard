@@ -153,11 +153,13 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                   {/* Toolbar de formato */}
                   <div
                     style={{
-                      display: "inline-flex",
+                      display: "flex",
+                      width: "100%",
                       border: "1px solid #d9d9d9",
                       borderRadius: 999,
                       overflow: "hidden",
                       background: "#fff",
+                      padding: "0 4px",
                     }}
                   >
                     {textToolbarItems.map((item) =>
