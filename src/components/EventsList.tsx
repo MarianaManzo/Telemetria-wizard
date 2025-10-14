@@ -8,7 +8,6 @@ import {
   SelectValue
 } from "./ui/select"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
-import type { LucideIcon } from "lucide-react"
 import { 
   AlertTriangle,
   Clock,
@@ -18,12 +17,7 @@ import {
   ChevronRight,
   Users,
   CheckCircle,
-  Gauge,
-  AlertOctagon,
-  Thermometer,
-  Clock4,
-  Signal,
-  FileText
+  AlertOctagon
 } from "lucide-react"
 import IconCheckCircleOutlined from "../imports/IconCheckCircleOutlined-32006-399"
 import { Event, AppView } from "../types"
@@ -45,7 +39,7 @@ const severityConfig = {
   high: { 
     label: 'Alta', 
     color: 'bg-red-100 text-red-800 border-red-200',
-    icon: AlertTriangle
+    icon: AlertOctagon
   },
   medium: { 
     label: 'Media', 
@@ -74,48 +68,39 @@ const severityVisuals: Record<Event['severity'], {
   dotBorderClass: string
   dotTextClass: string
   iconColorClass: string
+  shapeBgClass: string
 }> = {
   high: {
     badgeClass: 'bg-red-100 text-red-700 border-red-200',
     dotBorderClass: 'border-red-500',
     dotTextClass: 'text-red-500',
-    iconColorClass: 'text-red-600'
+    iconColorClass: 'text-red-600',
+    shapeBgClass: 'bg-red-100'
   },
   medium: {
     badgeClass: 'bg-orange-100 text-orange-700 border-orange-200',
     dotBorderClass: 'border-orange-500',
     dotTextClass: 'text-orange-500',
-    iconColorClass: 'text-orange-600'
+    iconColorClass: 'text-orange-600',
+    shapeBgClass: 'bg-orange-100'
   },
   low: {
     badgeClass: 'bg-blue-100 text-blue-700 border-blue-200',
     dotBorderClass: 'border-blue-500',
     dotTextClass: 'text-blue-500',
-    iconColorClass: 'text-blue-600'
+    iconColorClass: 'text-blue-600',
+    shapeBgClass: 'bg-blue-100'
   },
   informative: {
     badgeClass: 'bg-cyan-100 text-cyan-700 border-cyan-200',
     dotBorderClass: 'border-cyan-500',
     dotTextClass: 'text-cyan-500',
-    iconColorClass: 'text-cyan-600'
+    iconColorClass: 'text-cyan-600',
+    shapeBgClass: 'bg-cyan-100'
   }
 }
 
-const eventIconMap: Record<string, LucideIcon> = {
-  speed: Gauge,
-  warning: AlertOctagon,
-  thermometer: Thermometer,
-  clock: Clock4,
-  alert: AlertTriangle,
-  signal: Signal,
-}
-
-const getEventIcon = (iconKey?: string): LucideIcon => {
-  if (!iconKey) {
-    return FileText
-  }
-  return eventIconMap[iconKey] || FileText
-}
+const severityOctagonClipPath = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'
 
 const responsibleProfiles: Record<string, { name: string; email: string; avatar: string }> = {
   'mariana.manzo@numaris.com': {
@@ -350,7 +335,7 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                   const statusInfo = statusConfig[event.status]
                   const severityInfo = severityConfig[event.severity]
                   const severityVisual = severityVisuals[event.severity]
-                  const EventIcon = getEventIcon(event.icon)
+                  const SeverityIcon = severityInfo.icon
                   const locationText = event.startAddress || event.endAddress || '---'
                   const responsibleProfile = responsibleProfiles[event.responsible]
                   const responsibleName = responsibleProfile?.name || event.responsible
@@ -369,9 +354,10 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <span
-                            className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full border ${severityVisual.badgeClass}`}
+                            className={`inline-flex h-9 w-9 items-center justify-center ${severityVisual.shapeBgClass}`}
+                            style={{ clipPath: severityOctagonClipPath, paddingInline: '8px' }}
                           >
-                            <EventIcon className={`h-4 w-4 ${severityVisual.iconColorClass}`} />
+                            <SeverityIcon className={`h-4 w-4 ${severityVisual.iconColorClass}`} />
                           </span>
                           <TruncatedText 
                             text={event.ruleName}

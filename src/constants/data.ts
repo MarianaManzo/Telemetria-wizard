@@ -355,6 +355,7 @@ export const initialRules: Rule[] = [
     name: 'Exceso de velocidad',
     description: 'Detecta cuando un vehículo excede el límite de velocidad permitido',
     status: 'active',
+    ruleType: 'telemetry',
     severity: 'high',
     conditions: [],
     conditionGroups: [
@@ -430,6 +431,7 @@ export const initialRules: Rule[] = [
     name: 'Entrada a zona restringida',
     description: 'Alerta cuando un vehículo no autorizado ingresa a una zona restringida',
     status: 'active',
+    ruleType: 'zone',
     severity: 'high',
     conditions: [],
     conditionGroups: [
@@ -510,6 +512,7 @@ export const initialRules: Rule[] = [
     name: 'Temperatura de carga crítica',
     description: 'Monitorea la temperatura de la carga refrigerada para evitar deterioro',
     status: 'active',
+    ruleType: 'telemetry',
     severity: 'medium',
     conditions: [],
     conditionGroups: [
@@ -599,6 +602,7 @@ export const initialRules: Rule[] = [
     name: 'Parada prolongada sin autorización',
     description: 'Detecta cuando un vehículo permanece estacionado por más tiempo del permitido',
     status: 'inactive',
+    ruleType: 'telemetry',
     severity: 'informative',
     conditions: [],
     conditionGroups: [
@@ -697,6 +701,7 @@ export const initialRules: Rule[] = [
     name: 'Botón de pánico activado',
     description: 'Detecta cuando se activa el botón de pánico en un vehículo',
     status: 'active',
+    ruleType: 'telemetry',
     severity: 'high',
     conditions: [
       {
@@ -749,6 +754,7 @@ export const initialRules: Rule[] = [
     name: 'Desconexión prolongada del GPS',
     description: 'Detecta cuando un vehículo pierde conectividad GPS por más de 15 minutos',
     status: 'active',
+    ruleType: 'telemetry',
     severity: 'medium',
     conditions: [],
     conditionGroups: [
@@ -883,6 +889,7 @@ export const initialEvents: Event[] = [
     instructions: 'Contactar inmediatamente al conductor y equipo de seguridad. El vehículo debe salir de la zona en 5 minutos.',
     createdAt: new Date('2024-01-22T13:15:00'),
     updatedAt: new Date('2024-01-22T13:45:00'),
+    startAddress: '42 Wallaby Way, Sydney',
     notes: [
       {
         id: 'note-1',
@@ -942,6 +949,7 @@ export const initialEvents: Event[] = [
     instructions: 'Verificar velocidad del vehículo y contactar al conductor inmediatamente. Documentar cualquier evidencia.',
     createdAt: new Date('2024-01-23T10:45:00'),
     updatedAt: new Date('2024-01-23T11:00:00'),
+    startAddress: '90210 Sunset Boulevard, Beverly Hills',
     notes: [
       {
         id: 'note-3',
@@ -966,6 +974,7 @@ export const initialEvents: Event[] = [
     instructions: 'Contactar al conductor para verificar el motivo de la parada prolongada. Documentar justificación.',
     createdAt: new Date('2024-01-23T16:20:00'),
     updatedAt: new Date('2024-01-23T16:20:00'),
+    startAddress: 'Powell Street, San Francisco',
     notes: [],
     tags: ['operacion', 'tiempo'],
     location: { lat: 9.9100, lng: -84.0900 }
@@ -983,6 +992,7 @@ export const initialEvents: Event[] = [
     instructions: 'Verificar velocidad del vehículo y contactar al conductor inmediatamente. Documentar cualquier evidencia.',
     createdAt: new Date('2024-01-24T08:15:00'),
     updatedAt: new Date('2024-01-24T08:30:00'),
+    startAddress: 'Wisteria Lane, Fairview',
     notes: [
       {
         id: 'note-4',
@@ -1007,6 +1017,7 @@ export const initialEvents: Event[] = [
     instructions: 'Verificar sistema de refrigeración y ajustar temperatura. Revisar puertas del compartimento de carga.',
     createdAt: new Date('2024-01-24T12:45:00'),
     updatedAt: new Date('2024-01-24T12:45:00'),
+    startAddress: '1 Hacker Way, Menlo Park',
     notes: [],
     tags: ['cadena-frio', 'temperatura'],
     location: { lat: 9.9180, lng: -84.0780 }
@@ -1024,6 +1035,7 @@ export const initialEvents: Event[] = [
     instructions: 'Verificar velocidad del vehículo y contactar al conductor inmediatamente. Documentar cualquier evidencia.',
     createdAt: new Date('2024-01-20T15:30:00'),
     updatedAt: new Date('2024-01-20T16:45:00'),
+    startAddress: '1600 Amphitheatre Pkwy, Mountain View',
     notes: [
       {
         id: 'note-5',

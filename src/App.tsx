@@ -79,6 +79,7 @@ export default function App() {
         description: ruleData.description || '',
         status: 'active',
         severity: ruleData.severity || 'low',
+        ruleType: ruleData.ruleType || selectedRuleType || 'telemetry',
         conditions: ruleData.conditions || [],
         conditionGroups: ruleData.conditionGroups || [],
         appliesTo: ruleData.appliesTo || { type: 'units', units: [] },
@@ -164,7 +165,13 @@ export default function App() {
 
   const handleEditRule = useCallback((rule: Rule) => {
     setEditingRule(rule)
-    setSelectedRuleType('telemetry') // Assuming all rules are telemetry for now
+    const inferredType: 'telemetry' | 'zone' | 'entities' =
+      rule.ruleType
+        ? rule.ruleType
+        : (rule.zoneScope?.type && rule.zoneScope.type !== 'all')
+          ? 'zone'
+          : 'telemetry'
+    setSelectedRuleType(inferredType)
     setRulesView('edit')
   }, [])
 
@@ -465,9 +472,10 @@ export default function App() {
         )
       } else if (rulesView === 'new') {
         // Use TelemetryWizard for telemetry rules, regular wizard for others
-        if (selectedRuleType === 'telemetry') {
+        if (selectedRuleType === 'telemetry' || selectedRuleType === 'zone') {
           return (
             <TelemetryWizard
+              wizardType={selectedRuleType}
               onSave={handleCreateRule}
               onCancel={handleBackToRules}
               onBackToTypeSelector={handleBackToTypeSelector}
@@ -484,9 +492,10 @@ export default function App() {
         )
       } else if (rulesView === 'edit' && editingRule) {
         // Edit mode with prefilled data
-        if (selectedRuleType === 'telemetry') {
+        if (selectedRuleType === 'telemetry' || selectedRuleType === 'zone') {
           return (
             <TelemetryWizard
+              wizardType={selectedRuleType}
               rule={editingRule}
               onSave={handleCreateRule}
               onCancel={handleBackToTypeSelector}

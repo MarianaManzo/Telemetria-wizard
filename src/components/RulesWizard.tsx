@@ -264,7 +264,8 @@ export function RulesWizard({ ruleType, onSave, onCancel }: RulesWizardProps) {
           body: emailBody
         }
       },
-      severity // Copy severity to rule level
+      severity,
+      ruleType: ruleType || 'entities'
     }
 
     onSave(ruleData)

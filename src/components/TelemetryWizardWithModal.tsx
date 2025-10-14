@@ -1495,11 +1495,15 @@ interface TelemetryWizardProps {
   onBackToTypeSelector: () => void
   rule?: Rule
   onRename?: (ruleId: string, newName: string, newDescription?: string) => void
+  wizardType?: 'telemetry' | 'zone'
 }
 
-export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, onRename }: TelemetryWizardProps) {
+export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, onRename, wizardType = 'telemetry' }: TelemetryWizardProps) {
   const isEditing = !!rule
   const { addNotification } = useNotifications()
+
+  const resolvedRuleType: 'telemetry' | 'zone' = rule?.ruleType === 'zone' || wizardType === 'zone' ? 'zone' : 'telemetry'
+  const wizardLabel = resolvedRuleType === 'zone' ? 'Zonas' : 'Telemetría'
   
   const [activeTab, setActiveTab] = useState("parameters")
   const [ruleName, setRuleName] = useState(rule?.name || "")
@@ -2364,7 +2368,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         handleSaveRule({
           id: rule?.id,
           name: ruleName,
-          description: ruleDescription
+          description: ruleDescription,
+          ruleType: resolvedRuleType
         })
         // Remove timeout and save immediately
         setIsSaving(false)
@@ -2433,6 +2438,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       }
     }
 
+    const finalRuleType: 'telemetry' | 'zone' =
+      ruleData.ruleType === 'zone' || resolvedRuleType === 'zone' ? 'zone' : 'telemetry'
+
     const completeRuleData: Partial<Rule> = {
       ...ruleData,
       // Preserve existing rule properties when editing
@@ -2484,7 +2492,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
           enabled: platformNotificationEnabled
         }
       },
-      severity: eventSeverity
+      severity: eventSeverity,
+      ruleType: finalRuleType
     }
 
     console.log('Saving rule data:', completeRuleData)
@@ -2536,7 +2545,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   </Button>
                 </div>
                 <div className="text-[14px] text-muted-foreground" style={{ marginLeft: '22px' }}>
-                  Telemetría
+                  {wizardLabel}
                 </div>
               </div>
             </div>
@@ -4252,7 +4261,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
           onSave={handleSaveRule}
           defaultData={{
             name: ruleName,
-            description: ruleDescription
+            description: ruleDescription,
+            ruleType: resolvedRuleType
           }}
           isRenaming={false}
         />
