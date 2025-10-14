@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react"
 import { Layout } from "antd"
 import { NotificationProvider } from "./contexts/NotificationContext"
-import { GlobalHeader } from "./components/GlobalHeader"
+import MainNavTopMenu from "./components/MainNavTopMenu"
 import { Sidebar } from "./components/Sidebar"
 import { RulesDetailSidebar } from "./components/RulesDetailSidebar"
 import { EventsDetailSidebar } from "./components/EventsDetailSidebar"
@@ -19,7 +19,7 @@ import { Star } from "lucide-react"
 import { Rule, Event, AppView, Tag } from "./types"
 import { initialRules, initialEvents, initialTags } from "./constants/data"
 
-const { Header, Sider, Content } = Layout;
+const { Sider, Content } = Layout;
 
 const SIDEBAR_WIDTH = 240;
 
@@ -31,12 +31,6 @@ export default function App() {
   const [showEventDetail, setShowEventDetail] = useState(false)
   const [selectedRuleType, setSelectedRuleType] = useState<'telemetry' | 'zone' | null>(null)
   const [editingRule, setEditingRule] = useState<Rule | null>(null)
-  const [eventsSearchQuery, setEventsSearchQuery] = useState("")
-
-  const handleSearchChange = useCallback((query: string) => {
-    setEventsSearchQuery(query)
-  }, [])
-
   // State management
   const [rules, setRules] = useState<Rule[]>(initialRules)
   const [events, setEvents] = useState<Event[]>(initialEvents)
@@ -415,14 +409,30 @@ export default function App() {
       setRulesView('list')
       setSelectedRule(null)
     }
-    // Clear search when navigating away from events
-    if (view !== 'events' && view !== 'my-events') {
-      setEventsSearchQuery("")
-    }
     // Close any open modals/details when navigating
     setShowEventDetail(false)
     setSelectedEvent(null)
   }, [])
+
+  const handleTopMenuSelect = useCallback((key: string) => {
+    if (key === 'reglas') {
+      handleGlobalNavigation('rules')
+    } else if (key === 'eventos') {
+      handleGlobalNavigation('events')
+    }
+  }, [handleGlobalNavigation])
+
+  const topMenuSelectedKey = useMemo(() => {
+    if (currentView === 'rules' || currentView === 'tags-rules' || rulesView !== 'list') {
+      return 'reglas'
+    }
+
+    if (currentView === 'events' || currentView === 'my-events' || currentView === 'tags-events') {
+      return 'eventos'
+    }
+
+    return 'monitoreo'
+  }, [currentView, rulesView])
 
   const getFilteredEvents = useMemo(() => {
     if (currentView === 'my-events') {
@@ -534,7 +544,6 @@ export default function App() {
           onStatusChange={handleEventStatusChange}
           onResponsibleChange={handleEventResponsibleChange}
           viewType={currentView}
-          searchQuery={eventsSearchQuery}
         />
       )
     } else if (currentView === 'tags-rules') {
@@ -571,21 +580,10 @@ export default function App() {
   return (
     <NotificationProvider>
       <Layout style={{ minHeight: "100vh", background: "var(--color-bg-base)" }}>
-        <Header
-          style={{
-            background: "var(--color-bg-base)",
-            borderBottom: "1px solid var(--color-gray-200)",
-            padding: 0,
-            lineHeight: "initial",
-          }}
-        >
-          <GlobalHeader
-            currentView={currentView}
-            onNavigate={handleGlobalNavigation}
-            searchQuery={eventsSearchQuery}
-            onSearchChange={handleSearchChange}
-          />
-        </Header>
+        <MainNavTopMenu
+          selectedMenuItem={topMenuSelectedKey}
+          onMenuSelect={handleTopMenuSelect}
+        />
         <Layout hasSider style={{ minHeight: 0, background: "var(--color-bg-base)" }}>
           {primarySidebar && (
             <Sider
