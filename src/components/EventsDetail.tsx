@@ -25,7 +25,7 @@ import {
   MoreVertical,
   UserCheck,
   RefreshCw,
-  Check,
+  CheckCircle,
   ExternalLink
 } from "lucide-react"
 import { Event, Rule } from "../types"
@@ -39,31 +39,35 @@ interface EventsDetailProps {
 }
 
 const severityConfig = {
-  high: { 
-    label: 'Alta', 
-    color: 'text-red-600',
-    icon: AlertTriangle
+  high: {
+    label: 'Alta',
+    tagClass: 'bg-red-50 text-red-700 border-red-200',
+    iconClass: 'text-red-500',
+    icon: AlertTriangle,
   },
-  medium: { 
-    label: 'Media', 
-    color: 'text-orange-600',
-    icon: AlertTriangle
+  medium: {
+    label: 'Media',
+    tagClass: 'bg-orange-50 text-orange-700 border-orange-200',
+    iconClass: 'text-orange-500',
+    icon: AlertTriangle,
   },
-  low: { 
-    label: 'Baja', 
-    color: 'text-blue-600',
-    icon: Clock
+  low: {
+    label: 'Baja',
+    tagClass: 'bg-blue-50 text-blue-700 border-blue-200',
+    iconClass: 'text-blue-500',
+    icon: Clock,
   },
-  informative: { 
-    label: 'Informativo', 
-    color: 'text-cyan-600',
-    icon: Clock
-  }
+  informative: {
+    label: 'Informativo',
+    tagClass: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    iconClass: 'text-cyan-500',
+    icon: Clock,
+  },
 }
 
-const statusConfig: Record<'open' | 'closed', { label: string; color: string }> = {
-  open: { label: 'Abierto', color: 'bg-green-500' },
-  closed: { label: 'Cerrado', color: 'bg-gray-500' }
+const statusConfig: Record<'open' | 'closed', { label: string }> = {
+  open: { label: 'Abierto' },
+  closed: { label: 'Cerrado' },
 }
 
 export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsibleChange }: EventsDetailProps) {
@@ -111,6 +115,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
   }
 
   const severityInfo = severityConfig[event.severity]
+  const SeverityIcon = severityInfo.icon
   const statusInfo = statusConfig[status]
 
   const relatedRule = rules.find(r => r.id === event.ruleId)
@@ -260,7 +265,13 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                       <div>
                         <p className="text-[13px] font-medium text-gray-700 mb-1">Estatus</p>
                         <div className="mt-2 flex items-center gap-2">
-                          <span className={`w-2.5 h-2.5 rounded-full ${status === 'open' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          {status === 'open' ? (
+                            <span className="inline-flex items-center justify-center w-4 h-4 bg-green-500 rounded-full">
+                              <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                            </span>
+                          ) : (
+                            <CheckCircle className="w-4 h-4 text-[#252525]" strokeWidth={1.6} />
+                          )}
                           <span className="text-[14px] text-gray-900">{statusConfig[status].label}</span>
                         </div>
                       </div>
@@ -328,15 +339,8 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                     <div className="space-y-6">
                       <div>
                         <p className="text-[13px] font-medium text-gray-700 mb-1">Severidad</p>
-                        <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full border ${
-                          event.severity === 'high'
-                            ? 'bg-red-100 text-red-700 border-red-200'
-                            : event.severity === 'medium'
-                            ? 'bg-orange-100 text-orange-700 border-orange-200'
-                            : event.severity === 'low'
-                            ? 'bg-blue-100 text-blue-700 border-blue-200'
-                            : 'bg-cyan-100 text-cyan-700 border-cyan-200'
-                        }`}>
+                        <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full border ${severityInfo.tagClass}`}>
+                          <SeverityIcon className={`w-4 h-4 ${severityInfo.iconClass}`} />
                           <span className="text-[12px] font-medium">{severityInfo.label}</span>
                         </div>
                       </div>
