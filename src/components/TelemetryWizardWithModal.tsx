@@ -134,7 +134,8 @@ interface TagData {
 }
 
 // Import email templates from separate file
-import { userEmailTemplates, type UserEmailTemplate } from "../constants/emailTemplates"
+import { userEmailTemplates as initialEmailTemplates, type UserEmailTemplate } from "../constants/emailTemplates"
+import { showCustomToast } from "./CustomToast"
 
 
 
@@ -1645,6 +1646,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [descriptionCharCount, setDescriptionCharCount] = useState(defaultEventMessage.length)
   
   // Email personalization states
+  const [emailTemplates, setEmailTemplates] = useState<UserEmailTemplate[]>(initialEmailTemplates)
   const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || defaultEventMessage)
   const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(rule?.notifications?.email?.templateId || null)
   const [templateDrawerOpen, setTemplateDrawerOpen] = useState(false)
@@ -1754,22 +1756,80 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [webhookNotificationEnabled, setWebhookNotificationEnabled] = useState(rule?.notifications?.webhook?.enabled || false)
   const [platformNotificationEnabled, setPlatformNotificationEnabled] = useState(rule?.notifications?.platform?.enabled || false)
 
+  const extractPlainTextFromHtml = useCallback((input: string) => {
+    if (typeof document === 'undefined') {
+      return input
+    }
+    const temp = document.createElement('div')
+    temp.innerHTML = input
+    return temp.textContent || temp.innerText || ''
+  }, [])
+
   // Optimized template selection handler
   const handleTemplateSelection = useCallback((template: UserEmailTemplate) => {
-    setEmailRecipients(template.recipients)
+    setEmailRecipients(template.recipients && template.recipients.length > 0 ? template.recipients : [])
     setEmailSubject(template.subject)
     setCustomEmailMessage(template.message)
-    setEmailDescription(template.message)
+    const plainDescription = template.message.includes('<')
+      ? extractPlainTextFromHtml(template.message)
+      : template.message
+    setEmailDescription(plainDescription)
     setSelectedEmailTemplate(template.id)
-  }, [])
+  }, [extractPlainTextFromHtml])
+
+  const handleTemplateSaved = useCallback((payload: {
+    name: string;
+    subject: string;
+    description: string;
+    recipients: string[];
+    sender: string[];
+    messageHtml: string;
+  }) => {
+    const newTemplate: UserEmailTemplate = {
+      id: `template-${Date.now()}`,
+      name: payload.name,
+      description: payload.description,
+      createdBy: 'Usuario',
+      createdAt: new Date().toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+      usageCount: 0,
+      category: 'personal',
+      recipients: payload.recipients,
+      sender: payload.sender,
+      subject: payload.subject,
+      message: payload.messageHtml,
+    }
+
+    setEmailTemplates((prev) => [newTemplate, ...prev])
+    handleTemplateSelection(newTemplate)
+    setTemplateDrawerOpen(false)
+    showCustomToast({
+      title: 'Plantilla guardada',
+      description: `"${payload.name}" se añadió a tus plantillas`,
+    })
+  }, [handleTemplateSelection])
 
   const selectedEmailTemplateData = useMemo(() => {
     if (!selectedEmailTemplate) return null
-    return userEmailTemplates.find((template) => template.id === selectedEmailTemplate) || null
-  }, [selectedEmailTemplate, userEmailTemplates])
+    return emailTemplates.find((template) => template.id === selectedEmailTemplate) || null
+  }, [selectedEmailTemplate, emailTemplates])
 
   const renderedEmailTemplateMessage = useMemo(() => {
     if (!customEmailMessage) return []
+
+    const containsHtml = /<\/?[a-z][\s\S]*>/i.test(customEmailMessage)
+    if (containsHtml) {
+      return [
+        <div
+          key="html-preview"
+          className="text-[13px] leading-[22px] text-[#313655]"
+          dangerouslySetInnerHTML={{ __html: customEmailMessage }}
+        />,
+      ]
+    }
 
     const tokenRegex = /(\{[^}]+\})/g
 
@@ -1806,10 +1866,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     if (!emailEnabled) return
     if (selectedEmailTemplate) return
     if (rule?.notifications?.email?.templateId) return
-    const defaultTemplate = userEmailTemplates[0]
+    const defaultTemplate = emailTemplates[0]
     if (!defaultTemplate) return
     handleTemplateSelection(defaultTemplate)
-  }, [emailEnabled, selectedEmailTemplate, handleTemplateSelection, rule?.notifications?.email?.templateId])
+  }, [emailEnabled, selectedEmailTemplate, handleTemplateSelection, rule?.notifications?.email?.templateId, emailTemplates])
 
   const handleZonesChange = (zones) => {
     setSelectedZonesData(zones)
@@ -3915,7 +3975,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 <Select
                                   value={selectedEmailTemplate || ''}
                                   onValueChange={(value) => {
-                                    const template = userEmailTemplates.find((tpl) => tpl.id === value)
+                                    const template = emailTemplates.find((tpl) => tpl.id === value)
                                     if (template) {
                                       handleTemplateSelection(template)
                                     }
@@ -3925,7 +3985,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                     <SelectValue placeholder="Selecciona una plantilla guardada" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {userEmailTemplates.map((template) => (
+                                    {emailTemplates.map((template) => (
                                       <SelectItem key={template.id} value={template.id}>
                                         {template.name}
                                       </SelectItem>
@@ -4212,7 +4272,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
           eventMessage=""
           type={notificationExampleType}
         />
-        <EmailTemplateDrawer open={templateDrawerOpen} onClose={() => setTemplateDrawerOpen(false)} />
+        <EmailTemplateDrawer
+          open={templateDrawerOpen}
+          onClose={() => setTemplateDrawerOpen(false)}
+          onSave={handleTemplateSaved}
+        />
       </div>
     </TooltipProvider>
   )

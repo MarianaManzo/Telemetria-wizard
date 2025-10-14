@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlignCenterOutlined,
   AlignLeftOutlined,
@@ -25,6 +25,21 @@ import ModalBase from "./ModalBase";
 
 const { Panel } = Collapse;
 const { Text } = Typography;
+
+type TemplatePayload = {
+  name: string;
+  subject: string;
+  description: string;
+  recipients: string[];
+  sender: string[];
+  messageHtml: string;
+};
+
+type TemplateDrawerProps = {
+  open: boolean;
+  onClose: () => void;
+  onSave: (payload: TemplatePayload) => void;
+};
 
 type ToolbarItem =
   | { type: "button"; key: string; icon: React.ReactNode; ariaLabel: string; command?: string; handler?: () => void }
@@ -284,7 +299,7 @@ const moveCaretToDragPoint = (event: React.DragEvent<HTMLDivElement>, root: HTML
   }
 };
 
-export default function TemplateDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function TemplateDrawer({ open, onClose, onSave }: TemplateDrawerProps) {
   const MIN = 726;
   const [width, setWidth] = useState(MIN);
   const [bodyHtml, setBodyHtml] = useState("");
@@ -293,6 +308,8 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
   const editorRef = useRef<HTMLDivElement>(null);
   const dragPayloadRef = useRef<string | null>(null);
   const lastSelectionRef = useRef<Range | null>(null);
+  const [form] = Form.useForm();
+  const [isSaving, setIsSaving] = useState(false);
 
   const textToolbarItems: ToolbarItem[] = useMemo(
     () => [
@@ -353,6 +370,16 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", stopDrag);
   }, [onMouseMove, stopDrag]);
+
+  useEffect(() => {
+    if (!open) return;
+    form.resetFields();
+    setBodyHtml("");
+    if (editorRef.current) {
+      editorRef.current.innerHTML = "";
+    }
+    setPreviewVisible(false);
+  }, [open, form]);
 
   const restoreSelection = useCallback(() => {
     const editor = editorRef.current;
@@ -478,6 +505,41 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
     clampCaretOutsidePills(editor);
   }, [rememberSelection, restoreSelection, syncEditorState]);
 
+  const handleSave = useCallback(async () => {
+    if (isSaving) return;
+    try {
+      setIsSaving(true);
+      const values = await form.validateFields();
+      const templateName: string = values.name?.trim() ?? "";
+      const templateSubject: string = values.subject?.trim() ?? "";
+      const description: string = values.description?.trim() || "Plantilla creada manualmente";
+      const recipients: string[] = (values.recipients as string[] | undefined)?.map((item) => item.trim()).filter(Boolean) || [];
+      const sender: string[] = (values.sender as string[] | undefined)?.map((item) => item.trim()).filter(Boolean) || [];
+      const messageHtml = bodyHtml && bodyHtml.trim() ? bodyHtml : defaultPreviewHtml;
+
+      onSave({
+        name: templateName,
+        subject: templateSubject,
+        description,
+        recipients,
+        sender,
+        messageHtml,
+      });
+
+      form.resetFields();
+      setBodyHtml("");
+      if (editorRef.current) {
+        editorRef.current.innerHTML = "";
+      }
+      setPreviewVisible(false);
+      onClose();
+    } catch (error) {
+      // validation errors handled by antd form
+    } finally {
+      setIsSaving(false);
+    }
+  }, [bodyHtml, form, isSaving, onSave]);
+
   return (
     <>
       <Drawer
@@ -515,7 +577,9 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
             </Button>
             <div style={{ display: "flex", gap: 8 }}>
               <Button onClick={onClose}>Cancelar</Button>
-              <Button type="primary">Guardar</Button>
+              <Button type="primary" onClick={handleSave} loading={isSaving}>
+                Guardar
+              </Button>
             </div>
           </div>
         }
@@ -543,18 +607,50 @@ export default function TemplateDrawer({ open, onClose }: { open: boolean; onClo
                     <Panel header={<span style={{ fontSize: 14, fontWeight: 600 }}>Configuración de plantilla</span>} key="cfg">
                       <Text>Diseña tu plantilla con componentes y variables dinámicas.</Text>
                       <div style={{ height: 12 }} />
-                      <Form layout="vertical" requiredMark style={{ display: "grid", gap: 8 }} labelCol={{ style: { fontWeight: 500 } }}>
-                        <Form.Item label="Nombre de la plantilla" required>
-                          <Input />
+                      <Form
+                        form={form}
+                        layout="vertical"
+                        requiredMark
+                        style={{ display: "grid", gap: 8 }}
+                        labelCol={{ style: { fontWeight: 500 } }}
+                        initialValues={{
+                          name: "",
+                          subject: "",
+                          sender: [],
+                          recipients: [],
+                          description: "",
+                        }}
+                      >
+                        <Form.Item
+                          label="Nombre de la plantilla"
+                          name="name"
+                          rules={[{ required: true, message: "Ingresa un nombre para la plantilla" }]}
+                        >
+                          <Input placeholder="Nombre interno" allowClear />
                         </Form.Item>
-                        <Form.Item label="Asunto" required>
-                          <Input />
+                        <Form.Item
+                          label="Asunto"
+                          name="subject"
+                          rules={[{ required: true, message: "Ingresa el asunto del correo" }]}
+                        >
+                          <Input placeholder="Asunto del correo" allowClear />
                         </Form.Item>
-                        <Form.Item label="Remitentes" required>
-                          <Select placeholder="Selecciona" options={[]} />
+                        <Form.Item label="Remitentes" name="sender">
+                          <Select
+                            mode="tags"
+                            placeholder="Escribe y presiona Enter para agregar"
+                            tokenSeparators={[",", ";"]}
+                          />
                         </Form.Item>
-                        <Form.Item label="Destinatarios" required>
-                          <Select placeholder="Selecciona" options={[]} />
+                        <Form.Item label="Destinatarios" name="recipients">
+                          <Select
+                            mode="tags"
+                            placeholder="Escribe y presiona Enter para agregar"
+                            tokenSeparators={[",", ";"]}
+                          />
+                        </Form.Item>
+                        <Form.Item label="Descripción" name="description">
+                          <Input.TextArea rows={2} placeholder="Resumen o nota interna" />
                         </Form.Item>
                       </Form>
                     </Panel>
