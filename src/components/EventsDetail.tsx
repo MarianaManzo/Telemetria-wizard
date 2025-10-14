@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { Textarea } from "./ui/textarea"
@@ -112,7 +112,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
 
   const severityInfo = severityConfig[event.severity]
   const statusInfo = statusConfig[status]
-  
+
   const relatedRule = rules.find(r => r.id === event.ruleId)
 
   const formatDateTime = (date?: Date | null) => {
@@ -147,6 +147,20 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
     }
     return parts.join(' ')
   }
+
+  const eventMessageContent = useMemo(() => {
+    const source = event.eventMessageHtml || ''
+    if (!source) {
+      return null
+    }
+
+    const sanitized = source
+      .replace(/style="[^"]*"/g, '')
+      .replace(/class="template-pill"/g, `style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:12px;border:1px solid #E0E3EE;background:#F5F5F7;color:#313655;font-weight:500;font-size:12px;line-height:1;"`)
+      .replace(/<a\s+/g, '<a style="color:#3559FF;text-decoration:none;font-weight:600;" ')
+
+    return sanitized
+  }, [event.eventMessageHtml])
 
   const sidebarItems = [
     { id: 'contenido', label: 'Contenido', icon: FileText },
@@ -240,10 +254,11 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
             {activeTab === 'evento' && (
               <div>
                 <div className="bg-white rounded-lg border p-6 space-y-6">
+                  <h2 className="text-[16px] text-[#1C2452]">Evento</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Estatus</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Estatus</p>
                         <div className="mt-2 flex items-center gap-2">
                           <span className={`w-2.5 h-2.5 rounded-full ${status === 'open' ? 'bg-green-500' : 'bg-gray-400'}`} />
                           <span className="text-[14px] text-gray-900">{statusConfig[status].label}</span>
@@ -251,7 +266,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Inicio del evento</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Inicio del evento</p>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
                           <span>{formatDateTime(event.createdAt)}</span>
                           {event.historyUrl && (
@@ -269,32 +284,32 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Ubicación inicial</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Ubicación inicial</p>
                         <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
                           {event.startAddress || '---'}
                         </p>
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Duración</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Duración</p>
                         <p className="mt-2 text-[14px] text-gray-900">
                           {formatDuration(event.createdAt, event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}
                         </p>
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Mensaje del evento</span>
-                        <div className="mt-2 text-[14px] leading-[22px] text-[#313655] bg-[#FAFBFF] border border-[#EEF1FF] rounded-lg p-4 shadow-inner">
-                          {event.eventMessageHtml ? (
-                            <div dangerouslySetInnerHTML={{ __html: event.eventMessageHtml }} />
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Mensaje del evento</p>
+                        <div className="mt-2 text-[14px] leading-[22px] text-[#313655]">
+                          {eventMessageContent ? (
+                            <div dangerouslySetInnerHTML={{ __html: eventMessageContent }} />
                           ) : (
-                            <p>No hay mensaje registrado para este evento.</p>
+                            <p className="text-gray-500">No hay mensaje registrado para este evento.</p>
                           )}
                         </div>
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Asignado a</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Asignado a</p>
                         <div className="mt-2 flex items-center gap-3">
                           <Avatar className="w-8 h-8">
                             <AvatarImage
@@ -312,7 +327,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
 
                     <div className="space-y-6">
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Severidad</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Severidad</p>
                         <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full border ${
                           event.severity === 'high'
                             ? 'bg-red-100 text-red-700 border-red-200'
@@ -327,7 +342,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Cierre del evento</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Cierre del evento</p>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
                           <span>{formatDateTime(event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}</span>
                           {status === 'closed' && event.historyUrl && (
@@ -345,14 +360,14 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Ubicación final</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Ubicación final</p>
                         <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
                           {event.endAddress || '---'}
                         </p>
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Unidad</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Unidad</p>
                         <div className="mt-2 text-[14px] text-blue-600 hover:text-blue-800">
                           {event.unitLink ? (
                             <a href={event.unitLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
@@ -365,14 +380,14 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Instrucciones</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Instrucciones</p>
                         <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
                           {event.instructions || '---'}
                         </p>
                       </div>
 
                       <div>
-                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Acciones requeridas</span>
+                        <p className="text-[13px] font-medium text-gray-700 mb-1">Acciones requeridas</p>
                         {event.actionsRequired && event.actionsRequired.length > 0 ? (
                           <ol className="mt-2 space-y-1 text-[14px] text-gray-900 list-decimal list-inside">
                             {event.actionsRequired.map((action, index) => (
