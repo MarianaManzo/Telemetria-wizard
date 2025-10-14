@@ -416,8 +416,9 @@ export const initialRules: Rule[] = [
           'alertas@tracking.com',
           'admin@sistema.com'
         ],
-        subject: '[ALERTA] CAM-001 - Velocidad excesiva',
-        body: 'El vehículo {{unit_name}} excedió el límite de velocidad a las {{timestamp}}'
+        subject: '[CRÍTICO] {unidad} - Intervención Requerida',
+        body: 'ALERTA CRÍTICA\n\nSe ha detectado un evento crítico que requiere atención inmediata:\n\nUnidad: {unidad}\nEvento: {regla_nombre}\nUbicación: {ubicacion_link}\nFecha/Hora: {fecha_hora}\nVelocidad: {velocidad}\nConductor: {conductor}\n\nACCIÓN REQUERIDA:\n• Contactar inmediatamente al conductor\n• Verificar estado de la unidad\n• Reportar en sistema interno\n\nSistema de Monitoreo Avanzado\nNumaris Fleet Management',
+        templateId: 'template-1'
       }
     },
     createdAt: new Date('2024-01-15'),
@@ -497,8 +498,9 @@ export const initialRules: Rule[] = [
           'director@operaciones.com',
           'admin@sistema.com'
         ],
-        subject: '[URGENTE] TRK-203 - Acceso no autorizado',
-        body: 'El vehículo {{unit_name}} ingresó a zona restringida a las {{timestamp}}. Se requiere acción inmediata.'
+        subject: '[REPORTE] Evento en {unidad} - {fecha}',
+        body: 'Reporte de Evento - Turno Operacional\n\n==============================\nINFORMACIÓN DEL EVENTO\n==============================\n\nUnidad: {unidad}\nFecha: {fecha_hora}\nUbicación: {ubicacion_link}\nTipo de evento: {regla_nombre}\nVelocidad registrada: {velocidad}\n\n==============================\nDATOS TÉCNICOS\n==============================\n\nTemperatura: {temperatura}\nCombustible: {combustible}\nBatería: {bateria}\nConductor: {conductor}\n\n==============================\nSEGUIMIENTO\n==============================\n\nEste evento ha sido registrado en el sistema y está pendiente de revisión.\n\nSaludos,\nEquipo de Monitoreo - Turno {hora}',
+        templateId: 'template-2'
       }
     },
     createdAt: new Date('2024-01-10'),
@@ -586,9 +588,10 @@ export const initialRules: Rule[] = [
     notifications: {
       email: {
         enabled: false,
-        recipients: [],
-        subject: '',
-        body: ''
+        recipients: ['cliente.vip@empresa.com', 'atencion.premium@empresa.com'],
+        subject: '[NUMARIS] Notificación de Servicio - {unidad}',
+        body: 'Estimado Cliente,\n\nNos dirigimos a usted para informarle sobre un evento registrado en su flota:\n\n┌─────────────────────────────────────┐\n│           DETALLES DEL EVENTO       │\n└─────────────────────────────────────┘\n\n• Unidad afectada: {unidad}\n• Fecha y hora: {fecha_hora}\n• Ubicación actual: {ubicacion_link}\n• Tipo de evento: {regla_nombre}\n• Velocidad registrada: {velocidad}\n• Conductor asignado: {conductor}\n\n┌─────────────────────────────────────┐\n│         ACCIONES REALIZADAS         │\n└─────────────────────────────────────┘\n\n- Evento registrado automáticamente\n- Notificación enviada al supervisor\n- Ubicación verificada y confirmada\n- Seguimiento activo iniciado\n\nPara consultas adicionales, no dude en contactarnos.\n\nAtentamente,\nEquipo de Atención Premium\nNumaris Fleet Solutions\nTeléfono: +54 11 4000-0000\nCorreo: premium@numaris.com',
+        templateId: 'template-3'
       }
     },
     createdAt: new Date('2024-01-12'),
@@ -686,8 +689,9 @@ export const initialRules: Rule[] = [
           'coordinador@logistica.com',
           'supervisor@flota.com'
         ],
-        subject: '[INFO] BUS-045 - Parada prolongada detectada',
-        body: 'El vehículo {{unit_name}} ha permanecido detenido por más tiempo del permitido desde {{timestamp}}'
+        subject: '[TÉCNICO] {unidad} - {regla_nombre} | Rev. Requerida',
+        body: 'ALERTA TÉCNICA - MANTENIMIENTO\n\n==============================\nINFORMACIÓN TÉCNICA DEL EVENTO\n==============================\n\nID Unidad: {unidad}\nTimestamp: {fecha_hora}\nPosición GPS: {ubicacion_link}\nAlerta: {regla_nombre}\nVelocidad: {velocidad}\nOperador: {conductor}\n\n==============================\nPARÁMETROS TÉCNICOS\n==============================\n\nTemperatura motor: {temperatura}\nNivel combustible: {combustible}\nVoltaje batería: {bateria}\nPresión neumáticos: {presion}\nNivel aceite: {nivel_aceite}\nOdómetro: {odometro}\n\n==============================\nACCIÓN REQUERIDA\n==============================\n\n1. Revisar diagnóstico de unidad\n2. Programar inspección técnica\n3. Verificar histórico de mantenimiento\n4. Contactar con conductor si es necesario\n\nDepartamento Técnico\nNumaris Fleet Maintenance',
+        templateId: 'template-4'
       }
     },
     createdAt: new Date('2024-01-08'),
@@ -738,9 +742,10 @@ export const initialRules: Rule[] = [
     notifications: {
       email: {
         enabled: false,
-        recipients: [],
-        subject: '',
-        body: ''
+        recipients: ['direccion@empresa.com', 'gerencia.general@empresa.com'],
+        subject: '[EJECUTIVO] Evento {unidad} - {fecha}',
+        body: 'Resumen Ejecutivo de Evento\n\n- Unidad: {unidad}\n- Evento: {regla_nombre}\n- Fecha/Hora: {fecha_hora}\n- Ubicación: {ubicacion_link}\n- Velocidad: {velocidad}\n- Conductor: {conductor}\n\nEl evento ha sido registrado y está siendo gestionado por el equipo operativo.\n\nPara detalles adicionales, consulte el dashboard ejecutivo.\n\nSaludos cordiales,\nSistema de Gestión Numaris',
+        templateId: 'template-5'
       }
     },
     createdAt: new Date('2024-01-20'),
@@ -832,8 +837,9 @@ export const initialRules: Rule[] = [
           'tecnico@soporte.com',
           'alertas@conectividad.com'
         ],
-        subject: '[ADVERTENCIA] VAN-017 - Señal GPS perdida',
-        body: 'El vehículo {{unit_name}} ha perdido conectividad GPS desde {{timestamp}}'
+        subject: '[SEGUIMIENTO] {unidad} - Estado del evento',
+        body: 'SEGUIMIENTO DE EVENTO\n\nINFORMACIÓN INICIAL:\n\nUnidad: {unidad}\nEvento: {regla_nombre}\nFecha/Hora: {fecha_hora}\nUbicación: {ubicacion_link}\nVelocidad: {velocidad}\nConductor: {conductor}\n\nESTADO ACTUAL:\n\n- Evento registrado exitosamente\n- Datos recopilados y validados\n- En proceso de análisis\n- Notificaciones enviadas\n\nPRÓXIMOS PASOS:\n\n• Seguimiento en 24 horas\n• Análisis de patrones\n• Reporte de tendencias\n• Acciones preventivas\n\nEste mensaje es parte del proceso de mejora continua.\n\nEquipo de Calidad y Seguimiento\nNumaris Analytics',
+        templateId: 'template-6'
       }
     },
     createdAt: new Date('2024-01-18'),

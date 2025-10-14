@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Rule, Event, RuleConditionGroup } from "../types"
+import { userEmailTemplates } from "../constants/emailTemplates"
 import { DeleteRuleModal } from "./DeleteRuleModal"
 import { RenameRuleModal } from "./RenameRuleModal"
 import exampleImage from 'figma:asset/25905393c492af8c8e0b3cf142e20c9dc3cbe9e4.png'
@@ -141,6 +142,48 @@ const customTelemetrySensors = [
 // Combined sensors
 const telemetrySensors = [...systemTelemetrySensors, ...customTelemetrySensors]
 
+const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string')
+
+const highlightEmailTemplateMessage = (text: string) => {
+  if (!text) {
+    return (
+      <span className="text-[12px] text-muted-foreground">
+        No se definió un mensaje para el correo.
+      </span>
+    )
+  }
+
+  const tokenRegex = /(\{\{[^}]+\}\}|\{[^}]+\})/g
+  const parts = text.split(tokenRegex)
+  const tokens = text.match(tokenRegex) || []
+  let tokenIndex = 0
+  const nodes: React.ReactNode[] = []
+
+  parts.forEach((part, index) => {
+    if (part) {
+      nodes.push(<React.Fragment key={`text-${index}`}>{part}</React.Fragment>)
+    }
+
+    if (tokenIndex < tokens.length) {
+      const token = tokens[tokenIndex++]
+      nodes.push(
+        <span
+          key={`token-${index}`}
+          className="inline-flex items-center rounded-sm bg-purple-100 px-1 py-0.5 text-[12px] font-semibold text-purple-700"
+        >
+          {token}
+        </span>
+      )
+    }
+  })
+
+  return (
+    <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#313655]">
+      {nodes}
+    </div>
+  )
+}
 const operatorOptions = [
   { value: 'eq', label: 'es igual a', symbol: '=' },
   { value: 'neq', label: 'es distinto de', symbol: '≠' },
@@ -237,39 +280,6 @@ const renderConditionGroups = (rule: Rule) => {
       )}
     </div>
   )
-}
-
-// Function to replace variables with realistic example values
-const processMessageVariablesClean = (text: string | undefined): string => {
-  if (!text) return ''
-  
-  const variableMap: Record<string, string> = {
-    '{{nombreUnidad}}': 'Vehículo ABC-123',
-    '{{fechaEvento}}': '27 de septiembre 2025',
-    '{{horaEvento}}': '14:35:42',
-    '{{tipoEvento}}': 'Exceso de velocidad',
-    '{{ubicacion}}': 'Av. Providencia 1234, Santiago',
-    '{{velocidad}}': '85 km/h',
-    '{{velocidadMaxima}}': '60 km/h',
-    '{{conductor}}': 'Juan Pérez',
-    '{{zona}}': 'Centro de Santiago',
-    '{{duracion}}': '5 minutos',
-    '{{kilometraje}}': '45,230 km',
-    '{{combustible}}': '65%',
-    '{{temperatura}}': '23°C',
-    '{{empresa}}': 'Transportes ABC',
-    '{{supervisor}}': 'María González'
-  }
-  
-  let processedText = text
-  
-  // Replace all variables found in the text
-  Object.entries(variableMap).forEach(([variable, value]) => {
-    const regex = new RegExp(variable.replace(/[{}]/g, '\\$&'), 'g')
-    processedText = processedText.replace(regex, value)
-  })
-  
-  return processedText
 }
 
 const severityConfig = {
@@ -397,6 +407,22 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
     )
   }
 
+  const renderEmailSenders = (senders: string[]) => {
+    if (senders.length === 0) {
+      return <span className="text-[12px] text-muted-foreground">No hay remitentes configurados.</span>
+    }
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {senders.map((sender) => (
+          <Badge key={sender} variant="secondary" className="text-[12px] font-semibold bg-slate-100 text-slate-700">
+            {sender}
+          </Badge>
+        ))}
+      </div>
+    )
+  }
+
   // Helper function to render units dynamically
   const renderUnits = (unitIds: string[]) => {
     if (unitIds.length === 0) return (
@@ -505,6 +531,42 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
 
   const severityInfo = severityConfig[rule.eventSettings.severity]
   const SeverityIcon = severityInfo.icon
+
+  const emailSettings = rule.notifications.email
+  const emailRecipients = emailSettings?.recipients || []
+  const emailTemplate = emailSettings?.templateId
+    ? userEmailTemplates.find((template) => template.id === emailSettings.templateId)
+    : undefined
+  const rawEmailSubject = emailSettings?.subject?.trim() || ''
+  const emailSubjectDisplay = emailTemplate?.subject || rawEmailSubject || 'Sin asunto definido'
+  const emailMessageContent = emailTemplate?.message || emailSettings?.body || ''
+
+  const emailSettingsRecord = emailSettings as unknown as Record<string, unknown> | undefined
+  const emailSendersFromSettings = emailSettingsRecord && isStringArray(emailSettingsRecord['sender'])
+    ? (emailSettingsRecord['sender'] as string[])
+    : undefined
+  const emailSenders = emailSendersFromSettings?.length
+    ? emailSendersFromSettings
+    : emailTemplate?.sender?.length
+      ? emailTemplate.sender
+      : []
+
+  const notificationChannels = [
+    {
+      id: 'web',
+      label: 'Notificación web',
+      description: 'Visible en la plataforma de monitorización',
+      enabled: false,
+      icon: Monitor
+    },
+    {
+      id: 'mobile',
+      label: 'Notificación móvil',
+      description: 'Push notification en la app móvil (no configurada)',
+      enabled: false,
+      icon: Smartphone
+    }
+  ]
 
   const sidebarItems = [
     { id: 'contenido', label: 'Contenido', icon: FileText },
@@ -660,6 +722,16 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                         Parámetros
                       </button>
                       <button
+                        onClick={() => setActiveSubTab('configuracion')}
+                        className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                          activeSubTab === 'configuracion'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                        }`}
+                      >
+                        Configuración
+                      </button>
+                      <button
                         onClick={() => setActiveSubTab('acciones')}
                         className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
                           activeSubTab === 'acciones'
@@ -668,16 +740,6 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                         }`}
                       >
                         Acciones a realizar
-                      </button>
-                      <button
-                        onClick={() => setActiveSubTab('notificaciones')}
-                        className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                          activeSubTab === 'notificaciones'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                      >
-                        Notificaciones
                       </button>
                   </nav>
                 </div>
@@ -755,7 +817,7 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                     </div>
                   )}
 
-                {activeSubTab === 'acciones' && (
+                {activeSubTab === 'configuracion' && (
                     <div className="space-y-4">
                         <SectionCard
                           icon={<FileText className="w-4 h-4 text-muted-foreground" />}
@@ -859,241 +921,121 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                       </div>
                   )}
 
-                {activeSubTab === 'notificaciones' && (
-                      <div className="content-stretch flex flex-col gap-[21px] items-start relative size-full">
-                        {/* Section 1 - Mensaje del evento */}
-                        <div className="bg-white h-[155.5px] relative rounded-[8.75px] shrink-0 w-full">
-                          <div aria-hidden="true" className="absolute border border-[rgba(0,0,0,0.1)] border-solid inset-0 pointer-events-none rounded-[8.75px]" />
-                          <div className="relative size-full">
-                            <div className="box-border content-stretch flex flex-col gap-[14px] h-[155.5px] items-start pb-px pt-[22px] px-[22px] relative w-full">
-                              {/* Header */}
-                              <div className="content-stretch flex gap-[7px] h-[24px] items-center relative shrink-0 w-full">
-                                <div className="relative shrink-0 size-[14px]">
-                                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14 14">
-                                    <g>
-                                      <path d="M12.25 8.75C12.25 9.05942 12.1271 9.35616 11.9083 9.57496C11.6895 9.79375 11.3928 9.91667 11.0833 9.91667H4.08333L1.75 12.25V2.91667C1.75 2.60725 1.87292 2.3105 2.09171 2.09171C2.3105 1.87292 2.60725 1.75 2.91667 1.75H11.0833C11.3928 1.75 11.6895 1.87292 11.9083 2.09171C12.1271 2.3105 12.25 2.60725 12.25 2.91667V8.75Z" stroke="#717182" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.16667" />
-                                    </g>
-                                  </svg>
-                                </div>
-                                <div className="h-[24px] relative shrink-0 w-[129.969px]">
-                                  <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-[24px] relative w-[129.969px]">
-                                    <div className="absolute font-['Source_Sans_3:Medium',_sans-serif] font-medium leading-[0] left-0 text-[16px] text-neutral-950 text-nowrap top-0">
-                                      <p className="leading-[24px] whitespace-pre">Mensaje del evento</p>
-                                    </div>
+                {activeSubTab === 'acciones' && (
+                    <div className="space-y-4">
+                      <SectionCard
+                        icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
+                        title="Mensaje del evento"
+                        description={<span className="text-[14px] font-medium text-foreground">Vista previa con variables dinámicas</span>}
+                      >
+                        {emailMessageContent ? (
+                          <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-4">
+                            {highlightEmailTemplateMessage(emailMessageContent)}
+                          </div>
+                        ) : (
+                          <p className="text-[14px] text-muted-foreground">
+                            No hay mensaje configurado para este canal.
+                          </p>
+                        )}
+                      </SectionCard>
+
+                      <SectionCard
+                        icon={<Monitor className="w-4 h-4 text-muted-foreground" />}
+                        title="Canales de notificación"
+                        description={<span className="text-[14px] font-medium text-foreground">Medios disponibles para este evento</span>}
+                      >
+                        <div className="space-y-6">
+                          <div className="space-y-3">
+                            {notificationChannels.map((channel) => (
+                              <div key={channel.id} className="flex items-start justify-between rounded-md border border-border px-3 py-2">
+                                <div className="flex items-center gap-3">
+                                  <channel.icon className="w-4 h-4 text-muted-foreground" />
+                                  <div>
+                                    <span className="block text-[14px] font-semibold text-foreground">{channel.label}</span>
+                                    <span className="text-[12px] text-muted-foreground">{channel.description}</span>
                                   </div>
                                 </div>
+                                <Switch
+                                  checked={channel.enabled}
+                                  disabled
+                                  className="switch-blue pointer-events-none scale-90"
+                                />
                               </div>
-                              
-                              {/* Content */}
-                              <div className="content-stretch flex flex-col gap-[10.5px] h-[73.5px] items-start relative shrink-0 w-full">
-                                <div className="content-stretch flex h-[21px] items-start relative shrink-0 w-full">
-                                  <div className="basis-0 font-['Source_Sans_3:Regular',_sans-serif] font-normal grow leading-[0] min-h-px min-w-px relative shrink-0 text-[14px] text-neutral-950">
-                                    <p className="leading-[21px] font-semibold">Mensaje del evento:</p>
-                                  </div>
+                            ))}
+                          </div>
+
+                          {emailSettings && (
+                            <div className="rounded-lg border border-[#E5E9FF] bg-white shadow-sm">
+                              <div className="flex items-center justify-between gap-3 border-b border-[#E5E9FF] bg-[#F8F9FF] px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <Mail className="w-4 h-4 text-muted-foreground" />
+                                  <span className="text-[14px] font-semibold text-foreground">Correo electrónico</span>
                                 </div>
-                                <div className="h-[42px] relative shrink-0 w-full">
-                                  <div className="absolute font-['Source_Sans_3:Regular',_sans-serif] font-normal leading-[0] left-0 text-[14px] text-neutral-950 top-[-1px] w-[539px]">
-                                    <p className="leading-[21px] whitespace-nowrap">
-                                      <span className="text-[rgba(113,113,130,1)]">La unidad </span>
-                                      <span className="font-['Source_Sans_3:SemiBold',_sans-serif] font-semibold text-[rgba(113,113,130,1)]">Unidad ABC-123</span>
-                                      <span className="text-[rgba(113,113,130,1)]"> ha registrado una alerta en </span>
-                                      <span className="font-['Source_Sans_3:SemiBold',_sans-serif] font-semibold text-[#1867ff] cursor-pointer">Av. Corrientes 1234, Buenos Aires</span>
-                                      <span className="text-[rgba(113,113,130,1)]"> a las </span>
-                                      <span className="font-['Source_Sans_3:SemiBold',_sans-serif] font-semibold text-[rgba(113,113,130,1)]">29/9/2025, 11:51:18 AM.</span>
-                                    </p>
-                                  </div>
-                                </div>
+                                <Switch
+                                  checked={!!emailSettings.enabled}
+                                  disabled
+                                  className="switch-blue pointer-events-none scale-90"
+                                />
+                              </div>
+
+                              <div className="space-y-6 p-4">
+                                {emailSettings.enabled ? (
+                                  <>
+                                    <div className="grid gap-6 md:grid-cols-2">
+                                      <div>
+                                        <span className="text-[14px] font-semibold text-foreground block mb-2">Asunto</span>
+                                        <p className="text-[14px] text-[rgba(113,113,130,1)]">{emailSubjectDisplay}</p>
+                                      </div>
+                                      <div>
+                                        <span className="text-[14px] font-semibold text-foreground block mb-2">Destinatarios</span>
+                                        {emailRecipients.length > 0 ? (
+                                          renderEmailRecipients(emailRecipients)
+                                        ) : (
+                                          <span className="text-[12px] text-muted-foreground">No hay destinatarios configurados.</span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="grid gap-6 md:grid-cols-2">
+                                      <div>
+                                        <span className="text-[14px] font-semibold text-foreground block mb-2">Remitentes</span>
+                                        {renderEmailSenders(emailSenders)}
+                                      </div>
+                                      <div>
+                                        <span className="text-[14px] font-semibold text-foreground block mb-2">Plantilla seleccionada</span>
+                                        <p className="text-[14px] text-[rgba(113,113,130,1)]">
+                                          {emailTemplate ? emailTemplate.name : 'Sin plantilla asociada'}
+                                        </p>
+                                        {emailTemplate?.description && (
+                                          <p className="text-[12px] text-muted-foreground mt-1">
+                                            {emailTemplate.description}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="space-y-2 rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-4">
+                                      <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
+                                        Contenido del mensaje
+                                      </span>
+                                      <div className="rounded-md border border-[#D6DDFF] bg-white p-3">
+                                        {highlightEmailTemplateMessage(emailMessageContent)}
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <p className="text-[14px] text-muted-foreground">
+                                    El envío por correo electrónico está desactivado para esta regla.
+                                  </p>
+                                )}
                               </div>
                             </div>
-                          </div>
+                          )}
                         </div>
+                      </SectionCard>
 
-                        {/* Section 2 - Canales de notificación */}
-                        <div className="bg-white relative rounded-[8.75px] shrink-0 w-full">
-                          <div aria-hidden="true" className="absolute border border-[rgba(0,0,0,0.1)] border-solid inset-0 pointer-events-none rounded-[8.75px]" />
-                          <div className="relative size-full">
-                            <div className="box-border content-stretch flex flex-col gap-[14px] items-start px-[22px] py-[24px] relative w-full">
-                              {/* Header */}
-                              <div className="content-stretch flex gap-[7px] h-[24px] items-center relative shrink-0 w-full">
-                                <MessageSquare className="w-[14px] h-[14px] text-muted-foreground" />
-                                <div className="h-[24px] relative shrink-0 w-[156.984px]">
-                                  <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-[24px] relative w-[156.984px]">
-                                    <div className="absolute font-['Source_Sans_3:Medium',_sans-serif] font-medium leading-[0] left-0 text-[16px] text-neutral-950 text-nowrap top-0">
-                                      <p className="leading-[24px] whitespace-pre">Canales de notificación</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Notificación Web */}
-                              <div className="bg-white relative rounded-[8.75px] shrink-0 w-full">
-                                <div aria-hidden="true" className="absolute border border-[rgba(0,0,0,0.1)] border-solid inset-0 pointer-events-none rounded-[8.75px]" />
-                                <div className="flex flex-row items-center relative size-full">
-                                  <div className="box-border content-stretch flex gap-[14px] items-center px-[22px] py-[8px] relative w-full">
-                                    <div className="basis-0 content-stretch flex gap-[7px] grow h-[24px] items-center min-h-px min-w-px relative shrink-0">
-                                      <Monitor className="w-[14px] h-[14px] text-muted-foreground" />
-                                      <div className="h-[24px] relative shrink-0 w-[156.984px]">
-                                        <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-[24px] relative w-[156.984px]">
-                                          <div className="absolute font-['Source_Sans_3:Medium',_sans-serif] font-medium leading-[0] left-0 text-[16px] text-neutral-950 text-nowrap top-0">
-                                            <p className="leading-[24px] whitespace-pre text-[14px]">Notificación Web</p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="content-stretch flex items-start relative shrink-0">
-                                      <div className="bg-[#1867ff] opacity-60 h-[16px] min-w-[28px] relative rounded-[16px] shrink-0 pointer-events-none">
-                                        <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border content-stretch flex gap-[2px] h-[16px] items-start min-w-inherit relative">
-                                          <div className="box-border content-stretch flex gap-[2px] h-[16px] items-center justify-end overflow-clip p-[2px] relative shrink-0 w-[28px]">
-                                            <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-                                              <div className="[grid-area:1_/_1] bg-white ml-0 mt-0 rounded-[16px] shadow-[0px_2px_4px_0px_rgba(0,35,11,0.2)] size-[12px]" />
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Notificación móvil */}
-                              <div className="bg-white relative rounded-[8.75px] shrink-0 w-full">
-                                <div aria-hidden="true" className="absolute border border-[rgba(0,0,0,0.1)] border-solid inset-0 pointer-events-none rounded-[8.75px]" />
-                                <div className="flex flex-row items-center relative size-full">
-                                  <div className="box-border content-stretch flex gap-[14px] items-center px-[22px] py-[8px] relative w-full">
-                                    <div className="basis-0 content-stretch flex gap-[7px] grow h-[24px] items-center min-h-px min-w-px relative shrink-0">
-                                      <Smartphone className="w-[14px] h-[14px] text-muted-foreground" />
-                                      <div className="h-[24px] relative shrink-0 w-[156.984px]">
-                                        <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-[24px] relative w-[156.984px]">
-                                          <div className="absolute font-['Source_Sans_3:Medium',_sans-serif] font-medium leading-[0] left-0 text-[16px] text-neutral-950 text-nowrap top-0">
-                                            <p className="leading-[24px] whitespace-pre text-[14px]">Notificación móvil</p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="content-stretch flex gap-[7px] h-[21px] items-center relative shrink-0">
-                                      <div className="relative shrink-0">
-                                        <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border content-stretch flex items-start relative">
-                                          <div className="bg-[rgba(0,0,0,0.25)] opacity-60 h-[16px] min-w-[28px] relative rounded-[16px] shrink-0 pointer-events-none">
-                                            <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border content-stretch flex gap-[2px] h-[16px] items-start min-w-inherit relative">
-                                              <div className="box-border content-stretch flex gap-[2px] h-[16px] items-center overflow-clip p-[2px] relative shrink-0 w-[28px]">
-                                                <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-                                                  <div className="[grid-area:1_/_1] bg-white ml-0 mt-0 rounded-[16px] shadow-[0px_2px_4px_0px_rgba(0,35,11,0.2)] size-[12px]" />
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Correo electr��nico */}
-                              <div className="bg-white relative rounded-[8.75px] shrink-0 w-full">
-                                <div aria-hidden="true" className="absolute border border-[rgba(0,0,0,0.1)] border-solid inset-0 pointer-events-none rounded-[8.75px]" />
-                                <div className="flex flex-col justify-center relative size-full">
-                                  <div className="box-border content-stretch flex flex-col gap-[14px] items-start justify-center px-[22px] py-[8px] relative w-full">
-                                    {/* Header with switch */}
-                                    <div className="content-stretch flex gap-[14px] items-center relative shrink-0 w-full">
-                                      <div className="basis-0 content-stretch flex gap-[7px] grow h-[24px] items-center min-h-px min-w-px relative shrink-0">
-                                        <Mail className="w-[14px] h-[14px] text-muted-foreground" />
-                                        <div className="h-[24px] relative shrink-0 w-[156.984px]">
-                                          <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-[24px] relative w-[156.984px]">
-                                            <div className="absolute font-['Source_Sans_3:Medium',_sans-serif] font-medium leading-[0] left-0 text-[16px] text-neutral-950 text-nowrap top-0">
-                                              <p className="leading-[24px] whitespace-pre text-[14px]">Correo electrónico</p>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="content-stretch flex gap-[7px] h-[21px] items-center relative shrink-0">
-                                        <div className="relative shrink-0">
-                                          <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border content-stretch flex items-start relative">
-                                            <div className={`${rule.notifications.email.enabled ? 'bg-[#1867ff]' : 'bg-[rgba(0,0,0,0.25)]'} opacity-60 h-[16px] min-w-[28px] relative rounded-[16px] shrink-0 pointer-events-none`}>
-                                              <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border content-stretch flex gap-[2px] h-[16px] items-center justify-end min-w-inherit relative">
-                                                <div className={`box-border content-stretch flex gap-[2px] h-[16px] items-center ${rule.notifications.email.enabled ? 'justify-end' : ''} overflow-clip p-[2px] relative shrink-0 w-[28px]`}>
-                                                  <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-                                                    <div className="[grid-area:1_/_1] bg-white ml-0 mt-0 rounded-[16px] shadow-[0px_2px_4px_0px_rgba(0,35,11,0.2)] size-[12px]" />
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    
-                                    {/* Fields - only show if email is enabled */}
-                                    {rule.notifications.email.enabled && (
-                                      <div className="content-stretch flex gap-[7px] items-start relative shrink-0 w-full">
-                                        {/* Destinatario */}
-                                        <div className="basis-0 grow min-h-px min-w-px relative shrink-0">
-                                          <div className="text-[14px] text-neutral-950 mb-1 font-semibold">
-                                            Destinatario:
-                                          </div>
-                                          {renderEmailRecipients(rule.notifications.email.recipients)}
-                                        </div>
-                                        
-                                        {/* Asunto */}
-                                        <div className="basis-0 grow min-h-px min-w-px relative shrink-0">
-                                          <div className="text-[14px] text-neutral-950 mb-1 font-semibold">
-                                            Asunto:
-                                          </div>
-                                          <div className="text-[14px] text-[rgba(113,113,130,1)] font-semibold">
-                                            {rule.notifications.email.subject}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Section 3 - Webhook */}
-                        <div className="bg-white h-[134.5px] relative rounded-[8.75px] shrink-0 w-full">
-                          <div aria-hidden="true" className="absolute border border-[rgba(0,0,0,0.1)] border-solid inset-0 pointer-events-none rounded-[8.75px]" />
-                          <div className="relative size-full">
-                            <div className="box-border content-stretch flex flex-col gap-[14px] h-[134.5px] items-start pb-px pt-[22px] px-[22px] relative w-full">
-                              {/* Header */}
-                              <div className="content-stretch flex gap-[7px] h-[24px] items-center relative shrink-0 w-full">
-                                <div className="relative shrink-0 size-[14px]">
-                                  <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14 14">
-                                    <g>
-                                      <path d="M7 8.75C7.9665 8.75 8.75 7.9665 8.75 7C8.75 6.0335 7.9665 5.25 7 5.25C6.0335 5.25 5.25 6.0335 5.25 7C5.25 7.9665 6.0335 8.75 7 8.75Z" stroke="#717182" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.16667" />
-                                      <path d="M7.12833 1.16667H6.87167C6.56225 1.16667 6.2655 1.28958 6.04671 1.50838C5.82792 1.72717 5.705 2.02391 5.705 2.33333V2.43833C5.70479 2.64292 5.65078 2.84386 5.5484 3.02099C5.44601 3.19812 5.29885 3.34521 5.12167 3.4475L4.87083 3.59333C4.69348 3.69573 4.49229 3.74964 4.2875 3.74964C4.08271 3.74964 3.88152 3.69573 3.70417 3.59333L3.61667 3.54667C3.34896 3.39224 3.03091 3.35034 2.73234 3.43018C2.43377 3.51002 2.17907 3.70506 2.02417 3.9725L1.89583 4.19417C1.7414 4.46188 1.69951 4.77993 1.77935 5.0785C1.85918 5.37707 2.05423 5.63176 2.32167 5.78667L2.40917 5.845C2.5855 5.9468 2.73211 6.09297 2.83445 6.26899C2.93678 6.445 2.99127 6.64473 2.9925 6.84833V7.14583C2.99332 7.35141 2.9398 7.55356 2.83736 7.7318C2.73492 7.91004 2.58721 8.05805 2.40917 8.16083L2.32167 8.21333C2.05423 8.36824 1.85918 8.62293 1.77935 8.9215C1.69951 9.22007 1.7414 9.53812 1.89583 9.80583L2.02417 10.0275C2.17907 10.2949 2.43377 10.49 2.73234 10.5698C3.03091 10.6497 3.34896 10.6078 3.61667 10.4533L3.70417 10.4067C3.88152 10.3043 4.08271 10.2504 4.2875 10.2504C4.49229 10.2504 4.69348 10.3043 4.87083 10.4067L5.12167 10.5525C5.29885 10.6548 5.44601 10.8019 5.5484 10.979C5.65078 11.1561 5.70479 11.3571 5.705 11.5617V11.6667C5.705 11.9761 5.82792 12.2728 6.04671 12.4916C6.2655 12.7104 6.56225 12.8333 6.87167 12.8333H7.12833C7.43775 12.8333 7.7345 12.7104 7.95329 12.4916C8.17208 12.2728 8.295 11.9761 8.295 11.6667V11.5617C8.29521 11.3571 8.34922 11.1561 8.4516 10.979C8.55399 10.8019 8.70115 10.6548 8.87833 10.5525L9.12917 10.4067C9.30652 10.3043 9.50771 10.2504 9.7125 10.2504C9.91729 10.2504 10.1185 10.3043 10.2958 10.4067L10.3833 10.4533C10.651 10.6078 10.9691 10.6497 11.2677 10.5698C11.5662 10.49 11.8209 10.2949 11.9758 10.0275L12.1042 9.8C12.2586 9.53229 12.3005 9.21424 12.2207 8.91567C12.1408 8.6171 11.9458 8.36241 11.6783 8.2075L11.5908 8.16083C11.4128 8.05805 11.2651 7.91004 11.1626 7.7318C11.0602 7.55356 11.0067 7.35141 11.0075 7.14583V6.85417C11.0067 6.64859 11.0602 6.44644 11.1626 6.2682C11.2651 6.08996 11.4128 5.94196 11.5908 5.83917L11.6783 5.78667C11.9458 5.63176 12.1408 5.37707 12.2207 5.0785C12.3005 4.77993 12.2586 4.46188 12.1042 4.19417L11.9758 3.9725C11.8209 3.70506 11.5662 3.51002 11.2677 3.43018C10.9691 3.35034 10.651 3.39224 10.3833 3.54667L10.2958 3.59333C10.1185 3.69573 9.91729 3.74964 9.7125 3.74964C9.50771 3.74964 9.30652 3.69573 9.12917 3.59333L8.87833 3.4475C8.70115 3.34521 8.55399 3.19812 8.4516 3.02099C8.34922 2.84386 8.29521 2.64292 8.295 2.43833V2.33333C8.295 2.02391 8.17208 1.72717 7.95329 1.50838C7.7345 1.28958 7.43775 1.16667 7.12833 1.16667Z" stroke="#717182" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.16667" />
-                                    </g>
-                                  </svg>
-                                </div>
-                                <div className="h-[24px] relative shrink-0 w-[64.063px]">
-                                  <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border h-[24px] relative w-[64.063px]">
-                                    <div className="absolute font-['Source_Sans_3:Medium',_sans-serif] font-medium leading-[0] left-0 text-[16px] text-neutral-950 text-nowrap top-0">
-                                      <p className="leading-[24px] whitespace-pre">Webhook</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Content */}
-                              <div className="content-stretch flex flex-col gap-[10.5px] h-[52.5px] items-start relative shrink-0 w-full">
-                                <div className="content-stretch flex h-[21px] items-start relative shrink-0 w-full">
-                                  <div className="basis-0 font-['Source_Sans_3:Regular',_sans-serif] font-normal grow leading-[0] min-h-px min-w-px relative shrink-0 text-[14px] text-neutral-950">
-                                    <p className="leading-[21px] font-semibold">URL del webhook:</p>
-                                  </div>
-                                </div>
-                                <div className="content-stretch flex h-[21px] items-start relative shrink-0 w-full">
-                                  <div className="basis-0 font-['Source_Sans_3:Regular',_sans-serif] font-normal grow leading-[0] min-h-px min-w-px relative shrink-0 text-[14px] text-neutral-950">
-                                    <p className="leading-[21px] text-[rgba(113,113,130,1)]">https://api.miwebhook.com/alerta</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    </div>
+                  )}
               </>
             )}
 
