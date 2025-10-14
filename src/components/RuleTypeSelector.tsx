@@ -1,15 +1,15 @@
 import { useState } from "react"
 import { Button } from "./ui/button"
 import { Card } from "./ui/card"
-import { ArrowLeft, Gauge, MapPin, Settings } from "lucide-react"
+import { ArrowLeft, Gauge, MapPin } from "lucide-react"
 
 interface RuleTypeSelectorProps {
-  onTypeSelect: (type: 'telemetry' | 'zone' | 'entities') => void
+  onTypeSelect: (type: 'telemetry' | 'zone') => void
   onCancel: () => void
 }
 
 export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorProps) {
-  const [selectedType, setSelectedType] = useState<'telemetry' | 'zone' | 'entities' | null>(null)
+  const [selectedType, setSelectedType] = useState<'telemetry' | 'zone' | null>(null)
 
   const ruleTypes = [
     {
@@ -25,17 +25,10 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
       description: 'Define acciones automáticas al entrar o salir de una zona delimitada.',
       icon: MapPin,
       primary: false
-    },
-    {
-      id: 'entities' as const,
-      title: 'Entidades',
-      description: 'Genera una acción al crear, editar, modificar o eliminar cualquier registro del sistema (unidades, usuarios, comandos, sensores...)',
-      icon: Settings,
-      primary: false
     }
   ]
 
-  const handleSelect = (type: 'telemetry' | 'zone' | 'entities') => {
+  const handleSelect = (type: 'telemetry' | 'zone') => {
     setSelectedType(type)
     onTypeSelect(type)
   }
@@ -80,61 +73,65 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
             </h1>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {ruleTypes.map((type) => {
-              const Icon = type.icon
-              const isSelected = selectedType === type.id
-              
-              return (
-                <Card 
-                  key={type.id} 
-                  className={`relative p-6 cursor-pointer transition-all hover:shadow-md ${
-                    isSelected ? 'ring-2 ring-blue-500 border-blue-200' : ''
-                  } ${type.primary ? 'border-blue-200 bg-blue-50/30' : ''}`}
-                  onClick={() => setSelectedType(type.id)}
-                >
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    {/* Icon */}
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
-                      type.primary 
-                        ? 'border-blue-500 bg-blue-500' 
-                        : 'border-gray-300 bg-gray-100'
-                    }`}>
-                      <Icon className={`w-6 h-6 ${
-                        type.primary ? 'text-white' : 'text-gray-600'
-                      }`} />
+          <div className="max-w-5xl mx-auto px-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {ruleTypes.map((type) => {
+                const Icon = type.icon
+                const isSelected = selectedType === type.id
+
+                return (
+                  <Card
+                    key={type.id}
+                    className={`relative p-6 cursor-pointer transition-all hover:shadow-md h-full ${
+                      isSelected ? 'ring-2 ring-blue-500 border-blue-200' : ''
+                    } ${type.primary ? 'border-blue-200 bg-blue-50/30' : ''}`}
+                    onClick={() => setSelectedType(type.id)}
+                  >
+                    <div className="flex flex-col items-center text-center space-y-4 h-full">
+                      {/* Icon */}
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                        type.primary
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300 bg-gray-100'
+                      }`}>
+                        <Icon
+                          className={`w-6 h-6 ${
+                            type.primary ? 'text-white' : 'text-gray-600'
+                          }`}
+                        />
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-lg font-medium text-foreground">
+                        {type.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-muted-foreground leading-relaxed min-h-[4rem] flex items-center">
+                        {type.description}
+                      </p>
+
+                      {/* Select Button */}
+                      <Button
+                        variant={type.primary ? 'default' : 'outline'}
+                        size="sm"
+                        className={`w-full mt-4 ${
+                          type.primary
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : ''
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleSelect(type.id)
+                        }}
+                      >
+                        Seleccionar
+                      </Button>
                     </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg font-medium text-foreground">
-                      {type.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-sm text-muted-foreground leading-relaxed min-h-[4rem] flex items-center">
-                      {type.description}
-                    </p>
-
-                    {/* Select Button */}
-                    <Button
-                      variant={type.primary ? "default" : "outline"}
-                      size="sm"
-                      className={`w-full mt-4 ${
-                        type.primary 
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                          : ''
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleSelect(type.id)
-                      }}
-                    >
-                      Seleccionar
-                    </Button>
-                  </div>
-                </Card>
-              )
-            })}
+                  </Card>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>

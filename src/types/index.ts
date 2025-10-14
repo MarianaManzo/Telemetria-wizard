@@ -68,7 +68,7 @@ export interface Rule {
   name: string
   description: string
   status: 'active' | 'inactive'
-  ruleType?: 'telemetry' | 'zone' | 'entities'
+  ruleType?: 'telemetry' | 'zone'
   severity: 'informative' | 'low' | 'medium' | 'high'
   conditions: RuleCondition[] // Legacy flat structure for backward compatibility
   conditionGroups?: RuleConditionGroup[] // New grouped structure

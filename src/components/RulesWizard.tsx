@@ -37,7 +37,7 @@ import {
 import { Rule, RuleCondition } from "../types"
 
 interface RulesWizardProps {
-  ruleType?: 'telemetry' | 'zone' | 'entities' | null
+  ruleType?: 'telemetry' | 'zone' | null
   onSave: (rule: Partial<Rule>) => void
   onCancel: () => void
 }
@@ -265,7 +265,7 @@ export function RulesWizard({ ruleType, onSave, onCancel }: RulesWizardProps) {
         }
       },
       severity,
-      ruleType: ruleType || 'entities'
+      ruleType: ruleType || 'telemetry'
     }
 
     onSave(ruleData)

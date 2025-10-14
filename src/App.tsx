@@ -29,7 +29,7 @@ export default function App() {
   const [selectedRule, setSelectedRule] = useState<Rule | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [showEventDetail, setShowEventDetail] = useState(false)
-  const [selectedRuleType, setSelectedRuleType] = useState<'telemetry' | 'zone' | 'entities' | null>(null)
+  const [selectedRuleType, setSelectedRuleType] = useState<'telemetry' | 'zone' | null>(null)
   const [editingRule, setEditingRule] = useState<Rule | null>(null)
   const [eventsSearchQuery, setEventsSearchQuery] = useState("")
 
@@ -131,7 +131,7 @@ export default function App() {
     setRulesView('type-select')
   }, [])
 
-  const handleRuleTypeSelect = useCallback((type: 'telemetry' | 'zone' | 'entities') => {
+  const handleRuleTypeSelect = useCallback((type: 'telemetry' | 'zone') => {
     setSelectedRuleType(type)
     setRulesView('new')
   }, [])
@@ -165,7 +165,7 @@ export default function App() {
 
   const handleEditRule = useCallback((rule: Rule) => {
     setEditingRule(rule)
-    const inferredType: 'telemetry' | 'zone' | 'entities' =
+    const inferredType: 'telemetry' | 'zone' =
       rule.ruleType
         ? rule.ruleType
         : (rule.zoneScope?.type && rule.zoneScope.type !== 'all')

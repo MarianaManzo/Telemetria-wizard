@@ -57,6 +57,8 @@ export function GlobalHeader({ currentView, onNavigate, searchQuery = "", onSear
         paddingInline: headerPaddingInline,
         paddingBlock: headerPaddingBlock,
         background: "var(--color-bg-base)",
+        borderBottom: "1px solid var(--color-gray-200)",
+        boxShadow: "0 1px 0 0 rgba(15, 23, 42, 0.08)",
       }}
     >
       <Flex align="center" style={{ gap: toPx(spacing.sm) }}>
