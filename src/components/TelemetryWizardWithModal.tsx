@@ -1647,6 +1647,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Email personalization states
   const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || defaultEventMessage)
   const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(rule?.notifications?.email?.templateId || null)
+  const [templateDrawerOpen, setTemplateDrawerOpen] = useState(false)
 
   
   const [pushNotificationEnabled, setPushNotificationEnabled] = useState(rule?.notifications?.push?.enabled || false)
@@ -3932,7 +3933,13 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                   </SelectContent>
                                 </Select>
                               </div>
-                              <EmailTemplateDrawer variant="inline" />
+                              <Button
+                                type="link"
+                                className="px-0 text-[#3559FF] hover:text-[#1D37B7]"
+                                onClick={() => setTemplateDrawerOpen(true)}
+                              >
+                                + Crear plantilla
+                              </Button>
                             </div>
                           </div>
 
@@ -4205,6 +4212,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
           eventMessage=""
           type={notificationExampleType}
         />
+        <EmailTemplateDrawer open={templateDrawerOpen} onClose={() => setTemplateDrawerOpen(false)} />
       </div>
     </TooltipProvider>
   )
