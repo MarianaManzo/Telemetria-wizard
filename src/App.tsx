@@ -584,16 +584,17 @@ export default function App() {
           selectedMenuItem={topMenuSelectedKey}
           onMenuSelect={handleTopMenuSelect}
         />
-        <Layout hasSider style={{ minHeight: 0, background: "var(--color-bg-base)" }}>
+        <Layout hasSider style={{ flex: 1, minHeight: 0, background: "var(--color-bg-base)" }}>
           {primarySidebar && (
             <Sider
               width={SIDEBAR_WIDTH}
               theme="light"
               style={{
-                background: "var(--color-bg-base)",
+                background: "#fafafa",
                 borderInlineEnd: "1px solid var(--color-gray-200)",
                 paddingInline: 0,
-                height: "100%",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
               {primarySidebar}
@@ -604,10 +605,11 @@ export default function App() {
               width={SIDEBAR_WIDTH}
               theme="light"
               style={{
-                background: "var(--color-bg-base)",
+                background: "#fafafa",
                 borderInlineEnd: "1px solid var(--color-gray-200)",
                 paddingInline: 0,
-                height: "100%",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
               {eventSidebar}

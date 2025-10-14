@@ -262,7 +262,9 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
     <div className="flex-1 overflow-auto bg-white">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0 bg-white">
-        <h1 className="text-foreground text-[16px]">Reglas</h1>
+        <h1 className="text-foreground" style={{ fontSize: '18px', lineHeight: '24px' }}>
+          Reglas
+        </h1>
         <div className="flex items-center gap-3">
           <Button 
             onClick={onNewRule}
