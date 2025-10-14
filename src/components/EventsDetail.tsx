@@ -10,10 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
 import { ChangeResponsibleModal } from "./ChangeResponsibleModal"
 import { ChangeStatusModal } from "./ChangeStatusModal"
-import { 
-  X, 
-  AlertTriangle, 
-  Clock, 
+import {
+  X,
   ChevronDown,
   ArrowLeft,
   FileText,
@@ -26,7 +24,7 @@ import {
   UserCheck,
   RefreshCw,
   CheckCircle,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react"
 import { Event, Rule } from "../types"
 
@@ -41,27 +39,23 @@ interface EventsDetailProps {
 const severityConfig = {
   high: {
     label: 'Alta',
-    tagClass: 'bg-red-50 text-red-700 border-red-200',
-    iconClass: 'text-red-500',
-    icon: AlertTriangle,
+    tagClass: 'bg-red-100 text-red-700 border-red-200',
+    dotClass: 'bg-red-500',
   },
   medium: {
     label: 'Media',
-    tagClass: 'bg-orange-50 text-orange-700 border-orange-200',
-    iconClass: 'text-orange-500',
-    icon: AlertTriangle,
+    tagClass: 'bg-orange-100 text-orange-700 border-orange-200',
+    dotClass: 'bg-orange-500',
   },
   low: {
     label: 'Baja',
-    tagClass: 'bg-blue-50 text-blue-700 border-blue-200',
-    iconClass: 'text-blue-500',
-    icon: Clock,
+    tagClass: 'bg-blue-100 text-blue-700 border-blue-200',
+    dotClass: 'bg-blue-500',
   },
   informative: {
     label: 'Informativo',
-    tagClass: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-    iconClass: 'text-cyan-500',
-    icon: Clock,
+    tagClass: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+    dotClass: 'bg-cyan-500',
   },
 }
 
@@ -78,11 +72,18 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
   const [assignedTo, setAssignedTo] = useState(event.responsible)
   const [showChangeResponsibleModal, setShowChangeResponsibleModal] = useState(false)
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
+  const [messageExpanded, setMessageExpanded] = useState(false)
+  const [instructionsExpanded, setInstructionsExpanded] = useState(false)
 
   useEffect(() => {
     setStatus(event.status)
     setAssignedTo(event.responsible)
   }, [event.status, event.responsible])
+
+  useEffect(() => {
+    setMessageExpanded(false)
+    setInstructionsExpanded(false)
+  }, [event.id])
 
   const handleStatusChange = (newStatus: 'open' | 'closed', note?: string) => {
     setStatus(newStatus)
@@ -115,10 +116,21 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
   }
 
   const severityInfo = severityConfig[event.severity]
-  const SeverityIcon = severityInfo.icon
   const statusInfo = statusConfig[status]
 
   const relatedRule = rules.find(r => r.id === event.ruleId)
+
+  const instructionsText = (event.instructions || '').trim()
+  const actionItems = event.actionsRequired || []
+  const hasActionList = actionItems.length > 0
+  const hasInstructions = instructionsText.length > 0 || hasActionList
+  const shouldShowInstructionsToggle = hasInstructions && (
+    instructionsText.length > 160 ||
+    instructionsText.split('\n').length > 2 ||
+    hasActionList
+  )
+
+  const seeMoreButtonClass = 'mt-3 inline-flex items-center justify-center rounded-full bg-[#3559FF] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#1D37B7]'
 
   const formatDateTime = (date?: Date | null) => {
     if (!date) return '---'
@@ -159,12 +171,51 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
       return null
     }
 
-    const sanitized = source
-      .replace(/style="[^"]*"/g, '')
-      .replace(/class="template-pill"/g, `style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:12px;border:1px solid #E0E3EE;background:#F5F5F7;color:#313655;font-weight:500;font-size:12px;line-height:1;"`)
-      .replace(/<a\s+/g, '<a style="color:#3559FF;text-decoration:none;font-weight:600;" ')
+    const pillBaseStyle = 'display:inline-flex;align-items:center;gap:8px;padding:2px 8px;border-radius:9999px;border:1px solid #E0E3EE;background:#F5F6FB;color:#313655;font-weight:500;font-size:12px;line-height:1'
+    const iconWrapperStyle = 'display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:9999px;background:#E8EAFF'
+    const pillIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3F4AE0" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79V7a2 2 0 0 0-2-2h-5.79a2 2 0 0 0-1.41.59L3 14l7 7 9.79-9.79a2 2 0 0 0 .59-1.41Z"></path><path d="M7 7h.01"></path></svg>'
 
-    return sanitized
+    if (typeof DOMParser === 'undefined') {
+      return source
+        .replace(/style="[^"]*"/g, '')
+        .replace(/class="template-pill"/g, `style="${pillBaseStyle}"`)
+        .replace(/<a\s+/g, '<a style="color:#3559FF;text-decoration:none;font-weight:600;" ')
+    }
+
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(source, 'text/html')
+
+    doc.querySelectorAll('.template-pill').forEach((pill) => {
+      const pillElement = pill as HTMLElement
+      pillElement.removeAttribute('class')
+      pillElement.removeAttribute('style')
+      pillElement.setAttribute('style', pillBaseStyle)
+
+      const existingIcon = pillElement.querySelector('[data-pill-icon]')
+      if (!existingIcon) {
+        const iconSpan = doc.createElement('span')
+        iconSpan.setAttribute('data-pill-icon', 'true')
+        iconSpan.setAttribute('style', iconWrapperStyle)
+        iconSpan.innerHTML = pillIconSvg
+        pillElement.insertBefore(iconSpan, pillElement.firstChild)
+      }
+    })
+
+    doc.querySelectorAll('a').forEach((link) => {
+      const linkElement = link as HTMLElement
+      linkElement.setAttribute('style', 'color:#3559FF;text-decoration:none;font-weight:600;')
+    })
+
+    return doc.body.innerHTML
+  }, [event.eventMessageHtml])
+
+  const shouldShowMessageToggle = useMemo(() => {
+    if (!event.eventMessageHtml) {
+      return false
+    }
+
+    const textContent = event.eventMessageHtml.replace(/<[^>]+>/g, '').trim()
+    return textContent.length > 160
   }, [event.eventMessageHtml])
 
   const sidebarItems = [
@@ -261,146 +312,170 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                 <div className="bg-white rounded-lg border p-6 space-y-6">
                   <h2 className="text-[16px] text-[#1C2452]">Evento</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Estatus</p>
-                        <div className="mt-2 flex items-center gap-2">
-                          {status === 'open' ? (
-                            <span className="inline-flex items-center justify-center w-4 h-4 bg-green-500 rounded-full">
-                              <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                            </span>
-                          ) : (
-                            <CheckCircle className="w-4 h-4 text-[#252525]" strokeWidth={1.6} />
-                          )}
-                          <span className="text-[14px] text-gray-900">{statusConfig[status].label}</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Inicio del evento</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
-                          <span>{formatDateTime(event.createdAt)}</span>
-                          {event.historyUrl && (
-                            <a
-                              href={event.historyUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[#3559FF] hover:text-[#1D37B7] text-[13px] font-medium"
-                            >
-                              Ver en historial
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Ubicación inicial</p>
-                        <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
-                          {event.startAddress || '---'}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Duración</p>
-                        <p className="mt-2 text-[14px] text-gray-900">
-                          {formatDuration(event.createdAt, event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Mensaje del evento</p>
-                        <div className="mt-2 text-[14px] leading-[22px] text-[#313655]">
-                          {eventMessageContent ? (
-                            <div dangerouslySetInnerHTML={{ __html: eventMessageContent }} />
-                          ) : (
-                            <p className="text-gray-500">No hay mensaje registrado para este evento.</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Asignado a</p>
-                        <div className="mt-2 flex items-center gap-3">
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage
-                              src="https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGJ1c2luZXNzJTIwaGVhZHNob3R8ZW58MXx8fHwxNzU4NjUxMDA2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                              alt={`Avatar de ${assignedTo}`}
-                            />
-                            <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
-                              {assignedTo.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="text-[14px] text-gray-900">{assignedTo}</div>
-                        </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Estatus</p>
+                      <div className="mt-2 flex items-center gap-2">
+                        {status === 'open' ? (
+                          <span className="inline-flex items-center justify-center w-4 h-4 bg-green-500 rounded-full">
+                            <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                          </span>
+                        ) : (
+                          <CheckCircle className="w-4 h-4 text-[#252525]" strokeWidth={1.6} />
+                        )}
+                        <span className="text-[14px] text-gray-900">{statusInfo.label}</span>
                       </div>
                     </div>
 
-                    <div className="space-y-6">
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Severidad</p>
-                        <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full border ${severityInfo.tagClass}`}>
-                          <SeverityIcon className={`w-4 h-4 ${severityInfo.iconClass}`} />
-                          <span className="text-[12px] font-medium">{severityInfo.label}</span>
-                        </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Severidad</p>
+                      <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full border ${severityInfo.tagClass}`}>
+                        <span className={`w-2 h-2 rounded-full ${severityInfo.dotClass}`} />
+                        <span className="text-[12px] font-medium">{severityInfo.label}</span>
                       </div>
+                    </div>
 
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Cierre del evento</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
-                          <span>{formatDateTime(event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}</span>
-                          {status === 'closed' && event.historyUrl && (
-                            <a
-                              href={event.historyUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[#3559FF] hover:text-[#1D37B7] text-[13px] font-medium"
-                            >
-                              Ver en historial
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Ubicación final</p>
-                        <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
-                          {event.endAddress || '---'}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Unidad</p>
-                        <div className="mt-2 text-[14px] text-blue-600 hover:text-blue-800">
-                          {event.unitLink ? (
-                            <a href={event.unitLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                              {event.unitName}
-                            </a>
-                          ) : (
-                            event.unitName
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Instrucciones</p>
-                        <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
-                          {event.instructions || '---'}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[13px] font-medium text-gray-700 mb-1">Acciones requeridas</p>
-                        {event.actionsRequired && event.actionsRequired.length > 0 ? (
-                          <ol className="mt-2 space-y-1 text-[14px] text-gray-900 list-decimal list-inside">
-                            {event.actionsRequired.map((action, index) => (
-                              <li key={index}>{action}</li>
-                            ))}
-                          </ol>
-                        ) : (
-                          <p className="mt-2 text-[14px] text-gray-500">---</p>
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Inicio del evento</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
+                        <span>{formatDateTime(event.createdAt)}</span>
+                        {event.historyUrl && (
+                          <a
+                            href={event.historyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[#3559FF] hover:text-[#1D37B7] text-[13px] font-medium"
+                          >
+                            Ver en historial
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
                         )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Cierre del evento</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
+                        <span>{formatDateTime(event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}</span>
+                        {status === 'closed' && event.historyUrl && (
+                          <a
+                            href={event.historyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[#3559FF] hover:text-[#1D37B7] text-[13px] font-medium"
+                          >
+                            Ver en historial
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Ubicación inicial</p>
+                      <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
+                        {event.startAddress || '---'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Ubicación final</p>
+                      <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
+                        {event.endAddress || '---'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Duración</p>
+                      <p className="mt-2 text-[14px] text-gray-900">
+                        {formatDuration(event.createdAt, event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Unidad</p>
+                      <div className="mt-2 text-[14px] text-blue-600 hover:text-blue-800">
+                        {event.unitLink ? (
+                          <a href={event.unitLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            {event.unitName}
+                          </a>
+                        ) : (
+                          event.unitName
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Mensaje del evento</p>
+                      {eventMessageContent ? (
+                        <>
+                          <div
+                            className={`mt-2 text-[14px] leading-[22px] text-[#313655] ${messageExpanded ? '' : 'line-clamp-3'}`}
+                            dangerouslySetInnerHTML={{ __html: eventMessageContent }}
+                          />
+                          {shouldShowMessageToggle && (
+                            <button
+                              type="button"
+                              className={seeMoreButtonClass}
+                              onClick={() => setMessageExpanded((prev) => !prev)}
+                            >
+                              {messageExpanded ? 'Ver menos' : 'Ver más'}
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <p className="mt-2 text-[14px] text-gray-500">No hay mensaje registrado para este evento.</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Instrucciones</p>
+                      {hasInstructions ? (
+                        <>
+                          {instructionsText && (
+                            <div className={`mt-2 text-[14px] leading-[22px] text-[#313655] ${instructionsExpanded ? 'whitespace-pre-wrap' : 'line-clamp-3'}`}>
+                              {instructionsText}
+                            </div>
+                          )}
+                          {!instructionsText && !instructionsExpanded && hasActionList && (
+                            <p className="mt-2 text-[14px] text-gray-500">
+                              Ver más para revisar el detalle de las instrucciones.
+                            </p>
+                          )}
+                          {instructionsExpanded && hasActionList && (
+                            <ol className="mt-3 space-y-1 text-[14px] leading-[22px] text-[#313655] list-decimal list-inside">
+                              {actionItems.map((action, index) => (
+                                <li key={index}>{action}</li>
+                              ))}
+                            </ol>
+                          )}
+                          {shouldShowInstructionsToggle && (
+                            <button
+                              type="button"
+                              className={seeMoreButtonClass}
+                              onClick={() => setInstructionsExpanded((prev) => !prev)}
+                            >
+                              {instructionsExpanded ? 'Ver menos' : 'Ver más'}
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <p className="mt-2 text-[14px] text-gray-500">---</p>
+                      )}
+                    </div>
+
+                    <div className="lg:col-span-2">
+                      <p className="text-[13px] font-medium text-gray-700 mb-1">Asignado a</p>
+                      <div className="mt-2 flex items-center gap-3">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage
+                            src="https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGJ1c2luZXNzJTIwaGVhZHNob3R8ZW58MXx8fHwxNzU4NjUxMDA2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+                            alt={`Avatar de ${assignedTo}`}
+                          />
+                          <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
+                            {assignedTo.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="text-[14px] text-gray-900">{assignedTo}</div>
                       </div>
                     </div>
                   </div>

@@ -1,7 +1,5 @@
 import { useState } from "react"
 import { Button } from "./ui/button"
-import { Input } from "./ui/input"
-import { Badge } from "./ui/badge"
 import { 
   Select,
   SelectContent,
@@ -10,19 +8,22 @@ import {
   SelectValue
 } from "./ui/select"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
+import type { LucideIcon } from "lucide-react"
 import { 
-  Search, 
-  Filter,
   AlertTriangle,
   Clock,
   FileX,
-  MoreHorizontal,
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-  Check,
   Users,
-  CheckCircle
+  CheckCircle,
+  Gauge,
+  AlertOctagon,
+  Thermometer,
+  Clock4,
+  Signal,
+  FileText
 } from "lucide-react"
 import IconCheckCircleOutlined from "../imports/IconCheckCircleOutlined-32006-399"
 import { Event, AppView } from "../types"
@@ -66,6 +67,54 @@ const severityConfig = {
 const statusConfig: Record<'open' | 'closed', { label: string; color: string }> = {
   open: { label: 'Abierto', color: 'bg-green-100 text-green-800 border-green-200' },
   closed: { label: 'Cerrado', color: 'bg-gray-100 text-gray-800 border-gray-200' }
+}
+
+const severityVisuals: Record<Event['severity'], {
+  badgeClass: string
+  dotBorderClass: string
+  dotTextClass: string
+  iconColorClass: string
+}> = {
+  high: {
+    badgeClass: 'bg-red-100 text-red-700 border-red-200',
+    dotBorderClass: 'border-red-500',
+    dotTextClass: 'text-red-500',
+    iconColorClass: 'text-red-600'
+  },
+  medium: {
+    badgeClass: 'bg-orange-100 text-orange-700 border-orange-200',
+    dotBorderClass: 'border-orange-500',
+    dotTextClass: 'text-orange-500',
+    iconColorClass: 'text-orange-600'
+  },
+  low: {
+    badgeClass: 'bg-blue-100 text-blue-700 border-blue-200',
+    dotBorderClass: 'border-blue-500',
+    dotTextClass: 'text-blue-500',
+    iconColorClass: 'text-blue-600'
+  },
+  informative: {
+    badgeClass: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+    dotBorderClass: 'border-cyan-500',
+    dotTextClass: 'text-cyan-500',
+    iconColorClass: 'text-cyan-600'
+  }
+}
+
+const eventIconMap: Record<string, LucideIcon> = {
+  speed: Gauge,
+  warning: AlertOctagon,
+  thermometer: Thermometer,
+  clock: Clock4,
+  alert: AlertTriangle,
+  signal: Signal,
+}
+
+const getEventIcon = (iconKey?: string): LucideIcon => {
+  if (!iconKey) {
+    return FileText
+  }
+  return eventIconMap[iconKey] || FileText
 }
 
 const responsibleProfiles: Record<string, { name: string; email: string; avatar: string }> = {
@@ -282,23 +331,29 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
           </div>
         ) : (
           <div className="bg-white rounded-lg border overflow-x-auto">
-            <table className="w-full table-fixed min-w-[1200px]">
+            <table className="w-full min-w-[1200px] table-auto border-collapse">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Identificador</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-80">Evento</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Estatus</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Severidad</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-40">Fecha de creación</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[22rem]">Evento</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-44">Inicio del evento</th>
                   <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Unidad</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-48">Responsable</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-24 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">Acciones</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[18rem]">Ubicación</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Estatus</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Severidad</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[15rem]">Responsable</th>
+                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredEvents.map((event) => {
                   const statusInfo = statusConfig[event.status]
                   const severityInfo = severityConfig[event.severity]
+                  const severityVisual = severityVisuals[event.severity]
+                  const EventIcon = getEventIcon(event.icon)
+                  const locationText = event.startAddress || event.endAddress || '---'
+                  const responsibleProfile = responsibleProfiles[event.responsible]
+                  const responsibleName = responsibleProfile?.name || event.responsible
 
                   return (
                     <tr 
@@ -311,61 +366,17 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                           {event.id}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-[14px] text-gray-900">
-                        <TruncatedText 
-                          text={event.ruleName}
-                          className="pr-2"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {event.status === 'open' ? (
-                            <>
-                              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                              </div>
-                              <span className="text-[14px] text-gray-900">Abierto</span>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-4 h-4 flex-shrink-0">
-                                <IconCheckCircleOutlined />
-                              </div>
-                              <span className="text-[14px] text-gray-900">Cerrado</span>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-[14px] text-gray-500">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${
-                          event.severity === 'high'
-                            ? 'bg-red-100 text-red-700 border-red-200'
-                            : event.severity === 'medium'
-                            ? 'bg-orange-100 text-orange-700 border-orange-200'
-                            : event.severity === 'low'
-                            ? 'bg-blue-100 text-blue-700 border-blue-200'
-                            : 'bg-cyan-100 text-cyan-700 border-cyan-200'
-                        }`}>
-                          <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${
-                            event.severity === 'high'
-                              ? 'border-red-500'
-                              : event.severity === 'medium'
-                              ? 'border-orange-500'
-                              : event.severity === 'low'
-                              ? 'border-blue-500'
-                              : 'border-cyan-500'
-                          }`}>
-                            <span className={`text-[10px] font-bold ${
-                              event.severity === 'high'
-                                ? 'text-red-500'
-                                : event.severity === 'medium'
-                                ? 'text-orange-500'
-                                : event.severity === 'low'
-                                ? 'text-blue-500'
-                                : 'text-cyan-500'
-                            }`}>!</span>
-                          </div>
-                          <span className="text-[12px] font-medium">{severityInfo.label}</span>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full border ${severityVisual.badgeClass}`}
+                          >
+                            <EventIcon className={`h-4 w-4 ${severityVisual.iconColorClass}`} />
+                          </span>
+                          <TruncatedText 
+                            text={event.ruleName}
+                            className="pr-2 text-[14px] font-medium text-gray-900"
+                          />
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500">
@@ -380,25 +391,56 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                         </span>
                       </td>
                       <td className="px-6 py-4 text-[14px] text-gray-500">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-8 h-8">
+                        <TruncatedText 
+                          text={locationText}
+                          className="pr-2"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {event.status === 'open' ? (
+                            <>
+                              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                                <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
+                              </div>
+                              <span className="text-[14px] text-gray-900">{statusInfo.label}</span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-4 h-4 flex-shrink-0">
+                                <IconCheckCircleOutlined />
+                              </div>
+                              <span className="text-[14px] text-gray-900">{statusInfo.label}</span>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-[14px] text-gray-500">
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${severityVisual.badgeClass}`}>
+                          <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${severityVisual.dotBorderClass}`}>
+                            <span className={`text-[10px] font-bold ${severityVisual.dotTextClass}`}>!</span>
+                          </div>
+                          <span className="text-[12px] font-medium">{severityInfo.label}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-[14px] text-gray-500">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="w-8 h-8 flex-shrink-0">
                             <AvatarImage 
-                              src={responsibleProfiles[event.responsible]?.avatar} 
-                              alt={`Avatar de ${responsibleProfiles[event.responsible]?.name || event.responsible}`}
+                              src={responsibleProfile?.avatar} 
+                              alt={`Avatar de ${responsibleName}`}
                             />
                             <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
-                              {responsibleProfiles[event.responsible]?.name ? 
-                                responsibleProfiles[event.responsible].name.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2) :
+                              {responsibleProfile?.name ? 
+                                responsibleProfile.name.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2) :
                                 event.responsible.split('@')[0].slice(0, 2).toUpperCase()
                               }
                             </AvatarFallback>
                           </Avatar>
-                          <div className="flex flex-col">
-                            <TruncatedText 
-                              text={responsibleProfiles[event.responsible]?.email || event.responsible}
-                              className="text-[14px] text-foreground"
-                            />
-                          </div>
+                          <TruncatedText 
+                            text={responsibleName}
+                            className="text-[14px] font-medium text-foreground"
+                          />
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
