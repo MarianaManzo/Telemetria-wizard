@@ -1515,6 +1515,22 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [isSaving, setIsSaving] = useState(false)
   
   // Parameters - Support both new grouped structure and legacy flat structure
+  const createEmptyCondition = () => ({
+    id: `condition-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    sensor: '',
+    operator: '',
+    value: '',
+    dataType: 'numeric',
+    logicOperator: 'and' as const,
+  })
+
+  const createEmptyGroup = () => ({
+    id: `group-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    conditions: [createEmptyCondition()],
+    groupLogicOperator: 'and' as const,
+    betweenGroupOperator: 'and' as const,
+  })
+
   const initialConditionGroups = (() => {
     // If rule has conditionGroups (new structure), standardize the structure
     if (rule?.conditionGroups && rule.conditionGroups.length > 0) {
@@ -1548,19 +1564,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     // Default: single group with one empty condition
     return [{
       id: 'group-1',
-      conditions: [{
-        id: '1',
-        sensor: '',
-        operator: '',
-        value: '',
-        dataType: 'numeric',
-        logicOperator: 'and'
-      }],
+      conditions: [createEmptyCondition()],
       groupLogicOperator: 'and' as const,
-      betweenGroupOperator: undefined
+      betweenGroupOperator: undefined,
     }]
   })()
-  
+
   const [conditionGroups, setConditionGroups] = useState<RuleConditionGroup[]>(initialConditionGroups)
   
   // Legacy conditions state for backward compatibility (kept for existing functions)
@@ -1580,10 +1589,16 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [advancedOpen, setAdvancedOpen] = useState(false)
   
   // Geographic zone configuration
-  const [geographicZone, setGeographicZone] = useState('cualquier-lugar')
-  const [zoneType, setZoneType] = useState('dentro')
+  const [zoneEventAction, setZoneEventAction] = useState<'entrada' | 'salida'>('entrada')
   const [selectedZonesData, setSelectedZonesData] = useState([])
-  const [advancedTags, setAdvancedTags] = useState<Array<{id: string, name: string, color: string}>>([])
+  const [selectedZoneTags, setSelectedZoneTags] = useState<TagData[]>([])
+  const [validateZoneEntry, setValidateZoneEntry] = useState(resolvedRuleType !== 'zone')
+
+  useEffect(() => {
+    if (!isEditing) {
+      setValidateZoneEntry(resolvedRuleType !== 'zone')
+    }
+  }, [resolvedRuleType, isEditing])
 
   // Event generation timing
   const [eventTiming, setEventTiming] = useState('cumplan-condiciones')
@@ -1660,14 +1675,22 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [showNotificationExample, setShowNotificationExample] = useState(false)
   const [notificationExampleType, setNotificationExampleType] = useState<'web' | 'mobile'>('web')
 
+  const zoneContextValue = useMemo(
+    () =>
+      resolvedRuleType === 'zone' && (selectedZonesData.length > 0 || selectedZoneTags.length > 0)
+        ? 'zonas-especificas'
+        : 'cualquier-lugar',
+    [resolvedRuleType, selectedZonesData, selectedZoneTags]
+  )
+
   const suggestedEventVariables = useMemo(
     () =>
       buildSuggestedVariables(conditionGroups, eventMessage, {
-        geographicZone,
+        geographicZone: zoneContextValue,
         appliesTo,
         eventTiming,
       }),
-    [conditionGroups, eventMessage, geographicZone, appliesTo, eventTiming]
+    [conditionGroups, eventMessage, zoneContextValue, appliesTo, eventTiming]
   )
 
   const hasConfiguredSensors = useMemo(
@@ -1901,6 +1924,33 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     setSelectedTags(tags)
   }
 
+  const handleZoneTagsChange = (tags: TagData[]) => {
+    setSelectedZoneTags(tags)
+  }
+
+  const ensureInitialConditionGroup = () => {
+    setConditionGroups((prev) => {
+      if (prev.length === 0) {
+        return [createEmptyGroup()]
+      }
+
+      const [first, ...rest] = prev
+      if (first.conditions.length === 0) {
+        return [{ ...first, conditions: [createEmptyCondition()] }, ...rest]
+      }
+
+      return prev
+    })
+  }
+
+  const handleToggleZoneValidation = (checked: boolean) => {
+    if (resolvedRuleType !== 'zone') return
+    setValidateZoneEntry(checked)
+    if (checked) {
+      ensureInitialConditionGroup()
+    }
+  }
+
   // Effect to initialize form data when editing an existing rule
   useEffect(() => {
     if (rule && isEditing) {
@@ -1975,14 +2025,34 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         }
       }
       
+      const hasExistingConditions = (
+        rule.conditionGroups?.some(group => group.conditions?.some(condition => condition.sensor)) ||
+        rule.conditions?.some(condition => condition.sensor)
+      )
+
+      if (resolvedRuleType === 'zone') {
+        setValidateZoneEntry(Boolean(hasExistingConditions))
+      } else {
+        setValidateZoneEntry(true)
+      }
+
       // Initialize appliesTo settings
       if (rule.appliesTo) {
         if (rule.appliesTo.type === 'units' && rule.appliesTo.units && rule.appliesTo.units.length > 0) {
-          setAppliesTo('unidades-especificas')
-          setSelectedUnitsLocal(rule.appliesTo.units || [])
+          setAppliesTo('custom')
+          setSelectedUnitsLocal(rule.appliesTo.units as any)
         } else if (rule.appliesTo.type === 'tags' && rule.appliesTo.tags && rule.appliesTo.tags.length > 0) {
-          setAppliesTo('etiquetas')
-          setSelectedTags(rule.appliesTo.tags || [])
+          setAppliesTo('custom')
+          const mappedTags = rule.appliesTo.tags.map(tagName => {
+            const match = initialTags.find(tag => tag.id === tagName || tag.name === tagName)
+            return {
+              id: match?.id ?? tagName,
+              name: match?.name ?? tagName,
+              color: match?.color ?? '#2563EB',
+              vehicleCount: (match as any)?.assignedCount ?? 0,
+            }
+          })
+          setSelectedTags(mappedTags as any)
         } else {
           setAppliesTo('all-units')
         }
@@ -1990,12 +2060,38 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
       // Initialize geographic zone settings
       if (rule.zoneScope) {
-        if (rule.zoneScope.type === 'all') {
-          setGeographicZone('cualquier-lugar')
-        } else if (rule.zoneScope.type === 'custom' && rule.zoneScope.zones) {
-          setGeographicZone('zonas-especificas')
-          setSelectedZonesData(rule.zoneScope.zones || [])
-          setZoneType(rule.zoneScope.inside ? 'dentro' : 'fuera')
+        if (rule.zoneScope.type === 'inside') {
+          setZoneEventAction('entrada')
+        } else if (rule.zoneScope.type === 'outside') {
+          setZoneEventAction('salida')
+        }
+
+        if (rule.zoneScope.zones && Array.isArray(rule.zoneScope.zones)) {
+          const formattedZones = rule.zoneScope.zones.map((zone: any, index: number) => {
+            if (typeof zone === 'string') {
+              return {
+                id: zone,
+                name: zone,
+                type: 'Zona',
+                description: `Zona ${index + 1}`,
+              }
+            }
+            return zone
+          })
+          setSelectedZonesData(formattedZones)
+        }
+
+        if (rule.zoneScope.zoneTags && Array.isArray(rule.zoneScope.zoneTags)) {
+          const mappedZoneTags = rule.zoneScope.zoneTags.map((tagName: string) => {
+            const match = initialTags.find(tag => tag.id === tagName || tag.name === tagName)
+            return {
+              id: match?.id ?? tagName,
+              name: match?.name ?? tagName,
+              color: match?.color ?? '#2563EB',
+              vehicleCount: match?.assignedCount ?? 0,
+            }
+          })
+          setSelectedZoneTags(mappedZoneTags)
         }
       }
 
@@ -2136,20 +2232,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Group management functions
   const addGroup = () => {
     if (conditionGroups.length < 2) {
-      const newGroup: RuleConditionGroup = {
-        id: `group-${Date.now()}`,
-        conditions: [{
-          id: `condition-${Date.now()}`,
-          sensor: '',
-          operator: '',
-          value: '',
-          dataType: 'numeric',
-          logicOperator: 'and'
-        }],
-        groupLogicOperator: 'and',
-        betweenGroupOperator: 'and'
-      }
-      setConditionGroups([...conditionGroups, newGroup])
+      setConditionGroups([...conditionGroups, createEmptyGroup()])
     }
   }
 
@@ -2290,15 +2373,14 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Function to detect if there are unsaved changes
   const detectChanges = () => {
     if (!isEditing) {
-      // For new rules, check if user has modified anything from the initial state
       const initialEmailRecipients = ['usuario@email.com', 'usuario@email.com', 'usuario@email.com']
-      const initialEmailSubject = 'Alerta: {{ruleName}} ha registrado un evento desde {{vehicleName}}'
-      const initialEmailDescription = 'Unidad {{vehicleName}} ha excedido el límite de velocidad en {{location}} a las {{timestamp}}'
-      
+      const initialZoneValidation = resolvedRuleType === 'zone' ? false : true
+
       return !!(
         ruleName.trim() ||
         ruleDescription.trim() ||
         JSON.stringify(conditionGroups) !== JSON.stringify(initialConditionGroups) ||
+        (resolvedRuleType === 'zone' && validateZoneEntry !== initialZoneValidation) ||
         instructions.trim() ||
         eventSeverity !== 'medium' ||
         eventIcon !== 'info' ||
@@ -2310,16 +2392,23 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         emailSubject !== '[ALERTA] {unidad} - {regla_nombre}' ||
         JSON.stringify(emailRecipients) !== JSON.stringify(initialEmailRecipients) ||
         pushNotificationEnabled !== false ||
-        // webhookNotificationEnabled !== false ||
         platformNotificationEnabled !== false
       )
     }
 
     // For editing rules, compare with original values
+    const originalZoneValidation = resolvedRuleType === 'zone'
+      ? Boolean(
+          rule?.conditionGroups?.some(group => group.conditions?.some(condition => condition.sensor)) ||
+          rule?.conditions?.some(condition => condition.sensor)
+        )
+      : true
+
     return !!(
       ruleName !== (rule?.name || '') ||
       ruleDescription !== (rule?.description || '') ||
       JSON.stringify(conditionGroups) !== JSON.stringify(rule?.conditionGroups || initialConditionGroups) ||
+      validateZoneEntry !== originalZoneValidation ||
       instructions !== (rule?.eventSettings?.instructions || '') ||
       eventSeverity !== (rule?.eventSettings?.severity || 'medium') ||
       eventIcon !== (rule?.eventSettings?.icon || 'info') ||
@@ -2398,23 +2487,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     let appliesToData: any = { type: 'units', units: [] }
     if (appliesTo === 'all-units') {
       appliesToData = { type: 'units', units: [] }
-    } else if (appliesTo === 'unidades-especificas') {
-      appliesToData = { type: 'units', units: selectedUnitsLocal }
-    } else if (appliesTo === 'etiquetas') {
-      appliesToData = { type: 'tags', tags: selectedTags }
-    }
+    } else if (appliesTo === 'custom') {
+      const unitsPayload = selectedUnitsLocal
+      const tagsPayload = selectedTags.map(tag => tag.name)
 
-    // Build zoneScope object based on current form state
-    let zoneScopeData: any = { type: 'all' }
-    if (geographicZone === 'cualquier-lugar') {
-      zoneScopeData = { type: 'all' }
-    } else if (geographicZone === 'zonas-especificas') {
-      zoneScopeData = { 
-        type: 'custom', 
-        zones: selectedZonesData,
-        inside: zoneType === 'dentro'
+      appliesToData = {
+        type: unitsPayload.length > 0 ? 'units' : 'tags',
+        units: unitsPayload,
+        tags: tagsPayload,
       }
     }
+
+    const zoneScopeData = resolvedRuleType === 'zone'
+      ? {
+          type: zoneEventAction === 'entrada' ? 'inside' : 'outside',
+          zones: selectedZonesData,
+          zoneTags: selectedZoneTags.map(tag => tag.name),
+        }
+      : { type: 'all' }
 
     // Build schedule object based on current form state
     let scheduleData: any = { type: 'always' }
@@ -2525,6 +2615,546 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const isFirstTab = currentTabIndex === 0
   const isLastTab = currentTabIndex === tabs.length - 1
 
+  const renderConditionsCard = () => {
+    const isZone = resolvedRuleType === 'zone'
+    const showContent = !isZone || validateZoneEntry
+
+    return (
+      <div className={`border border-gray-200 rounded-lg ${isZone && !validateZoneEntry ? 'bg-gray-50' : 'bg-white'}`}>
+        <div
+          className={`flex items-start gap-3 px-4 py-4 border-b border-gray-200 rounded-t-lg ${
+            isZone && !validateZoneEntry ? 'bg-gray-50' : 'bg-gray-100'
+          }`}
+        >
+          <div className={`w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center ${isZone && !validateZoneEntry ? 'bg-white' : 'bg-white'} text-gray-600`}>
+            <Gauge className="h-4 w-4" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-[14px] font-semibold text-gray-900">
+              {isZone ? 'Validar parámetros al momento de entrar a la zona' : 'Parámetros a evaluar'}
+            </h3>
+            <p className="text-[14px] text-gray-600">
+              {isZone
+                ? 'El evento sólo será generado si las condiciones se cumplen al momento de entrar a la zona'
+                : '¿Qué condiciones evalúa esta regla?'}
+            </p>
+          </div>
+          {isZone && (
+            <Switch checked={validateZoneEntry} onCheckedChange={handleToggleZoneValidation} className="mt-1" />
+          )}
+        </div>
+
+        {showContent && (
+          <div className="p-4">
+            {conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0) && (
+              <div className="-mx-4 border-b border-gray-200 mb-4"></div>
+            )}
+
+            <DndProvider backend={HTML5Backend}>
+              <div className="space-y-6 relative">
+                {conditionGroups.map((group, groupIndex) => (
+                  <div key={group.id}>
+                    <DraggableConditionGroup
+                      group={group}
+                      groupIndex={groupIndex}
+                      moveGroup={moveGroup}
+                      updateGroup={updateGroup}
+                      removeGroup={removeGroup}
+                      addConditionToGroup={addConditionToGroup}
+                      updateConditionInGroup={updateConditionInGroup}
+                      removeConditionFromGroup={removeConditionFromGroup}
+                      moveConditionInGroup={moveConditionInGroup}
+                      telemetrySensors={telemetrySensors}
+                      operatorOptions={operatorOptions}
+                      totalGroups={conditionGroups.length}
+                    />
+
+                    {groupIndex === 0 && conditionGroups.length === 2 && (
+                      <div className="flex justify-center my-4">
+                        <div className="flex bg-gray-100 rounded-md p-1">
+                          <button
+                            type="button"
+                            onClick={() => updateGroup(conditionGroups[1].id, 'betweenGroupOperator', 'and')}
+                            className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
+                              conditionGroups[1]?.betweenGroupOperator === 'and' || !conditionGroups[1]?.betweenGroupOperator
+                                ? 'bg-blue-600/30 text-blue-800'
+                                : 'bg-transparent text-gray-600 hover:text-gray-800'
+                            }`}
+                          >
+                            {conditionGroups[1]?.betweenGroupOperator === 'and' || !conditionGroups[1]?.betweenGroupOperator
+                              ? 'Ambos grupos deben cumplirse'
+                              : 'Todas'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateGroup(conditionGroups[1].id, 'betweenGroupOperator', 'or')}
+                            className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
+                              conditionGroups[1]?.betweenGroupOperator === 'or'
+                                ? 'bg-yellow-500/50 text-yellow-800'
+                                : 'bg-transparent text-gray-600 hover:text-gray-800'
+                            }`}
+                          >
+                            {conditionGroups[1]?.betweenGroupOperator === 'or' ? 'Cualquiera puede cumplirse' : 'Cualquiera'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </DndProvider>
+
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="link"
+                  onClick={addGroup}
+                  className="p-0 h-auto text-blue-600 hover:text-blue-700 flex items-center gap-2 text-[14px] whitespace-nowrap"
+                  disabled={conditionGroups.length >= 2}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Agregar grupo</span>
+                  <span className="text-blue-600">({conditionGroups.length}/2)</span>
+                </Button>
+              </div>
+              <Button
+                variant="link"
+                onClick={clearAllGroups}
+                className="p-0 h-auto text-blue-600 hover:text-blue-700 text-[14px]"
+                disabled={conditionGroups.length === 1 && conditionGroups[0].conditions.length === 1 && !conditionGroups[0].conditions[0].sensor}
+              >
+                Limpiar todo
+              </Button>
+            </div>
+
+            {conditionGroups.some(group => group.conditions.some(c => c.sensor && c.operator && c.value)) && (
+              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="h-4 w-4 text-gray-600" />
+                  <h4 className="text-[14px] font-medium text-gray-700">Resumen de la regla</h4>
+                </div>
+                <div className="text-[14px] text-gray-600">
+                  {(() => {
+                    const validGroups = conditionGroups
+                      .map(group => ({
+                        ...group,
+                        conditions: group.conditions.filter(c => c.sensor && c.operator && c.value)
+                      }))
+                      .filter(group => group.conditions.length > 0)
+
+                    if (validGroups.length === 0) return 'Configura las condiciones para ver el resumen'
+
+                    return (
+                      <div className="flex flex-col gap-4">
+                        {validGroups.map((group, groupIndex) => {
+                          const groupNumber = groupIndex + 1
+                          const logicWord = group.groupLogicOperator === 'and' ? 'Todas' : 'Cualquiera'
+                          const logicColor = group.groupLogicOperator === 'and' ? 'text-blue-600' : 'text-amber-500'
+                          const logicSuffix = group.groupLogicOperator === 'and' ? 'deben cumplirse' : 'puede cumplirse'
+
+                          return (
+                            <div key={group.id} className="space-y-2">
+                              <div className="font-medium">
+                                Grupo {groupNumber}: <span className={logicColor}>{logicWord}</span> {logicSuffix}
+                              </div>
+                              <div className="space-y-1">
+                                {group.conditions.map((condition, condIndex) => {
+                                  const sensor = telemetrySensors.find(s => s.value === condition.sensor)
+                                  if (!sensor) return null
+
+                                  let operatorSymbol = ''
+                                  switch (condition.operator) {
+                                    case 'eq': operatorSymbol = '='; break
+                                    case 'gte': operatorSymbol = '≥'; break
+                                    case 'gt': operatorSymbol = '>'; break
+                                    case 'lte': operatorSymbol = '≤'; break
+                                    case 'lt': operatorSymbol = '<'; break
+                                    case 'neq': operatorSymbol = '≠'; break
+                                    default: operatorSymbol = '='
+                                  }
+
+                                  let displayValue = condition.value
+                                  if (sensor.dataType === 'boolean' || sensor.dataType === 'string') {
+                                    const option = sensor.options?.find(opt => opt.value === condition.value)
+                                    displayValue = option ? option.label : condition.value
+                                  } else {
+                                    displayValue = sensor.unit ? `${condition.value} ${sensor.unit}` : condition.value
+                                  }
+
+                                  return (
+                                    <div key={condIndex} className="text-[14px] ml-4">
+                                      - {sensor.label} {operatorSymbol} {displayValue}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        })}
+
+                        {validGroups.length > 1 && (
+                          <div className="pt-2 border-t border-gray-200">
+                            <div className="font-medium">
+                              La regla se activará cuando se cumplan las condiciones de Grupo 1 {validGroups[1]?.betweenGroupOperator === 'or' ? 'o' : 'y'} Grupo 2.
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderApplyCard = () => (
+    <div className="bg-white border border-gray-200 rounded-lg">
+      <div className="flex items-start gap-3 px-4 py-4 bg-gray-100 rounded-t-lg border-b border-gray-200">
+        <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
+          <Truck className="h-4 w-4" />
+        </div>
+        <div>
+          <h3 className="text-[14px] font-semibold text-gray-900">Aplica esta regla a</h3>
+          <p className="text-[14px] text-gray-600">
+            Elige a cuáles unidades o etiquetas esta regla debe aplicar
+          </p>
+        </div>
+      </div>
+      <div className="p-4 flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-8 items-center">
+          <div>
+            <label className="text-[14px] font-medium text-gray-700">¿A qué unidades aplicará la regla?</label>
+          </div>
+          <div>
+            <Select value={appliesTo} onValueChange={setAppliesTo}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-units">Todas las unidades</SelectItem>
+                <SelectItem value="custom">Personalizado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {appliesTo === 'custom' && (
+          <>
+            <div className="grid grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-gray-600" />
+                  <label className="text-[14px] font-medium text-gray-700">Unidades</label>
+                </div>
+              </div>
+              <div>
+                <UnidadesSelectorInput
+                  selectedUnits={selectedUnitsLocal}
+                  onSelectionChange={handleUnitsChange}
+                  placeholder="Seleccionar unidades"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-gray-600" />
+                  <label className="text-[14px] font-medium text-gray-700">Etiquetas</label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center hover:bg-gray-400 transition-colors cursor-help">
+                        <span className="text-[10px] text-gray-600">i</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-[12px]">
+                        Se aplicará a cualquier unidad que tenga al menos 1 de esas etiquetas
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <div>
+                <GenericSelectorInput
+                  selectedItems={selectedTags}
+                  onSelectionChange={handleTagsChange}
+                  placeholder="Seleccionar etiquetas"
+                  title="Etiquetas para aplicar regla"
+                  items={initialTags.map((tag, index) => ({
+                    id: tag.id,
+                    name: tag.name,
+                    color: tag.color,
+                    key: `tag-${tag.id}-${index}`
+                  }))}
+                  searchPlaceholder="Buscar etiquetas..."
+                  getDisplayText={(count) => {
+                    if (count === 0) return "Seleccionar etiquetas"
+                    if (count === 1) return "1 etiqueta seleccionada"
+                    return `${count} etiquetas seleccionadas`
+                  }}
+                  multiSelect
+                  showColorPills
+                  showPillsDisplay
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderAdvancedCard = () => (
+    <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <CollapsibleTrigger className="w-full">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2">
+              <Settings className="h-4 w-4 text-gray-600" />
+              <h3 className="text-[14px] font-medium text-gray-700">Configuración avanzada</h3>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
+          </div>
+          <p className="text-[14px] text-gray-600 text-left mt-2">
+            Define las condiciones adicionales de tu regla, cuándo debe activarse y otras configuraciones avanzadas
+          </p>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-6">
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-600" />
+                  <label className="text-[14px] font-medium text-gray-700">¿En qué momento se debe generar el evento?</label>
+                </div>
+              </div>
+              <div>
+                <Select value={eventTiming} onValueChange={setEventTiming}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cumplan-condiciones">Cuando se cumplan las condiciones</SelectItem>
+                    <SelectItem value="despues-tiempo">Después de cierto tiempo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {eventTiming === 'despues-tiempo' && (
+              <div className="grid grid-cols-2 gap-8 items-center">
+                <div>
+                  <label className="text-[14px] font-medium text-gray-700">Duración</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="9999"
+                    value={durationValue}
+                    onChange={(e) => setDurationValue(e.target.value)}
+                    className="w-20"
+                    placeholder="41"
+                  />
+                  <Select value={durationUnit} onValueChange={setDurationUnit}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="segundos">segundos</SelectItem>
+                      <SelectItem value="minutos">minutos</SelectItem>
+                      <SelectItem value="horas">horas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {eventTiming === 'despues-tiempo' && (
+              <div className="grid grid-cols-2 gap-8 items-center">
+                <div></div>
+                <div>
+                  <p className="text-[12px] text-gray-500 mt-1">
+                    Ejemplo: "Velocidad &gt; 110 km/h durante más de {durationValue} {durationUnit}"
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-600" />
+                  <label className="text-[14px] font-medium text-gray-700">¿Cuándo estará activa esta regla?</label>
+                </div>
+              </div>
+              <div>
+                <Select value={ruleSchedule} onValueChange={setRuleSchedule}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todo-momento">En todo momento</SelectItem>
+                    <SelectItem value="personalizado">Personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {ruleSchedule === 'personalizado' && (
+              <div className="mt-6">
+                <div className="flex flex-col gap-4">
+                  {Object.entries(scheduleConfig).map(([day, config]) => {
+                    const dayLabels: Record<string, string> = {
+                      lunes: 'Lunes',
+                      martes: 'Martes',
+                      miercoles: 'Miércoles',
+                      jueves: 'Jueves',
+                      viernes: 'Viernes',
+                      sabado: 'Sábado',
+                      domingo: 'Domingo',
+                    }
+
+                    return (
+                      <div key={day} className="grid grid-cols-4 gap-4 items-center">
+                        <div className="flex items-center gap-4 pl-8 pr-12">
+                          <Checkbox
+                            checked={config.enabled}
+                            onCheckedChange={(checked) => updateDaySchedule(day, 'enabled', checked)}
+                          />
+                          <label className="text-[14px] text-gray-700 font-medium">
+                            {dayLabels[day]}
+                          </label>
+                        </div>
+                        <div>
+                          <Select
+                            value={config.start}
+                            onValueChange={(value) => updateDaySchedule(day, 'start', value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="06:00">06:00 am</SelectItem>
+                              <SelectItem value="07:00">07:00 am</SelectItem>
+                              <SelectItem value="08:00">08:00 am</SelectItem>
+                              <SelectItem value="09:00">09:00 am</SelectItem>
+                              <SelectItem value="10:00">10:00 am</SelectItem>
+                              <SelectItem value="11:00">11:00 am</SelectItem>
+                              <SelectItem value="12:00">12:00 pm</SelectItem>
+                              <SelectItem value="13:00">01:00 pm</SelectItem>
+                              <SelectItem value="14:00">02:00 pm</SelectItem>
+                              <SelectItem value="15:00">03:00 pm</SelectItem>
+                              <SelectItem value="16:00">04:00 pm</SelectItem>
+                              <SelectItem value="17:00">05:00 pm</SelectItem>
+                              <SelectItem value="18:00">06:00 pm</SelectItem>
+                              <SelectItem value="19:00">07:00 pm</SelectItem>
+                              <SelectItem value="20:00">08:00 pm</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Select
+                            value={config.end}
+                            onValueChange={(value) => updateDaySchedule(day, 'end', value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="18:00">06:00 pm</SelectItem>
+                              <SelectItem value="19:00">07:00 pm</SelectItem>
+                              <SelectItem value="20:00">08:00 pm</SelectItem>
+                              <SelectItem value="21:00">09:00 pm</SelectItem>
+                              <SelectItem value="22:00">10:00 pm</SelectItem>
+                              <SelectItem value="23:00">11:00 pm</SelectItem>
+                              <SelectItem value="00:00">12:00 am</SelectItem>
+                              <SelectItem value="01:00">01:00 am</SelectItem>
+                              <SelectItem value="02:00">02:00 am</SelectItem>
+                              <SelectItem value="03:00">03:00 am</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Select
+                            value={config.scope}
+                            onValueChange={(value) => updateDaySchedule(day, 'scope', value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="dentro">Dentro</SelectItem>
+                              <SelectItem value="fuera">Fuera</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  )
+
+  const renderZoneCard = () => {
+    if (resolvedRuleType !== 'zone') return null
+
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg">
+        <div className="px-4 py-4 bg-gray-100 border-b border-gray-200 rounded-t-lg flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-gray-600">
+            <MapPin className="h-4 w-4" />
+            <h3 className="text-[14px] font-semibold text-gray-900">Zonas</h3>
+          </div>
+          <p className="text-[13px] text-gray-500">Detección de ingreso o salida de zona</p>
+        </div>
+        <div className="p-4 flex flex-col gap-4">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-6 items-center">
+              <label className="text-[14px] font-medium text-gray-700">¿Qué acción activará el evento?</label>
+              <Select value={zoneEventAction} onValueChange={(value: 'entrada' | 'salida') => setZoneEventAction(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="entrada">Entrada a una zona o grupo de zonas</SelectItem>
+                  <SelectItem value="salida">Salida de una zona o grupo de zonas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 items-center">
+              <label className="text-[14px] font-medium text-gray-700">Zonas geográficas</label>
+              <ZonasSelectorInput
+                selectedZones={selectedZonesData}
+                onSelectionChange={setSelectedZonesData}
+                placeholder="Seleccionar zonas"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 items-center">
+              <label className="text-[14px] font-medium text-gray-700">Etiquetas de zona</label>
+              <EtiquetasSelectorInput
+                selectedTags={selectedZoneTags}
+                onSelectionChange={handleZoneTagsChange}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <TooltipProvider>
       <div className="flex-1 flex flex-col overflow-hidden bg-background relative">
@@ -2621,595 +3251,20 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsList>
               
               <TabsContent value="parameters" className="mt-6 space-y-6">
-                <div className="bg-white border border-gray-200 rounded-lg">
-                  <div className="flex items-start gap-3 px-4 py-4 bg-gray-100 border-b border-gray-200 rounded-t-lg">
-                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
-                      <Gauge className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-[14px] font-semibold text-gray-900">Parámetros a evaluar</h3>
-                      <p className="text-[14px] text-gray-600">¿Qué condiciones evalúa esta regla?</p>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    {conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0) && (
-                      <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                    )}
-
-                    <DndProvider backend={HTML5Backend}>
-                    <div className="space-y-6 relative">
-                      {conditionGroups.map((group, groupIndex) => (
-                        <div key={group.id}>
-                          <DraggableConditionGroup
-                            group={group}
-                            groupIndex={groupIndex}
-                            moveGroup={moveGroup}
-                            updateGroup={updateGroup}
-                            removeGroup={removeGroup}
-                            addConditionToGroup={addConditionToGroup}
-                            updateConditionInGroup={updateConditionInGroup}
-                            removeConditionFromGroup={removeConditionFromGroup}
-                            moveConditionInGroup={moveConditionInGroup}
-                            telemetrySensors={telemetrySensors}
-                            operatorOptions={operatorOptions}
-                            totalGroups={conditionGroups.length}
-                          />
-                          
-                          {/* Between groups operator - only show between group 1 and 2 */}
-                          {groupIndex === 0 && conditionGroups.length === 2 && (
-                            <div className="flex justify-center my-4">
-                              <div className="flex bg-gray-100 rounded-md p-1">
-                                <button
-                                  type="button"
-                                  onClick={() => updateGroup(conditionGroups[1].id, 'betweenGroupOperator', 'and')}
-                                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
-                                    conditionGroups[1]?.betweenGroupOperator === 'and' || !conditionGroups[1]?.betweenGroupOperator 
-                                      ? 'bg-blue-600/30 text-blue-800' 
-                                      : 'bg-transparent text-gray-600 hover:text-gray-800'
-                                  }`}
-                                >
-                                  {conditionGroups[1]?.betweenGroupOperator === 'and' || !conditionGroups[1]?.betweenGroupOperator ? 'Ambos grupos deben cumplirse' : 'Todas'}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => updateGroup(conditionGroups[1].id, 'betweenGroupOperator', 'or')}
-                                  className={`px-3 py-2 rounded text-[14px] font-medium transition-colors flex items-center justify-center ${
-                                    conditionGroups[1]?.betweenGroupOperator === 'or' 
-                                      ? 'bg-yellow-500/50 text-yellow-800' 
-                                      : 'bg-transparent text-gray-600 hover:text-gray-800'
-                                  }`}
-                                >
-                                  {conditionGroups[1]?.betweenGroupOperator === 'or' ? 'Al menos un grupo debe cumplirse' : 'Cualquiera'}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="link"
-                            onClick={addGroup}
-                            className="p-0 h-auto text-blue-600 hover:text-blue-700 flex items-center gap-2 text-[14px] whitespace-nowrap"
-                            disabled={conditionGroups.length >= 2}
-                          >
-                            <Plus className="w-4 h-4" />
-                            <span>Agregar grupo</span>
-                            <span className="text-blue-600">({conditionGroups.length}/2)</span>
-                          </Button>
-                        </div>
-                        <Button
-                          variant="link"
-                          onClick={clearAllGroups}
-                          className="p-0 h-auto text-blue-600 hover:text-blue-700 text-[14px]"
-                          disabled={conditionGroups.length === 1 && conditionGroups[0].conditions.length === 1 && !conditionGroups[0].conditions[0].sensor}
-                        >
-                          Limpiar todo
-                        </Button>
-                      </div>
-                    </div>
-                    </DndProvider>
-
-                  {/* Rule Summary */}
-                  {conditionGroups.some(group => group.conditions.some(c => c.sensor && c.operator && c.value)) && (
-                    <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Info className="h-4 w-4 text-gray-600" />
-                        <h4 className="text-[14px] font-medium text-gray-700">Resumen de la regla</h4>
-                      </div>
-                      <div className="text-[14px] text-gray-600">
-                        {(() => {
-                          const validGroups = conditionGroups.map(group => ({
-                            ...group,
-                            conditions: group.conditions.filter(c => c.sensor && c.operator && c.value)
-                          })).filter(group => group.conditions.length > 0)
-
-                          if (validGroups.length === 0) return "Configura las condiciones para ver el resumen"
-                          
-                          return (
-                            <div className="flex flex-col gap-4">
-                              {validGroups.map((group, groupIndex) => {
-                                const groupNumber = groupIndex + 1
-                                const logicText = group.groupLogicOperator === 'and' ? (
-                                  <>
-                                    <span className="text-blue-600">todas</span> estas condiciones se cumplen
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="text-amber-500">cualquiera</span> de estas condiciones se cumple
-                                  </>
-                                )
-                                
-                                const logicWord = group.groupLogicOperator === 'and' ? 'Todas' : 'Cualquiera'
-                                const logicColor = group.groupLogicOperator === 'and' ? 'text-blue-600' : 'text-amber-500'
-                                const logicSuffix = group.groupLogicOperator === 'and' ? 'deben cumplirse' : 'puede cumplirse'
-                                
-                                return (
-                                  <div key={group.id} className="space-y-2">
-                                    <div className="font-medium">
-                                      Grupo {groupNumber}: <span className={logicColor}>{logicWord}</span> {logicSuffix}
-                                    </div>
-                                    <div className="space-y-1">
-                                      {group.conditions.map((condition, condIndex) => {
-                                        const sensor = telemetrySensors.find(s => s.value === condition.sensor)
-                                        if (!sensor) return null
-                                        
-                                        let operatorSymbol = ""
-                                        switch (condition.operator) {
-                                          case 'eq': operatorSymbol = "="; break
-                                          case 'gte': operatorSymbol = "≥"; break
-                                          case 'gt': operatorSymbol = ">"; break
-                                          case 'lte': operatorSymbol = "≤"; break
-                                          case 'lt': operatorSymbol = "<"; break
-                                          case 'neq': operatorSymbol = "≠"; break
-                                          default: operatorSymbol = "="
-                                        }
-                                        
-                                        // Format value based on sensor dataType
-                                        let displayValue = condition.value
-                                        if (sensor.dataType === 'boolean' || sensor.dataType === 'string') {
-                                          // Find the option label for boolean/string sensors
-                                          const option = sensor.options?.find(opt => opt.value === condition.value)
-                                          displayValue = option ? option.label : condition.value
-                                        } else {
-                                          // For numeric sensors, add unit if available
-                                          displayValue = sensor.unit ? `${condition.value} ${sensor.unit}` : condition.value
-                                        }
-                                        
-                                        return (
-                                          <div key={condIndex} className="text-[14px] ml-4">
-                                            - {sensor.label} {operatorSymbol} {displayValue}
-                                          </div>
-                                        )
-                                      })}
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                              
-                              {validGroups.length > 1 && (
-                                <div className="pt-2 border-t border-gray-200">
-                                  <div className="font-medium">
-                                    La regla se activará cuando se cumplan las condiciones de Grupo 1 {validGroups[1]?.betweenGroupOperator === 'or' ? 'o' : 'y'} Grupo 2.
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                  </div>
-                </div>
-
-                {/* Apply this rule to */}
-                <div className="bg-white border border-gray-200 rounded-lg">
-                  <div className="flex items-start gap-3 px-4 py-4 bg-gray-100 rounded-t-lg border-b border-gray-200">
-                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
-                      <Truck className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-[14px] font-semibold text-gray-900">Aplica esta regla a</h3>
-                      <p className="text-[14px] text-gray-600">
-                        Elige a cuáles unidades o etiquetas esta regla debe aplicar
-                      </p>
-                    </div>
-                  </div>
-                  <div className="p-4 flex flex-col gap-4">
-                    {/* Main selector */}
-                    <div className="grid grid-cols-2 gap-8 items-center">
-                      <div>
-                        <label className="text-[14px] font-medium text-gray-700">¿A qué unidades aplicará la regla?</label>
-                      </div>
-                      <div>
-                        <Select value={appliesTo} onValueChange={setAppliesTo}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all-units">Todas las unidades</SelectItem>
-                            <SelectItem value="custom">Personalizado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Conditional selectors */}
-                    {appliesTo === 'custom' && (
-                      <>
-                        {/* Unidades */}
-                        <div className="grid grid-cols-2 gap-8 items-center">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Truck className="h-4 w-4 text-gray-600" />
-                              <label className="text-[14px] font-medium text-gray-700">Unidades</label>
-                            </div>
-                          </div>
-                          <div>
-                            <UnidadesSelectorInput
-                              selectedUnits={selectedUnitsLocal}
-                              onSelectionChange={handleUnitsChange}
-                              placeholder="Seleccionar unidades"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Etiquetas */}
-                        <div className="grid grid-cols-2 gap-8 items-center">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Tag className="h-4 w-4 text-gray-600" />
-                              <label className="text-[14px] font-medium text-gray-700">Etiquetas</label>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center hover:bg-gray-400 transition-colors cursor-help">
-                                    <span className="text-[10px] text-gray-600">i</span>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="text-[12px]">
-                                    Se aplicará a cualquier unidad que tenga al menos 1 de esas etiquetas
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </div>
-                          <div>
-                            <GenericSelectorInput
-                              selectedItems={selectedTags}
-                              onSelectionChange={handleTagsChange}
-                              placeholder="Seleccionar etiquetas"
-                              title="Etiquetas para aplicar regla"
-                              items={initialTags.map((tag, index) => ({
-                                id: tag.id,
-                                name: tag.name,
-                                color: tag.color,
-                                key: `tag-${tag.id}-${index}`
-                              }))}
-                              searchPlaceholder="Buscar etiquetas..."
-                              getDisplayText={(count) => {
-                                if (count === 0) return "Seleccionar etiquetas"
-                                if (count === 1) return "1 etiqueta seleccionada"
-                                return `${count} etiquetas seleccionadas`
-                              }}
-                              multiSelect={true}
-                              showColorPills={true}
-                              showPillsDisplay={true}
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Advanced Configuration */}
-                <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                          <Settings className="h-4 w-4 text-gray-600" />
-                          <h3 className="text-[14px] font-medium text-gray-700">Configuración avanzada</h3>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
-                      </div>
-                      <p className="text-[14px] text-gray-600 text-left mt-2">
-                        Personaliza aún más tu regla definiendo lugares, horarios y otras configuraciones
-                      </p>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-6">
-                      {/* Header - Left aligned with first column labels */}
-
-
-                      {/* Main content grid */}
-                      <div className="space-y-6">
-                        {/* Section 1 – Geographic zone */}
-                        <div className="grid grid-cols-2 gap-8 items-start">
-                          <div>
-                            <div className="flex items-center gap-2 mb-4">
-                              <MapPin className="h-4 w-4 text-gray-600" />
-                              <label className="text-[14px] font-medium text-gray-700">¿En qué zona geográfica aplica esta regla?</label>
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-4">
-                            <Select value={geographicZone} onValueChange={setGeographicZone}>
-                              <SelectTrigger className="w-full">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="cualquier-lugar">En cualquier lugar</SelectItem>
-                                <SelectItem value="dentro-zona">Dentro de una zona o grupo de zonas</SelectItem>
-                                <SelectItem value="fuera-zona">Fuera de una zona o grupo de zonas</SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                          </div>
-                        </div>
-
-                        {/* Section 2 – Zonas */}
-                        {(geographicZone === 'dentro-zona' || geographicZone === 'fuera-zona') && (
-                          <div className="grid grid-cols-2 gap-8 items-center">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4 text-gray-600" />
-                                <label className="text-[14px] font-medium text-gray-700">Zonas</label>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-4">
-                              <ZonasSelectorInput
-                                selectedZones={selectedZonesData.map(zone => ({ 
-                                  id: zone.id, 
-                                  name: zone.name, 
-                                  type: zone.type,
-                                  description: zone.description
-                                }))}
-                                onSelectionChange={handleZonesChange}
-                                placeholder="Selecciona una zona"
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Section 3 – Tags */}
-                        {(geographicZone === 'dentro-zona' || geographicZone === 'fuera-zona') && (
-                          <div className="grid grid-cols-2 gap-8 items-center">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <Tag className="h-4 w-4 text-gray-600" />
-                                <label className="text-[14px] font-medium text-gray-700">Etiquetas</label>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center hover:bg-gray-400 transition-colors cursor-help">
-                                      <span className="text-[10px] text-gray-600">i</span>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="text-[12px]">
-                                      Se aplicará a cualquier unidad que tenga al menos 1 de esas etiquetas
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </div>
-                            <div>
-                              <GenericSelectorInput
-                                selectedItems={advancedTags}
-                                onSelectionChange={(items) => {
-                                  if (items.length <= 10) {
-                                    setAdvancedTags(items)
-                                    setHasUnsavedChanges(true)
-                                  }
-                                }}
-                                placeholder="Seleccionar etiquetas"
-                                title="Etiquetas de configuración avanzada"
-                                items={initialTags.map(tag => ({
-                                  id: tag.id,
-                                  name: tag.name,
-                                  color: tag.color
-                                }))}
-                                searchPlaceholder="Buscar etiquetas..."
-                                getDisplayText={(count) => {
-                                  if (count === 0) return "Seleccionar etiquetas"
-                                  if (count === 1) return "1 etiqueta seleccionada"
-                                  return `${count} etiquetas seleccionadas${count >= 10 ? ' (máximo)' : ''}`
-                                }}
-                                maxSelections={10}
-                                multiSelect={true}
-                                showColorPills={true}
-                                showPillsDisplay={true}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Section 3 – Event moment */}
-                        <div className="grid grid-cols-2 gap-8 items-center">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-gray-600" />
-                              <label className="text-[14px] font-medium text-gray-700">¿En qué momento se debe generar el evento?</label>
-                            </div>
-                          </div>
-                          <div>
-                            <Select value={eventTiming} onValueChange={setEventTiming}>
-                              <SelectTrigger className="w-full">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="cumplan-condiciones">Cuando se cumplan las condiciones</SelectItem>
-                                <SelectItem value="despues-tiempo">Después de cierto tiempo</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        {/* Section 3B – Duration configuration (conditional) */}
-                        {eventTiming === 'despues-tiempo' && (
-                          <div className="grid grid-cols-2 gap-8 items-center">
-                            <div>
-                              <label className="text-[14px] font-medium text-gray-700">Duración</label>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min="1"
-                                max="9999"
-                                value={durationValue}
-                                onChange={(e) => setDurationValue(e.target.value)}
-                                className="w-20"
-                                placeholder="41"
-                              />
-                              <Select value={durationUnit} onValueChange={setDurationUnit}>
-                                <SelectTrigger className="w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="segundos">segundos</SelectItem>
-                                  <SelectItem value="minutos">minutos</SelectItem>
-                                  <SelectItem value="horas">horas</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Duration example text (conditional) */}
-                        {eventTiming === 'despues-tiempo' && (
-                          <div className="grid grid-cols-2 gap-8 items-center">
-                            <div></div>
-                            <div>
-                              <p className="text-[12px] text-gray-500 mt-1">
-                                Ejemplo: "Velocidad &gt; 110 km/h durante más de {durationValue} {durationUnit}"
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Section 4  Rule activity period */}
-                        <div className="grid grid-cols-2 gap-8 items-center">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-gray-600" />
-                              <label className="text-[14px] font-medium text-gray-700">¿Cuándo estará activa esta regla?</label>
-                            </div>
-                          </div>
-                          <div>
-                            <Select value={ruleSchedule} onValueChange={setRuleSchedule}>
-                              <SelectTrigger className="w-full">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="todo-momento">En todo momento</SelectItem>
-                                <SelectItem value="personalizado">Personalizado</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        {/* Section 5 – Days of the week (table layout) */}
-                        {ruleSchedule === 'personalizado' && (
-                          <div className="mt-6">
-                            <div className="flex flex-col gap-4">
-                              {Object.entries(scheduleConfig).map(([day, config]) => {
-                                const dayLabels = {
-                                  lunes: 'Lunes',
-                                  martes: 'Martes', 
-                                  miercoles: 'Miércoles',
-                                  jueves: 'Jueves',
-                                  viernes: 'Viernes',
-                                  sabado: 'Sábado',
-                                  domingo: 'Domingo'
-                                }
-                                
-                                return (
-                                  <div key={day} className="grid grid-cols-4 gap-4 items-center">
-                                    {/* Column 1: Checkbox + day name (aligned with labels in first column) */}
-                                    <div className="flex items-center gap-4 pl-8 pr-12">
-                                      <Checkbox
-                                        checked={config.enabled}
-                                        onCheckedChange={(checked) => updateDaySchedule(day, 'enabled', checked)}
-                                      />
-                                      <label className="text-[14px] text-gray-700 font-medium">
-                                        {dayLabels[day]}
-                                      </label>
-                                    </div>
-                                    
-                                    {/* Column 2: Start time input (aligned with second column of dropdowns) */}
-                                    <div>
-                                      <Select
-                                        value={config.start}
-                                        onValueChange={(value) => updateDaySchedule(day, 'start', value)}
-                                      >
-                                        <SelectTrigger className="w-full">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="06:00">06:00 am</SelectItem>
-                                          <SelectItem value="07:00">07:00 am</SelectItem>
-                                          <SelectItem value="08:00">08:00 am</SelectItem>
-                                          <SelectItem value="09:00">09:00 am</SelectItem>
-                                          <SelectItem value="10:00">10:00 am</SelectItem>
-                                          <SelectItem value="11:00">11:00 am</SelectItem>
-                                          <SelectItem value="12:00">12:00 pm</SelectItem>
-                                          <SelectItem value="13:00">01:00 pm</SelectItem>
-                                          <SelectItem value="14:00">02:00 pm</SelectItem>
-                                          <SelectItem value="15:00">03:00 pm</SelectItem>
-                                          <SelectItem value="16:00">04:00 pm</SelectItem>
-                                          <SelectItem value="17:00">05:00 pm</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    
-                                    {/* Column 3: End time input (aligned directly to the right of column 2) */}
-                                    <div>
-                                      <Select
-                                        value={config.end}
-                                        onValueChange={(value) => updateDaySchedule(day, 'end', value)}
-                                      >
-                                        <SelectTrigger className="w-full">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="18:00">06:00 pm</SelectItem>
-                                          <SelectItem value="19:00">07:00 pm</SelectItem>
-                                          <SelectItem value="20:00">08:00 pm</SelectItem>
-                                          <SelectItem value="21:00">09:00 pm</SelectItem>
-                                          <SelectItem value="22:00">10:00 pm</SelectItem>
-                                          <SelectItem value="23:00">11:00 pm</SelectItem>
-                                          <SelectItem value="00:00">12:00 am</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    
-                                    {/* Column 4: Condition dropdown (aligned with rightmost dropdown position) */}
-                                    <div>
-                                      <Select
-                                        value={config.scope}
-                                        onValueChange={(value) => updateDaySchedule(day, 'scope', value)}
-                                      >
-                                        <SelectTrigger className="w-full">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="dentro">Dentro de este horario</SelectItem>
-                                          <SelectItem value="fuera">Fuera de este horario</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
+                {resolvedRuleType === 'zone' ? (
+                  <>
+                    {renderZoneCard()}
+                    {renderApplyCard()}
+                    {renderConditionsCard()}
+                    {renderAdvancedCard()}
+                  </>
+                ) : (
+                  <>
+                    {renderConditionsCard()}
+                    {renderApplyCard()}
+                    {renderAdvancedCard()}
+                  </>
+                )}
               </TabsContent>
 
               <TabsContent value="actions" className="mt-6 space-y-6">

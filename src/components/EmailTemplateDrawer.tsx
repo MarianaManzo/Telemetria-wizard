@@ -19,9 +19,10 @@ import {
   UndoOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
-import { ConfigProvider, Drawer, Button, Form, Input, Select, Collapse, Typography, Divider } from "antd";
+import { ConfigProvider, Drawer, Button, Form, Input, Collapse, Typography, Divider } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import ModalBase from "./ModalBase";
+import { RecipientsSelector } from "./RecipientsSelector";
 
 const { Panel } = Collapse;
 const { Text } = Typography;
@@ -635,19 +636,11 @@ export default function TemplateDrawer({ open, onClose, onSave }: TemplateDrawer
                         >
                           <Input placeholder="Asunto del correo" allowClear />
                         </Form.Item>
-                        <Form.Item label="Remitentes" name="sender">
-                          <Select
-                            mode="tags"
-                            placeholder="Escribe y presiona Enter para agregar"
-                            tokenSeparators={[",", ";"]}
-                          />
+                        <Form.Item label="Remitentes" name="sender" valuePropName="value">
+                          <RecipientsSelector placeholder="Agregar remitentes (separa con coma)" />
                         </Form.Item>
-                        <Form.Item label="Destinatarios" name="recipients">
-                          <Select
-                            mode="tags"
-                            placeholder="Escribe y presiona Enter para agregar"
-                            tokenSeparators={[",", ";"]}
-                          />
+                        <Form.Item label="Destinatarios" name="recipients" valuePropName="value">
+                          <RecipientsSelector placeholder="Agregar destinatarios (separa con coma)" />
                         </Form.Item>
                         <Form.Item label="Descripción" name="description">
                           <Input.TextArea rows={2} placeholder="Resumen o nota interna" />
