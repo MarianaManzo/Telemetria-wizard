@@ -1,4 +1,5 @@
-import { useRef, useEffect, useState, useCallback } from "react"
+import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from "react"
+import type { DragEvent } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { ChevronDown } from "lucide-react"
 
@@ -10,11 +11,21 @@ interface VariableTextareaProps {
   maxLength?: number
   name?: string
   showVariableButton?: boolean
-  ref?: React.RefObject<{ insertVariable: (variable: string) => void }>
+}
+
+export interface VariableTextareaHandle {
+  insertVariable: (variableKey: string) => void
+  focus: () => void
+}
+
+export interface MessageVariableDescriptor {
+  key: string
+  label: string
+  description: string
 }
 
 // Lista de variables disponibles
-const AVAILABLE_VARIABLES = [
+const AVAILABLE_VARIABLES: MessageVariableDescriptor[] = [
   { key: '{unidad}', label: 'Nombre de la unidad', description: 'Nombre del vehículo o dispositivo' },
   { key: '{velocidad}', label: 'Velocidad actual', description: 'Velocidad registrada en el momento del evento' },
   { key: '{ubicacion_link}', label: 'Ubicación con enlace', description: 'Dirección con enlace a Google Maps' },
@@ -27,31 +38,53 @@ const AVAILABLE_VARIABLES = [
   { key: '{voltaje}', label: 'Voltaje de batería', description: 'Voltaje actual de la batería del dispositivo' }
 ]
 
+interface VariableButtonProps {
+  onInsertVariable: (variableKey: string) => void
+  variables?: MessageVariableDescriptor[]
+  label?: string
+  triggerClassName?: string
+}
+
 // Componente separado para el botón de variables
-export function VariableButton({ onInsertVariable }: { onInsertVariable: (variable: string) => void }) {
+export function VariableButton({
+  onInsertVariable,
+  variables = AVAILABLE_VARIABLES,
+  label = 'Más variables',
+  triggerClassName,
+}: VariableButtonProps) {
+  const triggerClasses =
+    triggerClassName ||
+    'px-2 py-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors flex items-center gap-1 text-[12px]'
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="px-2 py-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors flex items-center gap-1 text-[12px]"
+          className={triggerClasses}
           title="Insertar variable"
         >
-          <span className="text-[14px]">+ Variable</span>
+          <span className="text-[14px]">{label}</span>
           <ChevronDown className="w-3 h-3" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-0" align="end">
+      <PopoverContent className="w-64 p-0 m-2" align="end">
         <div className="p-2 border-b border-gray-100">
           <div className="text-[12px] font-medium text-gray-700">Variables disponibles</div>
           <div className="text-[11px] text-gray-500">Click para insertar en el cursor</div>
         </div>
         <div className="max-h-64 overflow-y-auto">
-          {AVAILABLE_VARIABLES.map((variable) => (
+          {variables.map((variable) => (
             <button
               key={variable.key}
               type="button"
               className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.setData('application/x-variable-key', variable.key)
+                event.dataTransfer.setData('text/plain', variable.key)
+                event.dataTransfer.effectAllowed = 'copy'
+              }}
               onClick={() => onInsertVariable(variable.key)}
             >
               <div className="text-[13px] font-medium text-blue-600">
@@ -68,15 +101,19 @@ export function VariableButton({ onInsertVariable }: { onInsertVariable: (variab
   )
 }
 
-export function VariableTextarea({ 
-  value, 
-  onChange, 
-  placeholder, 
-  className = "", 
-  maxLength = 120,
-  name,
-  showVariableButton = true
-}: VariableTextareaProps) {
+const VariableTextareaComponent = (
+  props: VariableTextareaProps,
+  ref: React.ForwardedRef<VariableTextareaHandle>
+) => {
+  const {
+    value,
+    onChange,
+    placeholder,
+    className = '',
+    maxLength = 120,
+    name,
+    showVariableButton = true,
+  } = props
   const editorRef = useRef<HTMLDivElement>(null)
   const [isFocused, setIsFocused] = useState(false)
   const isUpdatingRef = useRef(false)
@@ -149,14 +186,14 @@ export function VariableTextarea({
     const variableRegex = /(\{[^}]+\})/g
     
     return text.replace(variableRegex, (match) => {
-      return `<span class="inline-block px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-[13px] mx-0.5">${match}</span>`
+      return `<span style="display: inline-block; padding: 2px 6px; background-color: #f3e8ff; color: #7c3aed; border-radius: 4px; font-size: 13px; font-weight: 500; margin: 0 1px;">${match}</span>`
     })
   }, [])
 
   // Función para insertar variable en posición del cursor
   const insertVariableAtCursor = useCallback((variable: string) => {
     if (!editorRef.current) return
-    
+
     const currentPosition = getCursorPosition()
     const currentText = getPlainText(editorRef.current)
     
@@ -235,6 +272,39 @@ export function VariableTextarea({
     }
   }, [getCursorPosition, getPlainText, maxLength, onChange, setCursorPosition])
 
+  const focusEditor = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.focus()
+    }
+  }, [])
+
+  const setCaretFromPoint = useCallback((clientX: number, clientY: number) => {
+    if (!editorRef.current) return
+
+    const selection = window.getSelection()
+    if (!selection) return
+
+    const doc: any = document
+
+    let range: Range | null = null
+
+    if (typeof doc.caretRangeFromPoint === 'function') {
+      range = doc.caretRangeFromPoint(clientX, clientY)
+    } else if (typeof doc.caretPositionFromPoint === 'function') {
+      const position = doc.caretPositionFromPoint(clientX, clientY)
+      if (position) {
+        range = document.createRange()
+        range.setStart(position.offsetNode, position.offset)
+        range.collapse(true)
+      }
+    }
+
+    if (range) {
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
+  }, [])
+
   // Actualizar contenido cuando cambie el valor externo
   useEffect(() => {
     if (!editorRef.current || isUpdatingRef.current) return
@@ -247,46 +317,50 @@ export function VariableTextarea({
     }
   }, [value, getPlainText, renderContentWithHighlights])
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      insertVariable: (variableKey: string) => {
+        insertVariableAtCursor(variableKey)
+      },
+      focus: () => {
+        focusEditor()
+      }
+    }),
+    [focusEditor, insertVariableAtCursor]
+  )
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    if (!editorRef.current) return
+    e.preventDefault()
+    setCaretFromPoint(e.clientX, e.clientY)
+  }, [setCaretFromPoint])
+
+  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
+    if (!editorRef.current) return
+    e.preventDefault()
+
+    const variableKey =
+      e.dataTransfer.getData('application/x-variable-key') ||
+      e.dataTransfer.getData('text/plain')
+
+    if (!variableKey) return
+
+    focusEditor()
+    setCaretFromPoint(e.clientX, e.clientY)
+    insertVariableAtCursor(variableKey)
+  }, [focusEditor, insertVariableAtCursor, setCaretFromPoint])
+
   return (
     <div className={className}>
       {/* Botón de variables arriba del textarea a la derecha - solo si showVariableButton es true */}
       {showVariableButton && (
         <div className="flex justify-end mb-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="px-2 py-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors flex items-center gap-1 text-[12px]"
-                title="Insertar variable"
-              >
-                <span>+ Variable</span>
-                <ChevronDown className="w-3 h-3" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-0" align="end">
-              <div className="p-2 border-b border-gray-100">
-                <div className="text-[12px] font-medium text-gray-700">Variables disponibles</div>
-                <div className="text-[11px] text-gray-500">Click para insertar en el cursor</div>
-              </div>
-              <div className="max-h-64 overflow-y-auto">
-                {AVAILABLE_VARIABLES.map((variable) => (
-                  <button
-                    key={variable.key}
-                    type="button"
-                    className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                    onClick={() => insertVariableAtCursor(variable.key)}
-                  >
-                    <div className="text-[13px] font-medium text-blue-600">
-                      {variable.key}
-                    </div>
-                    <div className="text-[12px] text-gray-600 mt-1">
-                      {variable.description}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <VariableButton
+            label="+ Variable"
+            variables={AVAILABLE_VARIABLES}
+            onInsertVariable={insertVariableAtCursor}
+          />
         </div>
       )}
 
@@ -300,6 +374,8 @@ export function VariableTextarea({
           onPaste={handlePaste}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
           className="min-h-[100px] w-full resize-y p-3 pb-8 border border-gray-200 rounded-lg bg-white text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           style={{
             whiteSpace: 'pre-wrap',
@@ -325,3 +401,5 @@ export function VariableTextarea({
     </div>
   )
 }
+
+export const VariableTextarea = forwardRef(VariableTextareaComponent)
