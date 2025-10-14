@@ -756,29 +756,23 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                   )}
 
                 {activeSubTab === 'acciones' && (
-                    <div className="space-y-6">
-                        {/* Section 1 - Instrucciones a realizar */}
-                        <div className="bg-white rounded-lg border p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                            <h3 className="text-[16px] text-foreground font-medium">Instrucciones a realizar</h3>
-                          </div>
-                          
+                    <div className="space-y-4">
+                        <SectionCard
+                          icon={<FileText className="w-4 h-4 text-muted-foreground" />}
+                          title="Instrucciones a realizar"
+                        >
                           <div className="space-y-3">
                             <span className="text-[14px] font-semibold text-foreground block">Instrucciones:</span>
                             <div className="text-[14px] text-[rgba(113,113,130,1)]">
                               {rule.eventSettings.instructions || 'Sin instrucciones especiales configuradas'}
                             </div>
                           </div>
-                        </div>
+                        </SectionCard>
 
-                        {/* Section 2 - Responsable del evento */}
-                        <div className="bg-white rounded-lg border p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Settings className="w-4 h-4 text-muted-foreground" />
-                            <h3 className="text-[16px] text-foreground font-medium">Responsable del evento</h3>
-                          </div>
-                          
+                        <SectionCard
+                          icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                          title="Responsable del evento"
+                        >
                           <div className="space-y-3">
                             <span className="text-[14px] font-semibold text-foreground block">Asignar responsable:</span>
                             <div className="flex items-center gap-3">
@@ -793,24 +787,18 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                                   </AvatarFallback>
                                 </Avatar>
                               )}
-                              <div>
-                                <div className="text-[14px] text-[rgba(113,113,130,1)]">
-                                  {responsibleProfiles[rule.eventSettings.responsible]?.email || rule.eventSettings.responsible}
-                                </div>
+                              <div className="text-[14px] text-[rgba(113,113,130,1)]">
+                                {responsibleProfiles[rule.eventSettings.responsible]?.email || rule.eventSettings.responsible}
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </SectionCard>
 
-                        {/* Section 3 - Clasificación del evento */}
-                        <div className="bg-white rounded-lg border p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <AlertTriangle className="w-4 h-4 text-muted-foreground" />
-                            <h3 className="text-[16px] text-foreground font-medium">Clasificación del evento</h3>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-6">
-                            {/* Severidad del evento */}
+                        <SectionCard
+                          icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
+                          title="Clasificación del evento"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                               <span className="text-[14px] font-semibold text-foreground block mb-3">Severidad del evento:</span>
                               <div className="flex items-center gap-3">
@@ -823,21 +811,17 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                               </div>
                             </div>
 
-                            {/* Etiquetas del evento */}
                             <div>
                               <span className="text-[14px] font-semibold text-foreground block mb-3">Etiquetas del evento:</span>
                               {renderTagsList(rule.eventSettings.tags || [], "bg-green-100", "text-green-700", "hover:bg-green-200")}
                             </div>
                           </div>
-                        </div>
+                        </SectionCard>
 
-                        {/* Section 4 - Cierre del evento */}
-                        <div className="bg-white rounded-lg border p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                            <h3 className="text-[16px] text-foreground font-medium">Cierre del evento</h3>
-                          </div>
-                          
+                        <SectionCard
+                          icon={<Clock className="w-4 h-4 text-muted-foreground" />}
+                          title="Cierre del evento"
+                        >
                           <div className="space-y-3">
                             <span className="text-[14px] font-semibold text-foreground block">Cierre del evento:</span>
                             <div className="text-[14px] text-[rgba(113,113,130,1)]">
@@ -849,37 +833,31 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                               )}
                             </div>
                           </div>
-                        </div>
+                        </SectionCard>
 
-                        {/* Section 5 - Asignar etiqueta a la unidad */}
-                        <div className="bg-white rounded-lg border p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Tag className="w-4 h-4 text-muted-foreground" />
-                            <h3 className="text-[16px] text-foreground font-medium">Asignar etiqueta a la unidad</h3>
-                          </div>
-                          
+                        <SectionCard
+                          icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                          title="Asignar etiqueta a la unidad"
+                        >
                           <div className="space-y-3">
                             <span className="text-[14px] font-semibold text-foreground block">Etiquetas asignadas:</span>
                             {renderTagsList(rule.eventSettings.unitTags || [], "bg-orange-100", "text-orange-700", "hover:bg-orange-200")}
                           </div>
-                        </div>
+                        </SectionCard>
 
-                        {/* Section 5.1 - Desasignar etiqueta a la unidad */}
                         {rule.eventSettings.unitUntagsEnabled && (
-                          <div className="bg-white rounded-lg border p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                              <Tag className="w-4 h-4 text-muted-foreground" />
-                              <h3 className="text-[16px] text-foreground font-medium">Desasignar etiqueta a la unidad</h3>
-                            </div>
-                            
+                          <SectionCard
+                            icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                            title="Desasignar etiqueta a la unidad"
+                          >
                             <div className="space-y-3">
                               <span className="text-[14px] font-semibold text-foreground block">Etiquetas a desasignar:</span>
                               {renderTagsList(rule.eventSettings.unitUntags || [], "bg-red-100", "text-red-700", "hover:bg-red-200")}
                             </div>
-                          </div>
+                          </SectionCard>
                         )}
                       </div>
-                    )}
+                  )}
 
                 {activeSubTab === 'notificaciones' && (
                       <div className="content-stretch flex flex-col gap-[21px] items-start relative size-full">
