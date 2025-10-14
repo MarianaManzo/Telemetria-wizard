@@ -8,13 +8,12 @@ import { X, Check } from "lucide-react"
 interface ChangeStatusModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (newStatus: 'open' | 'in-progress' | 'closed', note?: string) => void
-  currentStatus: 'open' | 'in-progress' | 'closed'
+  onSave: (newStatus: 'open' | 'closed', note?: string) => void
+  currentStatus: 'open' | 'closed'
 }
 
 const statusOptions = [
   { value: "open", label: "Abierto" },
-  { value: "in-progress", label: "En progreso" },
   { value: "closed", label: "Cerrado" }
 ]
 
@@ -24,7 +23,7 @@ export function ChangeStatusModal({
   onSave, 
   currentStatus 
 }: ChangeStatusModalProps) {
-  const [selectedStatus, setSelectedStatus] = useState<'open' | 'in-progress' | 'closed'>(currentStatus)
+  const [selectedStatus, setSelectedStatus] = useState<'open' | 'closed'>(currentStatus)
   const [note, setNote] = useState("")
 
   const handleSave = () => {
@@ -75,7 +74,7 @@ export function ChangeStatusModal({
                 Estado
               </label>
               <Select value={selectedStatus} onValueChange={(value) => {
-                setSelectedStatus(value as 'open' | 'in-progress' | 'closed')
+                setSelectedStatus(value as 'open' | 'closed')
                 // Reset note when changing status
                 if (value !== 'closed') {
                   setNote("")

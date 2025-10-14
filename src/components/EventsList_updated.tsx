@@ -55,9 +55,8 @@ const severityConfig = {
   }
 }
 
-const statusConfig = {
+const statusConfig: Record<'open' | 'closed', { label: string; color: string }> = {
   open: { label: 'Abierto', color: 'bg-green-100 text-green-800 border-green-200' },
-  'in-progress': { label: 'En progreso', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   closed: { label: 'Cerrado', color: 'bg-gray-100 text-gray-800 border-gray-200' }
 }
 
@@ -115,7 +114,6 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType }: E
           <SelectContent>
             <SelectItem value="all">Todos los estados</SelectItem>
             <SelectItem value="open">Abierto</SelectItem>
-            <SelectItem value="in-progress">En progreso</SelectItem>
             <SelectItem value="closed">Cerrado</SelectItem>
           </SelectContent>
         </Select>
@@ -199,8 +197,8 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType }: E
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {onStatusChange ? (
-                          <Select 
-                            value={event.status === 'in-progress' ? 'open' : event.status} 
+                          <Select
+                            value={event.status}
                             onValueChange={(newStatus: 'open' | 'closed') => {
                               onStatusChange(event.id, newStatus)
                             }}

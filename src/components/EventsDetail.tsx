@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { Textarea } from "./ui/textarea"
@@ -25,17 +25,16 @@ import {
   MoreVertical,
   UserCheck,
   RefreshCw,
-  Check
+  Check,
+  ExternalLink
 } from "lucide-react"
-import IconClockCircleOutlined from "../imports/IconClockCircleOutlined-32006-340"
-import IconCheckCircleOutlined from "../imports/IconCheckCircleOutlined-32006-399"
 import { Event, Rule } from "../types"
 
 interface EventsDetailProps {
   event: Event
   onClose: () => void
   rules: Rule[]
-  onStatusChange?: (eventId: string, newStatus: 'open' | 'in-progress' | 'closed', note?: string) => void
+  onStatusChange?: (eventId: string, newStatus: 'open' | 'closed', note?: string) => void
   onResponsibleChange?: (eventId: string, newResponsible: string) => void
 }
 
@@ -62,9 +61,8 @@ const severityConfig = {
   }
 }
 
-const statusConfig = {
+const statusConfig: Record<'open' | 'closed', { label: string; color: string }> = {
   open: { label: 'Abierto', color: 'bg-green-500' },
-  'in-progress': { label: 'En progreso', color: 'bg-yellow-500' },
   closed: { label: 'Cerrado', color: 'bg-gray-500' }
 }
 
@@ -72,12 +70,17 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
   const [activeTab, setActiveTab] = useState<'evento' | 'historial'>('evento')
   const [sidebarActiveItem, setSidebarActiveItem] = useState('evento')
   const [newNote, setNewNote] = useState("")
-  const [status, setStatus] = useState(event.status)
+  const [status, setStatus] = useState<'open' | 'closed'>(event.status === 'closed' ? 'closed' : 'open')
   const [assignedTo, setAssignedTo] = useState(event.responsible)
   const [showChangeResponsibleModal, setShowChangeResponsibleModal] = useState(false)
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
 
-  const handleStatusChange = (newStatus: 'open' | 'in-progress' | 'closed', note?: string) => {
+  useEffect(() => {
+    setStatus(event.status)
+    setAssignedTo(event.responsible)
+  }, [event.status, event.responsible])
+
+  const handleStatusChange = (newStatus: 'open' | 'closed', note?: string) => {
     setStatus(newStatus)
     if (onStatusChange) {
       onStatusChange(event.id, newStatus, note)
@@ -103,34 +106,46 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
     setShowChangeStatusModal(true)
   }
 
-  const handleChangeStatusFromModal = (newStatus: 'open' | 'in-progress' | 'closed', note?: string) => {
+  const handleChangeStatusFromModal = (newStatus: 'open' | 'closed', note?: string) => {
     handleStatusChange(newStatus, note)
   }
 
   const severityInfo = severityConfig[event.severity]
-  const statusInfo = statusConfig[event.status]
-  const SeverityIcon = severityInfo.icon
+  const statusInfo = statusConfig[status]
   
   const relatedRule = rules.find(r => r.id === event.ruleId)
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
+  const formatDateTime = (date?: Date | null) => {
+    if (!date) return '---'
+    return `${date.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
-      year: '2-digit',
+      year: 'numeric'
+    })} ${date.toLocaleTimeString('es-ES', {
       hour: '2-digit',
-      minute: '2-digit'
-    }) + ' pm'
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    })}`
   }
 
-  const formatDateLong = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }) + ' pm'
+  const formatDuration = (start: Date, end?: Date | null) => {
+    const endDate = end ?? new Date()
+    const diffMs = Math.max(0, endDate.getTime() - start.getTime())
+    const totalMinutes = Math.floor(diffMs / 60000)
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    if (hours <= 0 && minutes <= 0) {
+      return '---'
+    }
+    const parts: string[] = []
+    if (hours > 0) {
+      parts.push(`${hours} h`)
+    }
+    if (minutes > 0) {
+      parts.push(`${minutes} min`)
+    }
+    return parts.join(' ')
   }
 
   const sidebarItems = [
@@ -224,132 +239,150 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
 
             {activeTab === 'evento' && (
               <div>
-                {/* Información General Container */}
-                <div className="bg-white rounded-lg border p-6">
-                  <h2 className="text-[16px] text-foreground mb-6">Evento</h2>
-                  
-                  {/* Information Grid */}
-                  <div className="grid grid-cols-2 gap-x-12 gap-y-6">
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Regla:</label>
-                      <div className="text-[14px] text-muted-foreground">Límite de velocidad 120 Km</div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Estatus</label>
-                      <div className="flex items-center gap-2">
-                        {status === 'open' && (
-                          <>
-                            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                            </div>
-                            <span className="text-[14px] text-gray-900">Abierto</span>
-                          </>
-                        )}
-                        {status === 'in-progress' && (
-                          <>
-                            <div className="w-4 h-4 flex-shrink-0">
-                              <IconClockCircleOutlined />
-                            </div>
-                            <span className="text-[14px] text-gray-900">En progreso</span>
-                          </>
-                        )}
-                        {status === 'closed' && (
-                          <>
-                            <div className="w-4 h-4 flex-shrink-0">
-                              <IconCheckCircleOutlined />
-                            </div>
-                            <span className="text-[14px] text-gray-900">Cerrado</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Unidad</label>
-                      <div className="text-[14px] text-muted-foreground">XHDF-2390</div>
-                    </div>
-
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Severidad</label>
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${
-                        event.severity === 'high'
-                          ? 'bg-red-100 text-red-700 border-red-200'
-                          : event.severity === 'medium'
-                          ? 'bg-orange-100 text-orange-700 border-orange-200'
-                          : event.severity === 'low'
-                          ? 'bg-blue-100 text-blue-700 border-blue-200'
-                          : 'bg-cyan-100 text-cyan-700 border-cyan-200'
-                      }`}>
-                        <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${
-                          event.severity === 'high'
-                            ? 'border-red-500'
-                            : event.severity === 'medium'
-                            ? 'border-orange-500'
-                            : event.severity === 'low'
-                            ? 'border-blue-500'
-                            : 'border-cyan-500'
-                        }`}>
-                          <span className={`text-[10px] font-bold ${
-                            event.severity === 'high'
-                              ? 'text-red-500'
-                              : event.severity === 'medium'
-                              ? 'text-orange-500'
-                              : event.severity === 'low'
-                              ? 'text-blue-500'
-                              : 'text-cyan-500'
-                          }`}>!</span>
+                <div className="bg-white rounded-lg border p-6 space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Estatus</span>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className={`w-2.5 h-2.5 rounded-full ${status === 'open' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          <span className="text-[14px] text-gray-900">{statusConfig[status].label}</span>
                         </div>
-                        <span className="text-[12px] font-medium">
-                          {severityInfo.label}
-                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Inicio del evento</span>
+                        <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
+                          <span>{formatDateTime(event.createdAt)}</span>
+                          {event.historyUrl && (
+                            <a
+                              href={event.historyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[#3559FF] hover:text-[#1D37B7] text-[13px] font-medium"
+                            >
+                              Ver en historial
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Ubicación inicial</span>
+                        <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
+                          {event.startAddress || '---'}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Duración</span>
+                        <p className="mt-2 text-[14px] text-gray-900">
+                          {formatDuration(event.createdAt, event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Mensaje del evento</span>
+                        <div className="mt-2 text-[14px] leading-[22px] text-[#313655] bg-[#FAFBFF] border border-[#EEF1FF] rounded-lg p-4 shadow-inner">
+                          {event.eventMessageHtml ? (
+                            <div dangerouslySetInnerHTML={{ __html: event.eventMessageHtml }} />
+                          ) : (
+                            <p>No hay mensaje registrado para este evento.</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Asignado a</span>
+                        <div className="mt-2 flex items-center gap-3">
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage
+                              src="https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGJ1c2luZXNzJTIwaGVhZHNob3R8ZW58MXx8fHwxNzU4NjUxMDA2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+                              alt={`Avatar de ${assignedTo}`}
+                            />
+                            <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
+                              {assignedTo.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="text-[14px] text-gray-900">{assignedTo}</div>
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Instrucciones:</label>
-                      <div className="text-[14px] text-muted-foreground">
-                        La unidad presenta un límite de velocidad de 120 Km.<br />
-                        - Adjuntar imagen de referencia de ubicación y conductor asignado
+                    <div className="space-y-6">
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Severidad</span>
+                        <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full border ${
+                          event.severity === 'high'
+                            ? 'bg-red-100 text-red-700 border-red-200'
+                            : event.severity === 'medium'
+                            ? 'bg-orange-100 text-orange-700 border-orange-200'
+                            : event.severity === 'low'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200'
+                            : 'bg-cyan-100 text-cyan-700 border-cyan-200'
+                        }`}>
+                          <span className="text-[12px] font-medium">{severityInfo.label}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Notificación</label>
-                      <div className="text-[14px] text-muted-foreground">Envío por correo electrónico</div>
-                    </div>
-
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Ubicación</label>
-                      <div className="text-[14px] text-muted-foreground">
-                        Anillo Perif. Nte. Manuel Gómez Morín 767, Santa M...
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Cierre del evento</span>
+                        <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
+                          <span>{formatDateTime(event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}</span>
+                          {status === 'closed' && event.historyUrl && (
+                            <a
+                              href={event.historyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[#3559FF] hover:text-[#1D37B7] text-[13px] font-medium"
+                            >
+                              Ver en historial
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Fecha</label>
-                      <div className="text-[14px] text-muted-foreground">24/12/2025 12:00:02 pm</div>
-                    </div>
-
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Asignado a</label>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage 
-                            src="https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGJ1c2luZXNzJTIwaGVhZHNob3R8ZW58MXx8fHwxNzU4NjUxMDA2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral" 
-                            alt={`Avatar de ${assignedTo}`}
-                          />
-                          <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
-                            {assignedTo.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="text-[14px] text-muted-foreground">{assignedTo}</div>
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Ubicación final</span>
+                        <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
+                          {event.endAddress || '---'}
+                        </p>
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="text-[14px] text-foreground block mb-1">Duración</label>
-                      <div className="text-[14px] text-muted-foreground">En todo momento</div>
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Unidad</span>
+                        <div className="mt-2 text-[14px] text-blue-600 hover:text-blue-800">
+                          {event.unitLink ? (
+                            <a href={event.unitLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                              {event.unitName}
+                            </a>
+                          ) : (
+                            event.unitName
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Instrucciones</span>
+                        <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
+                          {event.instructions || '---'}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1C2452] block">Acciones requeridas</span>
+                        {event.actionsRequired && event.actionsRequired.length > 0 ? (
+                          <ol className="mt-2 space-y-1 text-[14px] text-gray-900 list-decimal list-inside">
+                            {event.actionsRequired.map((action, index) => (
+                              <li key={index}>{action}</li>
+                            ))}
+                          </ol>
+                        ) : (
+                          <p className="mt-2 text-[14px] text-gray-500">---</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -397,7 +430,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                           </div>
                           <div className="flex items-center text-[12px] text-muted-foreground mt-2">
                             <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-                            {formatDate(event.updatedAt)} por {event.responsible}
+                            {formatDateTime(event.updatedAt)} por {event.responsible}
                           </div>
                         </div>
                       </div>
@@ -416,7 +449,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                         </div>
                         <div className="flex items-center text-[12px] text-muted-foreground mt-2">
                           <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-                          28 Mayo 2025 por usuario@email.com
+                          28/05/2025 10:15:00 por usuario@email.com
                         </div>
                       </div>
                     </div>
@@ -434,7 +467,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                         </div>
                         <div className="flex items-center text-[12px] text-muted-foreground mt-2">
                           <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-                          25 Mayo 2025 por usuario@email.com
+                          25/05/2025 09:30:00 por usuario@email.com
                         </div>
                       </div>
                     </div>

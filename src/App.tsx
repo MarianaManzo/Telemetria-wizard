@@ -219,15 +219,20 @@ export default function App() {
     setShowEventDetail(false)
   }, [])
 
-  const handleEventStatusChange = useCallback((eventId: string, newStatus: 'open' | 'in-progress' | 'closed', note?: string) => {
+  const handleEventStatusChange = useCallback((eventId: string, newStatus: 'open' | 'closed', note?: string) => {
     setEvents(prevEvents => {
       return prevEvents.map(event => {
         if (event.id === eventId) {
-          const updatedEvent = { 
+          const updatedEvent = {
             ...event, 
             status: newStatus,
             updatedAt: new Date(),
-            ...(note && { closeNote: note })
+            ...(newStatus === 'closed'
+              ? {
+                  closeNote: note || event.closeNote,
+                  closedAt: new Date(),
+                }
+              : { closeNote: undefined, closedAt: undefined })
           }
           
           return updatedEvent
@@ -243,7 +248,9 @@ export default function App() {
           ...prev, 
           status: newStatus,
           updatedAt: new Date(),
-          ...(note && { closeNote: note })
+          ...(newStatus === 'closed'
+            ? { closeNote: note || prev.closeNote, closedAt: new Date() }
+            : { closeNote: undefined, closedAt: undefined })
         }
       }
       return prev
@@ -253,9 +260,7 @@ export default function App() {
     showCustomToast({
       title: "Estado del evento actualizado",
       description: `El evento se ha marcado como ${
-        newStatus === 'open' ? 'abierto' : 
-        newStatus === 'in-progress' ? 'en progreso' : 
-        'cerrado'
+        newStatus === 'open' ? 'abierto' : 'cerrado'
       }`
     })
   }, [])

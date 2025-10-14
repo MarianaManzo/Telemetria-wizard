@@ -31,7 +31,7 @@ export interface Event {
   id: string
   ruleId: string
   ruleName: string
-  status: 'open' | 'in-progress' | 'closed'
+  status: 'open' | 'closed'
   severity: 'informative' | 'low' | 'medium' | 'high'
   icon: string
   unitId: string
@@ -40,6 +40,16 @@ export interface Event {
   instructions: string
   createdAt: Date
   updatedAt: Date
+  closedAt?: Date | null
+  startAddress?: string
+  endAddress?: string
+  historyUrl?: string
+  unitLink?: string
+  eventMessageHtml?: string
+  actionsRequired?: string[]
+  startLocationLink?: string
+  driverName?: string
+  speedRecorded?: string
   notes: EventNote[]
   tags: string[]
   location: { lat: number; lng: number }

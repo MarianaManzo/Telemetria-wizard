@@ -24,7 +24,6 @@ import {
   Users,
   CheckCircle
 } from "lucide-react"
-import IconClockCircleOutlined from "../imports/IconClockCircleOutlined-32006-340"
 import IconCheckCircleOutlined from "../imports/IconCheckCircleOutlined-32006-399"
 import { Event, AppView } from "../types"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
@@ -35,7 +34,7 @@ import { TruncatedText } from "./TruncatedText"
 interface EventsListProps {
   events: Event[]
   onEventClick: (event: Event) => void
-  onStatusChange?: (eventId: string, newStatus: 'open' | 'in-progress' | 'closed', note?: string) => void
+  onStatusChange?: (eventId: string, newStatus: 'open' | 'closed', note?: string) => void
   onResponsibleChange?: (eventId: string, newResponsible: string) => void
   viewType?: AppView
   searchQuery?: string
@@ -64,9 +63,8 @@ const severityConfig = {
   }
 }
 
-const statusConfig = {
+const statusConfig: Record<'open' | 'closed', { label: string; color: string }> = {
   open: { label: 'Abierto', color: 'bg-green-100 text-green-800 border-green-200' },
-  'in-progress': { label: 'En progreso', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   closed: { label: 'Cerrado', color: 'bg-gray-100 text-gray-800 border-gray-200' }
 }
 
@@ -154,7 +152,7 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
     handleCloseModals()
   }
 
-  const handleStatusSave = (newStatus: 'open' | 'in-progress' | 'closed', note?: string) => {
+  const handleStatusSave = (newStatus: 'open' | 'closed', note?: string) => {
     if (selectedEventForModal && onStatusChange) {
       onStatusChange(selectedEventForModal.id, newStatus, note)
     }
@@ -179,7 +177,6 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
           <SelectContent>
             <SelectItem value="all">Todos los estados</SelectItem>
             <SelectItem value="open">Abierto</SelectItem>
-            <SelectItem value="in-progress">En progreso</SelectItem>
             <SelectItem value="closed">Cerrado</SelectItem>
           </SelectContent>
         </Select>
@@ -322,23 +319,14 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          {event.status === 'open' && (
+                          {event.status === 'open' ? (
                             <>
                               <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                                 <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                               </div>
                               <span className="text-[14px] text-gray-900">Abierto</span>
                             </>
-                          )}
-                          {event.status === 'in-progress' && (
-                            <>
-                              <div className="w-4 h-4 flex-shrink-0">
-                                <IconClockCircleOutlined />
-                              </div>
-                              <span className="text-[14px] text-gray-900">En progreso</span>
-                            </>
-                          )}
-                          {event.status === 'closed' && (
+                          ) : (
                             <>
                               <div className="w-4 h-4 flex-shrink-0">
                                 <IconCheckCircleOutlined />
