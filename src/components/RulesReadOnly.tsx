@@ -5,7 +5,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Textarea } from "./ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "./ui/dropdown-menu"
 import { Switch } from "./ui/switch"
 import { 
@@ -33,6 +32,7 @@ import { Rule, Event, RuleConditionGroup } from "../types"
 import { DeleteRuleModal } from "./DeleteRuleModal"
 import { RenameRuleModal } from "./RenameRuleModal"
 import exampleImage from 'figma:asset/25905393c492af8c8e0b3cf142e20c9dc3cbe9e4.png'
+import SectionCard from "./SectionCard"
 
 // System sensors for telemetry (updated to match TelemetryWizardWithModal)
 const systemTelemetrySensors = [
@@ -644,194 +644,119 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
 
             {activeMainTab === 'informacion-general' && (
               <>
-                <div className="bg-white rounded-lg border p-6">
-                  <div>
-                    <h2 className="text-[16px] text-foreground mb-6">Información general</h2>
-                    
-                    {/* Sub Tabs */}
-                    <div className="border-b border-border mb-6">
-                      <nav className="-mb-px flex space-x-8">
-                        <button
-                          onClick={() => setActiveSubTab('parametros')}
-                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                            activeSubTab === 'parametros'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                          }`}
-                        >
-                          Parámetros
-                        </button>
-                        <button
-                          onClick={() => setActiveSubTab('acciones')}
-                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                            activeSubTab === 'acciones'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                          }`}
-                        >
-                          Acciones a realizar
-                        </button>
-                        <button
-                          onClick={() => setActiveSubTab('notificaciones')}
-                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                            activeSubTab === 'notificaciones'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                          }`}
-                        >
-                          Notificaciones
-                        </button>
-                      </nav>
+                <h2 className="text-[18px] text-foreground mb-6">Información general</h2>
+
+                {/* Sub Tabs */}
+                <div className="border-b border-border mb-6">
+                  <nav className="-mb-px flex space-x-8">
+                      <button
+                        onClick={() => setActiveSubTab('parametros')}
+                        className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                          activeSubTab === 'parametros'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                        }`}
+                      >
+                        Parámetros
+                      </button>
+                      <button
+                        onClick={() => setActiveSubTab('acciones')}
+                        className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                          activeSubTab === 'acciones'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                        }`}
+                      >
+                        Acciones a realizar
+                      </button>
+                      <button
+                        onClick={() => setActiveSubTab('notificaciones')}
+                        className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                          activeSubTab === 'notificaciones'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                        }`}
+                      >
+                        Notificaciones
+                      </button>
+                  </nav>
+                </div>
+
+                {activeSubTab === 'parametros' && (
+                    <div className="space-y-4">
+                      <SectionCard
+                        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                        title="Parámetros a evaluar"
+                        description={<span className="text-[14px] font-medium text-foreground">Condiciones de activación</span>}
+                      >
+                        {renderConditionGroups(rule)}
+                      </SectionCard>
+
+                      <SectionCard
+                        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                        title="Aplica esta regla a"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <span className="text-[14px] font-semibold text-foreground block mb-2">Unidades</span>
+                            {rule.appliesTo.type === 'units' ? (
+                              renderUnits(rule.appliesTo.units || [])
+                            ) : (
+                              <span className="text-[12px] text-muted-foreground">Sin unidades específicas</span>
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-[14px] font-semibold text-foreground block mb-2">Etiquetas</span>
+                            {rule.appliesTo.type === 'tags' ? (
+                              renderTagsList(rule.appliesTo.tags || [])
+                            ) : (
+                              <span className="text-[12px] text-muted-foreground">Sin etiquetas específicas</span>
+                            )}
+                          </div>
+                        </div>
+                      </SectionCard>
+
+                      <SectionCard
+                        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                        title="Configuración avanzada"
+                        headerExtra={
+                          <button
+                            type="button"
+                            onClick={() => setConfigAvanzadaOpen((prev) => !prev)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {configAvanzadaOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          </button>
+                        }
+                        className="overflow-hidden"
+                        contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
+                      >
+                        {configAvanzadaOpen && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+                            <div>
+                              <span className="text-[14px] font-semibold text-foreground block mb-2">Zona geográfica</span>
+                              <p className="text-[14px] text-muted-foreground">En cualquier lugar</p>
+                            </div>
+                            <div>
+                              <span className="text-[14px] font-semibold text-foreground block mb-2">Activación de la regla</span>
+                              <p className="text-[14px] text-muted-foreground">En todo momento</p>
+                            </div>
+                            <div>
+                              <span className="text-[14px] font-semibold text-foreground block mb-2">Generación de evento</span>
+                              <p className="text-[14px] text-muted-foreground">Cuando se cumplan las condiciones</p>
+                            </div>
+                            <div>
+                              <span className="text-[14px] font-semibold text-foreground block mb-2">Cierre del evento</span>
+                              <p className="text-[14px] text-muted-foreground">Cuando deje de cumplirse la condición</p>
+                            </div>
+                          </div>
+                        )}
+                      </SectionCard>
                     </div>
+                  )}
 
-                    {activeSubTab === 'parametros' && (
-                      <div className="space-y-6">
-                        {/* Parámetros a evaluar */}
-                        <div className="bg-white rounded-lg border p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Settings className="w-4 h-4 text-muted-foreground" />
-                            <h3 className="text-[16px] text-foreground font-medium">Parámetros a evaluar</h3>
-                          </div>
-                          <span className="text-[14px] font-semibold text-foreground block mb-3">Condiciones de activación:</span>
-
-                          {/* Condiciones de la regla - dinámicas */}
-                          {renderConditionGroups(rule)}
-                        </div>
-
-                        {/* Aplica esta regla a */}
-                        <div className="bg-white rounded-lg border p-6">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Settings className="w-4 h-4 text-muted-foreground" />
-                            <h3 className="text-[16px] text-foreground font-medium">Aplica esta regla a</h3>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-6">
-                            {/* Columna de Unidades */}
-                            <div>
-                              <span className="text-[14px] font-semibold text-foreground block mb-3">Unidades:</span>
-                              {rule.appliesTo.type === 'units' ? (
-                                renderUnits(rule.appliesTo.units || [])
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground">Sin unidades específicas</span>
-                              )}
-                            </div>
-
-                            {/* Columna de Etiquetas */}
-                            <div>
-                              <span className="text-[14px] font-semibold text-foreground block mb-3">Etiquetas:</span>
-                              {rule.appliesTo.type === 'tags' ? (
-                                renderTagsList(rule.appliesTo.tags || [])
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground">Sin etiquetas específicas</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Configuración avanzada */}
-                        <div className="bg-white rounded-lg border p-6">
-                          <Collapsible open={configAvanzadaOpen} onOpenChange={setConfigAvanzadaOpen}>
-                            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left">
-                              <Settings className="w-4 h-4 text-muted-foreground" />
-                              <h3 className="text-[16px] text-foreground font-medium">Configuración avanzada</h3>
-                              {configAvanzadaOpen ? (
-                                <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
-                              ) : (
-                                <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
-                              )}
-                            </CollapsibleTrigger>
-                            <p className="text-[14px] text-muted-foreground mt-2 hidden">Define las zonas, cuándo debe evaluarse y la duración del evento</p>
-                            <CollapsibleContent className="mt-4">
-                              <div className="space-y-6">
-                                {/* Primera fila: Zona geográfica + Zonas (condicional) */}
-                                {rule.zoneScope.type === 'all' ? (
-                                  <div>
-                                    <span className="text-[14px] font-semibold text-foreground">Zona geográfica:</span>
-                                    <div className="text-[14px] text-muted-foreground mt-1">
-                                      En cualquier lugar
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="grid grid-cols-2 gap-6">
-                                    <div>
-                                      <span className="text-[14px] font-semibold text-foreground">Zona geográfica:</span>
-                                      <div className="text-[14px] text-muted-foreground mt-1">
-                                        {rule.zoneScope.type === 'inside' 
-                                          ? 'Dentro de una zona o grupo de zonas'
-                                          : 'Fuera de una zona o grupo de zonas'}
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <span className="text-[14px] font-semibold text-foreground">Zonas:</span>
-                                      <div className="mt-1">
-                                        {/* Zonas seleccionadas */}
-                                        {rule.zoneScope.zones && rule.zoneScope.zones.length > 0 ? (
-                                          <div className="flex flex-wrap gap-2">
-                                            {rule.zoneScope.zones.map((zoneId, index) => (
-                                              <Badge key={`zone-${index}`} variant="secondary" className="text-[12px] bg-orange-100 text-orange-700 hover:bg-orange-200">
-                                                Zona {zoneId.replace('zona-', '').toUpperCase()}
-                                              </Badge>
-                                            ))}
-                                          </div>
-                                        ) : (
-                                          <span className="text-[12px] text-muted-foreground">Sin zonas seleccionadas</span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Segunda fila: Etiquetas de zonas (solo si no es 'all') */}
-                                {rule.zoneScope.type !== 'all' && (
-                                  <div>
-                                    <span className="text-[14px] font-semibold text-foreground">Etiquetas zonas:</span>
-                                    <div className="mt-1">
-                                      {rule.zoneScope.zoneTags && rule.zoneScope.zoneTags.length > 0 ? (
-                                        <div className="flex flex-wrap gap-2">
-                                          {rule.zoneScope.zoneTags.map((tag, index) => (
-                                            <Badge key={`zone-tag-${index}`} variant="secondary" className="text-[12px] bg-blue-100 text-blue-700 hover:bg-blue-200">
-                                              {tag}
-                                            </Badge>
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        <span className="text-[12px] text-muted-foreground">Sin etiquetas asignadas</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Tercera fila: Generación de evento + Activación de la regla */}
-                                <div className="grid grid-cols-2 gap-6">
-                                  <div>
-                                    <span className="text-[14px] font-semibold text-foreground">Generación de evento:</span>
-                                    <div className="text-[14px] text-muted-foreground mt-1">
-                                      {rule.eventSettings.eventTiming === 'despues-tiempo' 
-                                        ? 'Después de cierto tiempo' 
-                                        : 'Cuando se cumplan las condiciones'}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <span className="text-[14px] font-semibold text-foreground">Activación de la regla:</span>
-                                    <div className="text-[14px] text-muted-foreground mt-1">
-                                      {rule.schedule.type === 'always' 
-                                        ? 'En todo momento' 
-                                        : 'Personalizado'}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </CollapsibleContent>
-                          </Collapsible>
-                        </div>
-
-                        {/* Etiquetas configuradas */}
-
-                      </div>
-                    )}
-
-                    {activeSubTab === 'acciones' && (
-                      <div className="space-y-6">
+                {activeSubTab === 'acciones' && (
+                    <div className="space-y-6">
                         {/* Section 1 - Instrucciones a realizar */}
                         <div className="bg-white rounded-lg border p-6">
                           <div className="flex items-center gap-2 mb-4">
@@ -956,7 +881,7 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                       </div>
                     )}
 
-                    {activeSubTab === 'notificaciones' && (
+                {activeSubTab === 'notificaciones' && (
                       <div className="content-stretch flex flex-col gap-[21px] items-start relative size-full">
                         {/* Section 1 - Mensaje del evento */}
                         <div className="bg-white h-[155.5px] relative rounded-[8.75px] shrink-0 w-full">
@@ -1191,8 +1116,6 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
               </>
             )}
 
