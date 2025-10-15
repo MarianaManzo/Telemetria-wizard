@@ -73,7 +73,6 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
   const [showChangeResponsibleModal, setShowChangeResponsibleModal] = useState(false)
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
   const [messageExpanded, setMessageExpanded] = useState(false)
-  const [instructionsExpanded, setInstructionsExpanded] = useState(false)
 
   useEffect(() => {
     setStatus(event.status)
@@ -82,7 +81,6 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
 
   useEffect(() => {
     setMessageExpanded(false)
-    setInstructionsExpanded(false)
   }, [event.id])
 
   const handleStatusChange = (newStatus: 'open' | 'closed', note?: string) => {
@@ -120,15 +118,6 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
 
   const relatedRule = rules.find(r => r.id === event.ruleId)
 
-  const instructionsText = (event.instructions || '').trim()
-  const actionItems = event.actionsRequired || []
-  const hasActionList = actionItems.length > 0
-  const hasInstructions = instructionsText.length > 0 || hasActionList
-  const shouldShowInstructionsToggle = hasInstructions && (
-    instructionsText.length > 160 ||
-    instructionsText.split('\n').length > 2 ||
-    hasActionList
-  )
 
   const seeMoreButtonClass = 'mt-3 inline-flex items-center justify-center rounded-full bg-[#3559FF] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#1D37B7]'
 
@@ -427,57 +416,6 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                       )}
                     </div>
 
-                    <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Instrucciones</p>
-                      {hasInstructions ? (
-                        <>
-                          {instructionsText && (
-                            <div className={`mt-2 text-[14px] leading-[22px] text-[#313655] ${instructionsExpanded ? 'whitespace-pre-wrap' : 'line-clamp-3'}`}>
-                              {instructionsText}
-                            </div>
-                          )}
-                          {!instructionsText && !instructionsExpanded && hasActionList && (
-                            <p className="mt-2 text-[14px] text-gray-500">
-                              Ver más para revisar el detalle de las instrucciones.
-                            </p>
-                          )}
-                          {instructionsExpanded && hasActionList && (
-                            <ol className="mt-3 space-y-1 text-[14px] leading-[22px] text-[#313655] list-decimal list-inside">
-                              {actionItems.map((action, index) => (
-                                <li key={index}>{action}</li>
-                              ))}
-                            </ol>
-                          )}
-                          {shouldShowInstructionsToggle && (
-                            <button
-                              type="button"
-                              className={seeMoreButtonClass}
-                              onClick={() => setInstructionsExpanded((prev) => !prev)}
-                            >
-                              {instructionsExpanded ? 'Ver menos' : 'Ver más'}
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        <p className="mt-2 text-[14px] text-gray-500">---</p>
-                      )}
-                    </div>
-
-                    <div className="lg:col-span-2">
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Asignado a</p>
-                      <div className="mt-2 flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage
-                            src="https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGJ1c2luZXNzJTIwaGVhZHNob3R8ZW58MXx8fHwxNzU4NjUxMDA2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                            alt={`Avatar de ${assignedTo}`}
-                          />
-                          <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
-                            {assignedTo.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="text-[14px] text-gray-900">{assignedTo}</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
