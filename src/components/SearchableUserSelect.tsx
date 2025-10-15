@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Input } from "./ui/input"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
@@ -13,29 +13,44 @@ interface User {
 
 interface SearchableUserSelectProps {
   defaultValue?: string
+  value?: string
   users: User[]
   onValueChange?: (value: string) => void
 }
 
 export function SearchableUserSelect({ 
-  defaultValue, 
+  defaultValue,
+  value,
   users, 
   onValueChange 
 }: SearchableUserSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [selectedValue, setSelectedValue] = useState(defaultValue || "")
+  const [internalValue, setInternalValue] = useState(value ?? defaultValue ?? "")
   const [searchTerm, setSearchTerm] = useState("")
+
+  useEffect(() => {
+    if (value !== undefined) {
+      setInternalValue(value)
+      return
+    }
+    if (defaultValue !== undefined) {
+      setInternalValue(defaultValue)
+    }
+  }, [value, defaultValue])
 
   const filteredUsers = users.filter(user => 
     user.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.value.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const selectedValue = value !== undefined ? value : internalValue
   const selectedUser = users.find(user => user.value === selectedValue)
 
-  const handleSelect = (value: string) => {
-    setSelectedValue(value)
-    onValueChange?.(value)
+  const handleSelect = (nextValue: string) => {
+    if (value === undefined) {
+      setInternalValue(nextValue)
+    }
+    onValueChange?.(nextValue)
     setIsOpen(false)
     setSearchTerm("")
   }

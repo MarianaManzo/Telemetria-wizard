@@ -30,8 +30,6 @@ import {
   MapPin,
   Clock,
   Calendar,
-  ClipboardList,
-  UserCheck,
   AlertTriangle,
   XCircle,
   Mail,
@@ -48,7 +46,6 @@ import { UnidadesSelectorInput } from "./UnidadesSelectorInput"
 import { EtiquetasSelectorInput } from "./EtiquetasSelectorInput"
 import { ZonasSelectorInput } from "./ZonasSelectorInput"
 import { GenericSelectorInput } from "./GenericSelectorInput"
-import { SearchableUserSelect } from "./SearchableUserSelect"
 import { SaveRuleModal } from "./SaveRuleModal"
 import { RecipientsSelector } from "./RecipientsSelector"
 import SectionCard from "./SectionCard"
@@ -147,7 +144,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   // Actions tab state
   const [instructions, setInstructions] = useState(rule?.eventSettings?.instructions || '')
-  const [assignResponsible, setAssignResponsible] = useState(!!rule?.eventSettings?.responsible)
+  const assignResponsible = !!rule?.eventSettings?.responsible
   const [eventIcon, setEventIcon] = useState(rule?.eventSettings?.icon || 'info')
   const [eventSeverity, setEventSeverity] = useState(rule?.eventSettings?.severity || 'critico')
   const [eventTags, setEventTags] = useState(
@@ -999,78 +996,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsContent>
 
               <TabsContent value="actions" className="mt-6 space-y-6">
-                {/* Section 1 - Instrucciones a realizar */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ClipboardList className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Instrucciones a realizar</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Instrucciones a realizar cuando se genere un evento
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="grid grid-cols-2 gap-8 items-start">
-                    <div>
-                      <label className="text-[14px] font-medium text-gray-700">
-                        ¿Qué debe realizar el usuario que atienda este evento?
-                      </label>
-                    </div>
-                    <div>
-                      <Textarea
-                        placeholder="Agregar instrucciones"
-                        value={instructions}
-                        onChange={(e) => setInstructions(e.target.value)}
-                        className="min-h-[80px] resize-y"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 2 - Asignar responsable al evento */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <UserCheck className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Asignar responsable al evento</h3>
-                    </div>
-                    <Switch
-                      checked={assignResponsible}
-                      onCheckedChange={setAssignResponsible}
-                      disabled
-                    />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Selecciona el usuario al que se asignará cuando los eventos ocurran
-                  </p>
-                  {assignResponsible && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  )}
-                  
-                  {assignResponsible && (
-                    <div className="grid grid-cols-2 gap-8 items-center">
-                      <div>
-                        <label className="text-[14px] font-medium text-gray-700">
-                          * Asignar responsable
-                        </label>
-                      </div>
-                      <div className="relative">
-                        <SearchableUserSelect 
-                          defaultValue="usuario@email.com"
-                          users={[
-                            { value: 'usuario@email.com', label: 'usuario@email.com' },
-                            { value: 'supervisor@fleet.com', label: 'supervisor@fleet.com' },
-                            { value: 'admin@fleet.com', label: 'admin@fleet.com' },
-                            { value: 'operador@fleet.com', label: 'operador@fleet.com' },
-                            { value: 'gerente@fleet.com', label: 'gerente@fleet.com' }
-                          ]}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Section 3 - Clasificación del evento */}
+                {/* Section 1 - Clasificación del evento */}
                 <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-gray-600" />

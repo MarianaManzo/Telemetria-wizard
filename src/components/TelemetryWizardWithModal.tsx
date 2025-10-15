@@ -10,7 +10,6 @@ import { Badge } from "./ui/badge"
 import { Checkbox } from "./ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group"
 import { Switch } from "./ui/switch"
-import { Textarea } from "./ui/textarea"
 import { VariableTextarea, VariableButton, type VariableTextareaHandle, type MessageVariableDescriptor } from "./VariableTextarea"
 import { NotificationExampleModal } from "./NotificationExampleModal"
 import { EmailTemplateDrawer } from "./EmailTemplateDrawer"
@@ -41,8 +40,6 @@ import {
   MapPin,
   Clock,
   Calendar,
-  ClipboardList,
-  UserCheck,
   AlertTriangle,
   XCircle,
   Mail,
@@ -110,7 +107,6 @@ import { UnidadesSelectorInput } from "./UnidadesSelectorInput"
 import { EtiquetasSelectorInput } from "./EtiquetasSelectorInput"
 import { ZonasSelectorInput } from "./ZonasSelectorInput"
 import { GenericSelectorInput } from "./GenericSelectorInput"
-import { SearchableUserSelect } from "./SearchableUserSelect"
 import { SaveRuleModal } from "./SaveRuleModal"
 import { ExitRuleConfirmationModal } from "./ExitRuleConfirmationModal"
 import { SensorSelectorWithSearch } from "./SensorSelectorWithSearch"
@@ -1648,8 +1644,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   })
 
   // Actions tab state
+  const defaultResponsible = rule?.eventSettings?.responsible || 'mariana.manzo@numaris.com'
   const [instructions, setInstructions] = useState(rule?.eventSettings?.instructions || '')
-  const [assignResponsible, setAssignResponsible] = useState(!!rule?.eventSettings?.responsible)
+  const [assignResponsible, setAssignResponsible] = useState(
+    rule?.eventSettings?.responsible ? true : false
+  )
+  const [selectedResponsible, setSelectedResponsible] = useState(defaultResponsible)
   const [eventIcon, setEventIcon] = useState(rule?.eventSettings?.icon || 'info')
   const [eventSeverity, setEventSeverity] = useState(rule?.eventSettings?.severity || 'low')
   const [eventShortName, setEventShortName] = useState(rule?.eventSettings?.shortName || 'Evento')
@@ -2045,8 +2045,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         setEventSeverity(rule.eventSettings.severity || 'medium')
         setEventIcon(rule.eventSettings.icon || 'info')
         setEventShortName(rule.eventSettings.shortName || 'Evento')
-        setAssignResponsible(!!rule.eventSettings.responsible)
-        
+        const responsibleValue = rule.eventSettings.responsible || defaultResponsible
+        setSelectedResponsible(responsibleValue)
+        const hasExplicitResponsible = rule.eventSettings.responsible !== undefined
+        setAssignResponsible(hasExplicitResponsible ? responsibleValue.trim().length > 0 : false)
+
         if (rule.eventSettings.tags) {
           setEventTags(rule.eventSettings.tags.map(tagName => ({ name: tagName })))
         }
@@ -2192,11 +2195,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         }
       }
 
-      // Initialize responsible assignment
-      if (rule.eventSettings?.responsible) {
-        setAssignResponsible(!!rule.eventSettings.responsible)
-      }
-
       console.log('Form initialized with rule data')
       console.log('Form state after initialization:', {
         ruleName,
@@ -2208,7 +2206,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         eventMessage
       })
     }
-  }, [rule, isEditing])
+  }, [rule, isEditing, defaultResponsible])
 
   // Debug effect to track form state changes
   useEffect(() => {
@@ -2613,7 +2611,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       closePolicy: closePolicyData,
       eventSettings: {
         instructions: instructions,
-        responsible: assignResponsible ? 'supervisor-flota' : '',
+        responsible: assignResponsible ? selectedResponsible : '',
         severity: eventSeverity,
         icon: eventIcon,
         shortName: eventShortName,
@@ -3331,105 +3329,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   </>
                 )}
               </TabsContent>
-
               <TabsContent value="actions" className="mt-6 space-y-6">
-                {/* Section 1 - Instrucciones a realizar */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <ClipboardList className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Instrucciones a realizar</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Instrucciones a realizar cuando se genere un evento
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="grid grid-cols-2 gap-8 items-start">
-                    <div>
-                      <label className="text-[14px] font-medium text-gray-700">
-                        ¿Qué debe realizar el usuario que atienda este evento?
-                      </label>
-                    </div>
-                    <div>
-                      <Textarea
-                        placeholder="Agregar instrucciones"
-                        value={instructions}
-                        onChange={(e) => setInstructions(e.target.value)}
-                        className="min-h-[80px] resize-y"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 2 - Asignar responsable al evento */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <UserCheck className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Asignar responsable al evento</h3>
-                    </div>
-                    <Switch
-                      checked={assignResponsible}
-                      onCheckedChange={setAssignResponsible}
-                      className="switch-blue"
-                    />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Selecciona el usuario al que se asignará cuando los eventos ocurran
-                  </p>
-                  {assignResponsible && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  )}
-                  
-                  {assignResponsible && (
-                    <div className="grid grid-cols-2 gap-8 items-center">
-                      <div>
-                        <label className="text-[14px] font-medium text-gray-700">
-                          <span className="text-red-500">*</span> Asignar responsable
-                        </label>
-                      </div>
-                      <div className="relative">
-                        <SearchableUserSelect 
-                          defaultValue="mariana.manzo@numaris.com"
-                          users={[
-                            { 
-                              value: 'mariana.manzo@numaris.com', 
-                              label: 'Mariana Manzo', 
-                              email: 'mariana.manzo@numaris.com',
-                              avatar: 'https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHdvbWFuJTIwcHJvZmVzc2lvbmFsJTIwaGVhZHNob3R8ZW58MXx8fHwxNzU4NjIzODAyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-                            },
-                            { 
-                              value: 'juan.perez@numaris.com', 
-                              label: 'Juan Pérez', 
-                              email: 'juan.perez@numaris.com',
-                              avatar: 'https://images.unsplash.com/photo-1652471943570-f3590a4e52ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1hbiUyMHByb2Zlc3Npb25hbCUyMGhlYWRzaG90fGVufDF8fHx8MTc1ODYwNDk4M3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-                            },
-                            { 
-                              value: 'ana.garcia@numaris.com', 
-                              label: 'Ana García', 
-                              email: 'ana.garcia@numaris.com',
-                              avatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGJ1c2luZXNzJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzU4NjE2NTgwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-                            },
-                            { 
-                              value: 'carlos.rodriguez@numaris.com', 
-                              label: 'Carlos Rodríguez', 
-                              email: 'carlos.rodriguez@numaris.com',
-                              avatar: 'https://images.unsplash.com/photo-1752778935828-bf6fdd5a834a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBleGVjdXRpdmUlMjBoZWFkc2hvdCUyMGxhdGlub3xlbnwxfHx8fDE3NTg2NTExNzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-                            },
-                            { 
-                              value: 'supervisor-flota', 
-                              label: 'Supervisor de Flota', 
-                              email: 'supervisor@numaris.com',
-                              avatar: 'https://images.unsplash.com/photo-1524538198441-241ff79d153b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMGV4ZWN1dGl2ZSUyMHByb2Zlc3Npb25hbCUyMG1hbnxlbnwxfHx8fDE3NTg2NTExODF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-                            }
-                          ]}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Section 3 - Clasificación del evento */}
+                {/* Section 1 - Clasificación del evento */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-gray-600" />
