@@ -3968,8 +3968,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   Simulación visual del evento con los puntos inicial y de seguimiento que verá tu equipo.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-center gap-3">
-                    <div className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 space-y-2">
                       <label className="text-[14px] font-medium text-gray-700">Marcador de inicio</label>
                       <Input
                         value={mapPreviewStart}
@@ -3978,16 +3978,19 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         className="text-[14px]"
                       />
                     </div>
-                    <div className="inline-flex h-9 w-9 items-center justify-center bg-red-100" style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)', paddingInline: '8px' }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-octagon-alert h-4 w-4 text-red-600">
-                        <path d="M12 16h.01"></path>
-                        <path d="M12 8v4"></path>
-                        <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"></path>
-                      </svg>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="inline-flex h-9 w-9 items-center justify-center bg-red-100" style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)', paddingInline: '8px' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-octagon-alert h-4 w-4 text-red-600">
+                          <path d="M12 16h.01"></path>
+                          <path d="M12 8v4"></path>
+                          <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"></path>
+                        </svg>
+                      </div>
+                      <span className="text-[12px] font-medium text-red-600">Alerta inicial</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 space-y-2">
                       <label className="text-[14px] font-medium text-gray-700">Marcador final</label>
                       <Input
                         value={mapPreviewEnd}
@@ -3996,12 +3999,15 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         className="text-[14px]"
                       />
                     </div>
-                    <div className="inline-flex h-9 w-9 items-center justify-center bg-red-100" style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)', paddingInline: '8px' }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-octagon-alert h-4 w-4 text-red-600">
-                        <path d="M12 16h.01"></path>
-                        <path d="M12 8v4"></path>
-                        <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"></path>
-                      </svg>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="inline-flex h-9 w-9 items-center justify-center bg-red-100" style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)', paddingInline: '8px' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-octagon-alert h-4 w-4 text-red-600">
+                          <path d="M12 16h.01"></path>
+                          <path d="M12 8v4"></path>
+                          <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"></path>
+                        </svg>
+                      </div>
+                      <span className="text-[12px] font-medium text-red-600">Destino</span>
                     </div>
                   </div>
                 </div>
