@@ -1670,10 +1670,35 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(rule?.notifications?.email?.templateId || null)
   const [templateDrawerOpen, setTemplateDrawerOpen] = useState(false)
 
-  
+  const [mapPreviewStart, setMapPreviewStart] = useState('Inicio del evento')
+  const [mapPreviewEnd, setMapPreviewEnd] = useState('Punto de seguimiento')
   const [pushNotificationEnabled, setPushNotificationEnabled] = useState(rule?.notifications?.push?.enabled || false)
   const [showNotificationExample, setShowNotificationExample] = useState(false)
   const [notificationExampleType, setNotificationExampleType] = useState<'web' | 'mobile'>('web')
+  const headerRef = useRef<HTMLDivElement | null>(null)
+  const [headerHeight, setHeaderHeight] = useState(0)
+
+  useEffect(() => {
+    const element = headerRef.current
+    if (!element) return
+
+    const updateHeight = () => {
+      setHeaderHeight(Math.round(element.getBoundingClientRect().height))
+    }
+
+    updateHeight()
+
+    if (typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    const observer = new ResizeObserver(updateHeight)
+    observer.observe(element)
+
+    return () => observer.disconnect()
+  }, [])
+
+  const tabsStickyTop = headerHeight > 0 ? headerHeight : 88
 
   const zoneContextValue = useMemo(
     () =>
@@ -3157,9 +3182,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   return (
     <TooltipProvider>
-      <div className="flex-1 flex flex-col overflow-hidden bg-background relative">
+      <div className="telemetry-wizard flex-1 flex flex-col bg-background relative">
         {/* Header */}
-        <div className="border-b border-border bg-background px-6 py-4">
+        <div ref={headerRef} className="telemetry-wizard__header border-b border-border bg-background px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex flex-col">
@@ -3202,7 +3227,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         <div className="flex-1 overflow-auto">
           <div className="max-w-4xl mx-auto p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="pb-6">
-              <TabsList className="sticky top-0 bg-white border-b border-gray-200 w-full justify-start h-auto p-0 space-x-8 z-10">
+              <TabsList
+                className="telemetry-wizard__tabs w-full justify-start h-auto p-0 space-x-8"
+                style={{ top: `${tabsStickyTop}px` }}
+              >
                 <TabsTrigger 
                   value="parameters" 
                   className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 pointer-events-none ${
@@ -3928,13 +3956,61 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </div>
                       )}
                     </div>
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="h-4 w-4 text-gray-600" />
+                  <h3 className="text-[14px] font-medium text-gray-700">Vista previa en mapa</h3>
+                </div>
+                <p className="text-[14px] text-gray-600 mb-4">
+                  Simulación visual del evento con los puntos inicial y de seguimiento que verá tu equipo.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center gap-3">
+                    <div className="space-y-2">
+                      <label className="text-[14px] font-medium text-gray-700">Marcador de inicio</label>
+                      <Input
+                        value={mapPreviewStart}
+                        onChange={(event) => setMapPreviewStart(event.target.value)}
+                        placeholder="Inicio del evento"
+                        className="text-[14px]"
+                      />
+                    </div>
+                    <div className="inline-flex h-9 w-9 items-center justify-center bg-red-100" style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)', paddingInline: '8px' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-octagon-alert h-4 w-4 text-red-600">
+                        <path d="M12 16h.01"></path>
+                        <path d="M12 8v4"></path>
+                        <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="space-y-2">
+                      <label className="text-[14px] font-medium text-gray-700">Marcador final</label>
+                      <Input
+                        value={mapPreviewEnd}
+                        onChange={(event) => setMapPreviewEnd(event.target.value)}
+                        placeholder="Punto de seguimiento"
+                        className="text-[14px]"
+                      />
+                    </div>
+                    <div className="inline-flex h-9 w-9 items-center justify-center bg-red-100" style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)', paddingInline: '8px' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-octagon-alert h-4 w-4 text-red-600">
+                        <path d="M12 16h.01"></path>
+                        <path d="M12 8v4"></path>
+                        <path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"></path>
+                      </svg>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Section 2 - Canales de notificación */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Bell className="h-4 w-4 text-gray-600" />
+              {/* Section 2 - Canales de notificación */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Bell className="h-4 w-4 text-gray-600" />
                     <h3 className="text-[14px] font-medium text-gray-700">Canales de notificación</h3>
                   </div>
                   <p className="text-[14px] text-gray-600 mb-4">
@@ -4287,7 +4363,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         </div>
 
         {/* Footer Navigation */}
-        <div className="border-t border-border bg-background px-6 py-4">
+        <div className="telemetry-wizard__footer border-t border-border bg-background px-6 py-4">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <Button
               variant="outline"

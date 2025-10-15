@@ -308,8 +308,11 @@ export default function MainNavTopMenu({
         height: '64px',
         boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
         borderBottom: '1px solid #f0f0f0',
-        position: 'relative',
+        position: 'sticky',
+        top: 0,
         zIndex: 100,
+        backgroundColor: '#fff',
+        ['--app-header-height' as string]: '64px',
       }}
     >
       {/* Logo */}
