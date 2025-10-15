@@ -542,7 +542,6 @@ export default function App() {
           events={getFilteredEvents}
           onEventClick={handleEventClick}
           onStatusChange={handleEventStatusChange}
-          onResponsibleChange={handleEventResponsibleChange}
           viewType={currentView}
         />
       )

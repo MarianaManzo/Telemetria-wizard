@@ -1,28 +1,25 @@
 import { useState } from "react"
 import { Button } from "./ui/button"
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
 } from "./ui/select"
-import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
-import { 
+import {
   AlertTriangle,
   Clock,
   FileX,
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-  Users,
   CheckCircle,
   AlertOctagon
 } from "lucide-react"
 import IconCheckCircleOutlined from "../imports/IconCheckCircleOutlined-32006-399"
 import { Event, AppView } from "../types"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
-import { ChangeResponsibleModal } from "./ChangeResponsibleModal"
 import { ChangeStatusModal } from "./ChangeStatusModal"
 import { TruncatedText } from "./TruncatedText"
 
@@ -30,7 +27,6 @@ interface EventsListProps {
   events: Event[]
   onEventClick: (event: Event) => void
   onStatusChange?: (eventId: string, newStatus: 'open' | 'closed', note?: string) => void
-  onResponsibleChange?: (eventId: string, newResponsible: string) => void
   viewType?: AppView
   searchQuery?: string
 }
@@ -102,55 +98,21 @@ const severityVisuals: Record<Event['severity'], {
 
 const severityOctagonClipPath = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'
 
-const responsibleProfiles: Record<string, { name: string; email: string; avatar: string }> = {
-  'mariana.manzo@numaris.com': {
-    name: 'Mariana Manzo',
-    email: 'mariana.manzo@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHdvbWFuJTIwcHJvZmVzc2lvbmFsJTIwaGVhZHNob3R8ZW58MXx8fHwxNzU4NjIzODAyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'juan.perez@numaris.com': {
-    name: 'Juan Pérez',
-    email: 'juan.perez@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1652471943570-f3590a4e52ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1hbiUyMHByb2Zlc3Npb25hbCUyMGhlYWRzaG90fGVufDF8fHx8MTc1ODYwNDk4M3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'ana.garcia@numaris.com': {
-    name: 'Ana García',
-    email: 'ana.garcia@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGJ1c2luZXNzJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzU4NjE2NTgwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'carlos.rodriguez@numaris.com': {
-    name: 'Carlos Rodríguez',
-    email: 'carlos.rodriguez@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1752778935828-bf6fdd5a834a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBleGVjdXRpdmUlMjBoZWFkc2hvdCUyMGxhdGlub3xlbnwxfHx8fDE3NTg2NTExNzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'supervisor-flota': {
-    name: 'Supervisor de Flota',
-    email: 'supervisor@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1524538198441-241ff79d153b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMGV4ZWN1dGl2ZSUyMHByb2Zlc3Npb25hbCUyMG1hbnxlbnwxfHx8fDE3NTg2NTExODF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  }
-}
-
-export function EventsList({ events, onEventClick, onStatusChange, onResponsibleChange, viewType, searchQuery = "" }: EventsListProps) {
+export function EventsList({ events, onEventClick, onStatusChange, viewType, searchQuery = "" }: EventsListProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [severityFilter, setSeverityFilter] = useState<string>("all")
-  const [responsibleFilter, setResponsibleFilter] = useState<string>("all")
   const [selectedEventForModal, setSelectedEventForModal] = useState<Event | null>(null)
-  const [showChangeResponsibleModal, setShowChangeResponsibleModal] = useState(false)
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
 
-  // Get unique responsibles for the filter
-  const uniqueResponsibles = Array.from(new Set(events.map(event => event.responsible))).sort()
-
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.unitName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.ruleName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.responsible.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch =
+      event.unitName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.ruleName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.id.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === "all" || event.status === statusFilter
     const matchesSeverity = severityFilter === "all" || event.severity === severityFilter
-    const matchesResponsible = responsibleFilter === "all" || event.responsible === responsibleFilter
-    
-    return matchesSearch && matchesStatus && matchesSeverity && matchesResponsible
+
+    return matchesSearch && matchesStatus && matchesSeverity
   })
 
   const formatDate = (date: Date) => {
@@ -163,11 +125,6 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
     })
   }
 
-  const handleChangeResponsible = (event: Event) => {
-    setSelectedEventForModal(event)
-    setShowChangeResponsibleModal(true)
-  }
-
   const handleChangeStatus = (event: Event) => {
     setSelectedEventForModal(event)
     setShowChangeStatusModal(true)
@@ -175,15 +132,7 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
 
   const handleCloseModals = () => {
     setSelectedEventForModal(null)
-    setShowChangeResponsibleModal(false)
     setShowChangeStatusModal(false)
-  }
-
-  const handleResponsibleSave = (newResponsible: string) => {
-    if (selectedEventForModal && onResponsibleChange) {
-      onResponsibleChange(selectedEventForModal.id, newResponsible)
-    }
-    handleCloseModals()
   }
 
   const handleStatusSave = (newStatus: 'open' | 'closed', note?: string) => {
@@ -228,64 +177,6 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
           </SelectContent>
         </Select>
 
-        {/* Solo mostrar filtro de responsable en la vista general de eventos, no en "Mis eventos" */}
-        {viewType !== 'my-events' && (
-          <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
-            <SelectTrigger className="flex-1">
-              {responsibleFilter === "all" ? (
-                <SelectValue placeholder="Responsable" />
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage 
-                      src={responsibleProfiles[responsibleFilter]?.avatar} 
-                      alt={`Avatar de ${responsibleProfiles[responsibleFilter]?.name || responsibleFilter}`}
-                    />
-                    <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
-                      {responsibleProfiles[responsibleFilter]?.name ? 
-                        responsibleProfiles[responsibleFilter].name.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2) :
-                        responsibleFilter.split('@')[0].slice(0, 2).toUpperCase()
-                      }
-                    </AvatarFallback>
-                  </Avatar>
-                  <TruncatedText 
-                    text={responsibleProfiles[responsibleFilter]?.email || responsibleFilter}
-                    className="text-[14px] text-foreground"
-                  />
-                </div>
-              )}
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los responsables</SelectItem>
-              {uniqueResponsibles.map((responsible) => {
-                const profile = responsibleProfiles[responsible]
-                return (
-                  <SelectItem key={responsible} value={responsible}>
-                    <div className="flex items-center gap-3 py-1">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage 
-                          src={profile?.avatar} 
-                          alt={`Avatar de ${profile?.name || responsible}`}
-                        />
-                        <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
-                          {profile?.name ? 
-                            profile.name.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2) :
-                            responsible.split('@')[0].slice(0, 2).toUpperCase()
-                          }
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-[14px] text-foreground">{profile?.name || responsible}</span>
-                        <span className="text-[12px] text-muted-foreground">{profile?.email || responsible}</span>
-                      </div>
-                    </div>
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
-        )}
-
         <Select>
           <SelectTrigger className="flex-1">
             <SelectValue placeholder="Etiquetas" />
@@ -302,13 +193,13 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
           <div className="flex flex-col items-center justify-center py-12">
             <FileX className="w-12 h-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {searchQuery || statusFilter !== "all" || severityFilter !== "all" || responsibleFilter !== "all"
+              {searchQuery || statusFilter !== "all" || severityFilter !== "all"
                 ? "No se encontraron eventos que coincidan con los filtros" 
                 : "No hay eventos registrados"
               }
             </h3>
             <p className="text-muted-foreground text-center max-w-md">
-              {searchQuery || statusFilter !== "all" || severityFilter !== "all" || responsibleFilter !== "all"
+              {searchQuery || statusFilter !== "all" || severityFilter !== "all"
                 ? "Prueba ajustando los criterios de búsqueda o filtros"
                 : "Los eventos aparecerán aquí cuando las reglas se activen según las condiciones configuradas"
               }
@@ -326,7 +217,6 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                   <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[18rem]">Ubicación</th>
                   <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Estatus</th>
                   <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Severidad</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[15rem]">Responsable</th>
                   <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20">Acciones</th>
                 </tr>
               </thead>
@@ -337,8 +227,6 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                   const severityVisual = severityVisuals[event.severity]
                   const SeverityIcon = severityInfo.icon
                   const locationText = event.startAddress || event.endAddress || '---'
-                  const responsibleProfile = responsibleProfiles[event.responsible]
-                  const responsibleName = responsibleProfile?.name || event.responsible
 
                   return (
                     <tr 
@@ -409,26 +297,6 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                           <span className="text-[12px] font-medium">{severityInfo.label}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-[14px] text-gray-500">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <Avatar className="w-8 h-8 flex-shrink-0">
-                            <AvatarImage 
-                              src={responsibleProfile?.avatar} 
-                              alt={`Avatar de ${responsibleName}`}
-                            />
-                            <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
-                              {responsibleProfile?.name ? 
-                                responsibleProfile.name.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2) :
-                                event.responsible.split('@')[0].slice(0, 2).toUpperCase()
-                              }
-                            </AvatarFallback>
-                          </Avatar>
-                          <TruncatedText 
-                            text={responsibleName}
-                            className="text-[14px] font-medium text-foreground"
-                          />
-                        </div>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
                         <div className="flex justify-center items-center">
                           <DropdownMenu>
@@ -443,16 +311,6 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleChangeResponsible(event)
-                                }}
-                                className="flex items-center gap-2"
-                              >
-                                <Users className="w-4 h-4" />
-                                <span>Cambiar responsable</span>
-                              </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={(e) => {
                                   e.stopPropagation()
@@ -506,21 +364,12 @@ export function EventsList({ events, onEventClick, onStatusChange, onResponsible
 
       {/* Modals */}
       {selectedEventForModal && (
-        <>
-          <ChangeResponsibleModal
-            isOpen={showChangeResponsibleModal}
-            onClose={handleCloseModals}
-            onSave={handleResponsibleSave}
-            currentResponsible={selectedEventForModal.responsible}
-          />
-
-          <ChangeStatusModal
-            isOpen={showChangeStatusModal}
-            onClose={handleCloseModals}
-            onSave={handleStatusSave}
-            currentStatus={selectedEventForModal.status}
-          />
-        </>
+        <ChangeStatusModal
+          isOpen={showChangeStatusModal}
+          onClose={handleCloseModals}
+          onSave={handleStatusSave}
+          currentStatus={selectedEventForModal.status}
+        />
       )}
     </div>
   )
