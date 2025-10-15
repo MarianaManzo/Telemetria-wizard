@@ -820,43 +820,6 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                 {activeSubTab === 'configuracion' && (
                     <div className="space-y-4">
                         <SectionCard
-                          icon={<FileText className="w-4 h-4 text-muted-foreground" />}
-                          title="Instrucciones a realizar"
-                        >
-                          <div className="space-y-3">
-                            <span className="text-[14px] font-semibold text-foreground block">Instrucciones:</span>
-                            <div className="text-[14px] text-[rgba(113,113,130,1)]">
-                              {rule.eventSettings.instructions || 'Sin instrucciones especiales configuradas'}
-                            </div>
-                          </div>
-                        </SectionCard>
-
-                        <SectionCard
-                          icon={<Settings className="w-4 h-4 text-muted-foreground" />}
-                          title="Responsable del evento"
-                        >
-                          <div className="space-y-3">
-                            <span className="text-[14px] font-semibold text-foreground block">Asignar responsable:</span>
-                            <div className="flex items-center gap-3">
-                              {responsibleProfiles[rule.eventSettings.responsible] && (
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage 
-                                    src={responsibleProfiles[rule.eventSettings.responsible].avatar}
-                                    alt={responsibleProfiles[rule.eventSettings.responsible].name}
-                                  />
-                                  <AvatarFallback>
-                                    {responsibleProfiles[rule.eventSettings.responsible].name.split(' ').map(n => n[0]).join('')}
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                              <div className="text-[14px] text-[rgba(113,113,130,1)]">
-                                {responsibleProfiles[rule.eventSettings.responsible]?.email || rule.eventSettings.responsible}
-                              </div>
-                            </div>
-                          </div>
-                        </SectionCard>
-
-                        <SectionCard
                           icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
                           title="Clasificación del evento"
                         >
