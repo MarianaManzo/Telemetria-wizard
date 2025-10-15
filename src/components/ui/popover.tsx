@@ -136,9 +136,10 @@ type PopoverContentProps = PropsWithChildren<{
   style?: CSSProperties;
   innerClassName?: string;
   innerStyle?: CSSProperties;
+  sideOffset?: number;
 }>;
 
-export function PopoverContent({ className, align = "center", style, innerClassName, innerStyle, children }: PopoverContentProps) {
+export function PopoverContent({ className, align = "center", style, innerClassName, innerStyle, sideOffset = 0, children }: PopoverContentProps) {
   const ctx = usePopoverContext("PopoverContent");
 
   useEffect(() => {
@@ -152,6 +153,9 @@ export function PopoverContent({ className, align = "center", style, innerClassN
     ctx.setOverlayStyle(style);
     ctx.setOverlayInnerClassName(innerClassName);
     ctx.setOverlayInnerStyle(innerStyle);
+    if (sideOffset) {
+      ctx.setOverlayStyle({ ...style, marginTop: sideOffset });
+    }
     return () => {
       ctx.setContent(null);
       ctx.setOverlayClassName(undefined);
@@ -159,7 +163,7 @@ export function PopoverContent({ className, align = "center", style, innerClassN
       ctx.setOverlayInnerClassName(undefined);
       ctx.setOverlayInnerStyle(undefined);
     };
-  }, [ctx, children, className, align, style, innerClassName, innerStyle]);
+  }, [ctx, children, className, align, style, innerClassName, innerStyle, sideOffset]);
 
   return null;
 }
@@ -167,12 +171,12 @@ export function PopoverContent({ className, align = "center", style, innerClassN
 function mapAlignToPlacement(align: "start" | "center" | "end"): AntdPopoverProps["placement"] {
   switch (align) {
     case "start":
-      return "bottomLeft";
+      return "topLeft";
     case "end":
-      return "bottomRight";
+      return "topRight";
     case "center":
     default:
-      return "bottom";
+      return "top";
   }
 }
 

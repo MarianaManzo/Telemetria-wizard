@@ -27,7 +27,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collap
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
-import type { LucideIcon } from 'lucide-react'
+import type { LucideIcon, LucideIconProps } from 'lucide-react'
 
 import { 
   ArrowLeft, 
@@ -820,24 +820,32 @@ const severityConfig = {
     bgColor: 'bg-red-100',
     textColor: 'text-red-700',
     borderColor: 'border-red-200',
+    previewBg: '#FFE1E1',
+    previewText: '#DF3F40',
   },
   medium: {
     label: 'Media',
     bgColor: 'bg-orange-100',
     textColor: 'text-orange-700',
     borderColor: 'border-orange-200',
+    previewBg: '#FFEAD5',
+    previewText: '#C2410C',
   },
   low: {
     label: 'Baja',
     bgColor: 'bg-blue-100',
     textColor: 'text-blue-700',
     borderColor: 'border-blue-200',
+    previewBg: '#DBEAFE',
+    previewText: '#1D4ED8',
   },
   informative: {
     label: 'Informativo',
     bgColor: 'bg-cyan-100',
     textColor: 'text-cyan-700',
     borderColor: 'border-cyan-200',
+    previewBg: '#CFFAFE',
+    previewText: '#0E7490',
   },
 } as const
 
@@ -899,8 +907,28 @@ const eventIconOptions = [
   { id: 'pentagon', icon: Pentagon },
 ]
 
-const eventIconMap = eventIconOptions.reduce<Record<string, LucideIcon>>((acc, option) => {
-  acc[option.id] = option.icon
+type IconPair = {
+  outline: LucideIcon
+  solid: React.FC<LucideIconProps>
+}
+
+const eventIconMap = eventIconOptions.reduce<Record<string, IconPair>>((acc, option) => {
+  const SolidIcon: React.FC<LucideIconProps> = ({ color, stroke, ...rest }) => {
+    const fillColor = color || 'currentColor'
+    const strokeColor = stroke || '#FFFFFF'
+
+    return (
+      <option.icon
+        {...rest}
+        strokeWidth={0}
+        fill={fillColor}
+        stroke={strokeColor}
+        color={strokeColor}
+      />
+    )
+  }
+
+  acc[option.id] = { outline: option.icon, solid: SolidIcon }
   return acc
 }, {})
 
@@ -1623,8 +1651,14 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [instructions, setInstructions] = useState(rule?.eventSettings?.instructions || '')
   const [assignResponsible, setAssignResponsible] = useState(!!rule?.eventSettings?.responsible)
   const [eventIcon, setEventIcon] = useState(rule?.eventSettings?.icon || 'info')
-  const EventIconComponent = eventIcon ? eventIconMap[eventIcon] : undefined
   const [eventSeverity, setEventSeverity] = useState(rule?.eventSettings?.severity || 'low')
+  const [eventShortName, setEventShortName] = useState(rule?.eventSettings?.shortName || 'Evento')
+  const iconPair = eventIcon ? eventIconMap[eventIcon] : undefined
+  const EventIconComponent = iconPair?.outline
+  const previewSeverityStyles = severityConfig[eventSeverity] || severityConfig.low
+  const PreviewIconComponent: React.FC<LucideIconProps> = iconPair?.solid
+    ? (props) => iconPair.solid({ ...props, color: props.color || previewSeverityStyles.previewText, stroke: props.stroke || '#FFFFFF' })
+    : (props) => <AlertOctagon {...props} strokeWidth={0} fill={props.color || previewSeverityStyles.previewText} stroke={props.stroke || '#FFFFFF'} />
   const [eventTags, setEventTags] = useState<Array<{id: string, name: string, color: string}>>(
     rule?.eventSettings?.tags ? rule.eventSettings.tags.map((tag: string) => ({ 
       id: tag.toLowerCase().replace(/\s+/g, '-'), 
@@ -2010,6 +2044,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         setInstructions(rule.eventSettings.instructions || '')
         setEventSeverity(rule.eventSettings.severity || 'medium')
         setEventIcon(rule.eventSettings.icon || 'info')
+        setEventShortName(rule.eventSettings.shortName || 'Evento')
         setAssignResponsible(!!rule.eventSettings.responsible)
         
         if (rule.eventSettings.tags) {
@@ -2437,6 +2472,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       instructions !== (rule?.eventSettings?.instructions || '') ||
       eventSeverity !== (rule?.eventSettings?.severity || 'medium') ||
       eventIcon !== (rule?.eventSettings?.icon || 'info') ||
+      eventShortName !== (rule?.eventSettings?.shortName || 'Evento') ||
       JSON.stringify(eventTags.map(tag => tag.name)) !== JSON.stringify(rule?.eventSettings?.tags || []) ||
       JSON.stringify(unitTags.map(tag => tag.name)) !== JSON.stringify(rule?.eventSettings?.unitTags || []) ||
       JSON.stringify(unitUntags.map(tag => tag.name)) !== JSON.stringify(rule?.eventSettings?.unitUntags || []) ||
@@ -2580,6 +2616,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         responsible: assignResponsible ? 'supervisor-flota' : '',
         severity: eventSeverity,
         icon: eventIcon,
+        shortName: eventShortName,
         tags: eventTags.map(tag => tag.name),
         unitTags: unitTags.map(tag => tag.name),
         unitUntags: unitUntags.map(tag => tag.name),
@@ -3473,6 +3510,56 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </div>
                     </div>
 
+                    {/* Row 1.1: Nombre corto y vista previa */}
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <label className="text-[14px] font-medium text-gray-700" htmlFor="event-short-name">
+                          <span className="text-red-500">*</span> Nombre corto
+                        </label>
+                        <Input
+                          id="event-short-name"
+                          value={eventShortName}
+                          onChange={(event) => {
+                            const value = event.target.value.slice(0, 10)
+                            setEventShortName(value)
+                          }}
+                          maxLength={10}
+                          suffix={
+                            <span className="flex items-center h-full text-[11px] leading-none text-gray-400">
+                              {eventShortName.length}/10
+                            </span>
+                          }
+                          placeholder="Ej. Frenado"
+                          className="text-[14px]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-[14px] font-medium text-gray-700">Vista previa en mapa</span>
+                        <div className="flex flex-col items-center gap-2 p-2 text-[12px]" style={{ color: previewSeverityStyles.previewText, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                          <div
+                            className="inline-flex h-9 w-9 items-center justify-center"
+                            style={{
+                              clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+                              paddingInline: '8px',
+                              backgroundColor: previewSeverityStyles.previewText,
+                            }}
+                          >
+                            <PreviewIconComponent color={previewSeverityStyles.previewBg} stroke={previewSeverityStyles.previewBg} className="h-4 w-4" />
+                          </div>
+                          <span
+                            className="inline-flex items-center gap-1 text-[11px] font-medium rounded-full"
+                            style={{
+                              backgroundColor: previewSeverityStyles.previewText,
+                              color: previewSeverityStyles.previewBg,
+                              padding: '4px 8px',
+                            }}
+                          >
+                            {eventShortName || 'Evento'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Row 2: Etiquetas */}
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
@@ -3956,100 +4043,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </div>
                       )}
                     </div>
-                </div>
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="h-4 w-4 text-gray-600" />
-                  <h3 className="text-[14px] font-medium text-gray-700">Vista previa en mapa</h3>
-                </div>
-                <p className="text-[14px] text-gray-600 mb-4">
-                  Simulación visual del evento con los puntos inicial y de seguimiento que verá tu equipo.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 space-y-2">
-                      <label className="text-[14px] font-medium text-gray-700">Marcador de inicio</label>
-                      <Input
-                        value={mapPreviewStart}
-                        onChange={(event) => setMapPreviewStart(event.target.value)}
-                        placeholder="Inicio del evento"
-                        className="text-[14px]"
-                      />
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                    <div className="flex flex-col items-center">
-                      <div className="inline-flex h-9 w-9 items-center justify-center bg-red-100" style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)', paddingInline: '8px' }}>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          className="h-4 w-4"
-                        >
-                          <path
-                            d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"
-                            fill="none"
-                            stroke="#DF3F40"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <rect x="11" y="6" width="2" height="8" rx="1" fill="#DF3F40" />
-                          <circle cx="12" cy="16.5" r="1" fill="#DF3F40" />
-                        </svg>
-                      </div>
-                      <span className="inline-flex px-2 py-1 text-[11px] font-medium text-red-600 bg-red-100 rounded-full mt-1">
-                        {mapPreviewStart}
-                      </span>
-                    </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 space-y-2">
-                      <label className="text-[14px] font-medium text-gray-700">Marcador final</label>
-                      <Input
-                        value={mapPreviewEnd}
-                        onChange={(event) => setMapPreviewEnd(event.target.value)}
-                        placeholder="Punto de seguimiento"
-                        className="text-[14px]"
-                      />
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                    <div className="flex flex-col items-center">
-                      <div
-                        className="inline-flex h-9 w-9 items-center justify-center"
-                        style={{
-                          clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                          paddingInline: '8px',
-                          backgroundColor: '#FF4D4F',
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          className="h-4 w-4 text-white"
-                        >
-                          <path
-                            d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"
-                            fill="currentColor"
-                          />
-                          <rect x="11" y="6" width="2" height="8" rx="1" fill="#FF4D4F" />
-                          <circle cx="12" cy="16.5" r="1" fill="#FF4D4F" />
-                        </svg>
-                      </div>
-                      <span
-                        className="inline-flex px-2 py-1 text-[11px] font-medium text-white rounded-full mt-1"
-                        style={{ backgroundColor: '#FF4D4F' }}
-                      >
-                        {mapPreviewEnd}
-                      </span>
-                    </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
