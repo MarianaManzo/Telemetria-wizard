@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect } from "react"
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { Dropdown } from "antd"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Search, X } from "lucide-react"
 import { DownOutlined } from "@ant-design/icons"
-import { TruncatedText } from "./TruncatedText"
-
 interface GenericSelectorInputProps<T = any> {
   selectedItems: T[]
   onSelectionChange: (items: T[]) => void
@@ -48,6 +46,9 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [dynamicVisiblePills, setDynamicVisiblePills] = useState(maxVisiblePills)
+  const [overlayWidth, setOverlayWidth] = useState<number>()
+  const [isClearHover, setIsClearHover] = useState(false)
+  const triggerRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
 
@@ -216,6 +217,20 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
     }
   }, [selectedItems.length, maxVisiblePills, showColorPills])
 
+  useEffect(() => {
+    if (triggerRef.current) {
+      setOverlayWidth(triggerRef.current.offsetWidth)
+    }
+  }, [isOpen, selectedItems.length, showPillsDisplay, showColorPills])
+
+  const clearDisabled = disabled || (selectedItems.length === 0 && !searchTerm)
+
+  useEffect(() => {
+    if (clearDisabled && isClearHover) {
+      setIsClearHover(false)
+    }
+  }, [clearDisabled, isClearHover])
+
   // Initial calculation after mount
   useEffect(() => {
     if (showColorPills && selectedItems.length > 0) {
@@ -229,18 +244,32 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
 
   // Also recalculate on resize
   useEffect(() => {
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null
+
     const handleResize = () => {
-      if (showColorPills && selectedItems.length > 0) {
-        const timer = setTimeout(() => {
+      if (resizeTimer) {
+        clearTimeout(resizeTimer)
+      }
+
+      resizeTimer = setTimeout(() => {
+        if (showColorPills && selectedItems.length > 0) {
           const newVisiblePills = measurePillsFit()
           setDynamicVisiblePills(newVisiblePills)
-        }, 20)
-        return () => clearTimeout(timer)
-      }
+        }
+
+        if (triggerRef.current) {
+          setOverlayWidth(triggerRef.current.offsetWidth)
+        }
+      }, 20)
     }
 
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      if (resizeTimer) {
+        clearTimeout(resizeTimer)
+      }
+      window.removeEventListener('resize', handleResize)
+    }
   }, [selectedItems.length, maxVisiblePills, showColorPills])
 
   // Render pills with max visible limit
@@ -296,60 +325,217 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
     }
   }
 
-  const handleSelectAll = () => {
-    if (disabled) return
-    
-    const allSelected = filteredItems.every(item =>
-      selectedItems.some(selected => selected.id === item.id)
-    )
-    
-    if (allSelected) {
-      // Deselect all filtered items
-      const remainingSelected = selectedItems.filter(selected =>
-        !filteredItems.some(item => item.id === selected.id)
-      )
-      onSelectionChange(remainingSelected)
-    } else {
-      // Select all filtered items
-      const newSelected = [...selectedItems]
-      filteredItems.forEach(item => {
-        if (!newSelected.some(selected => selected.id === item.id)) {
-          newSelected.push(item)
-        }
-      })
-      onSelectionChange(newSelected)
-    }
-  }
-
   const handleClearAll = () => {
     if (disabled) return
     onSelectionChange([])
+    setSearchTerm("")
   }
 
-  const allFilteredSelected = filteredItems.length > 0 && filteredItems.every(item =>
-    selectedItems.some(selected => selected.id === item.id)
+  const handleDropdownOpenChange = (openState: boolean) => {
+    if (disabled) return
+
+    setIsOpen(openState)
+    if (!openState) {
+      setSearchTerm("")
+    }
+  }
+
+  const computedOverlayWidth = overlayWidth && overlayWidth > 0 ? overlayWidth : 320
+  const clearButtonColor = clearDisabled
+    ? '#9ca3af'
+    : searchTerm
+      ? (isClearHover ? '#1d4ed8' : '#2563eb')
+      : (isClearHover ? '#1f2937' : '#4b5563')
+
+  const overlay = (
+    <div
+      style={{
+        width: computedOverlayWidth,
+        background: '#ffffff',
+        borderRadius: 12,
+        border: '1px solid #E5E7EB',
+        boxShadow: '0 16px 40px rgba(15, 23, 42, 0.12)'
+      }}
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+      role="group"
+      aria-label={title}
+    >
+      <div className="p-4">
+        {/* Search */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-9"
+              disabled={disabled}
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearAll}
+            className="text-[12px] h-9 px-3 whitespace-nowrap"
+            disabled={clearDisabled}
+            style={{ color: clearButtonColor }}
+            onMouseEnter={() => {
+              if (!clearDisabled) setIsClearHover(true)
+            }}
+            onMouseLeave={() => {
+              if (isClearHover) setIsClearHover(false)
+            }}
+          >
+            Limpiar
+          </Button>
+        </div>
+
+        {/* Items List */}
+        <div className="max-h-64 overflow-y-auto">
+          {filteredItems.length === 0 ? (
+            <div className="flex items-center justify-center h-20 text-[14px] text-gray-500">
+              {searchTerm ? "No se encontraron elementos" : "No hay elementos disponibles"}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {filteredItems.map((item) => {
+                const isSelected = selectedItems.some(selected => selected.id === item.id)
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center justify-between py-0.5 px-3 rounded cursor-pointer transition-colors ${
+                      isSelected 
+                        ? 'bg-blue-50 border border-blue-200' 
+                        : 'hover:bg-gray-50 border border-transparent'
+                    }`}
+                    onClick={() => handleItemToggle(item)}
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {renderItemIcon && renderItemIcon(item)}
+                      <div className="flex-1 min-w-0">
+                        {showColorPills && item.color ? (
+                          <div className="flex items-center">
+                            <span 
+                              className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-medium text-white"
+                              style={{ backgroundColor: item.color }}
+                            >
+                              {item.name}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className={`text-[14px] truncate ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+                            {item.name}
+                          </div>
+                        )}
+                        {renderItemDetails && renderItemDetails(item)}
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <div className="ml-2 flex-shrink-0">
+                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer with count - only show when showFooterCount is true */}
+        {showFooterCount && maxSelections && (
+          <>
+            <div className="border-t border-gray-200 -mx-4 mt-4"></div>
+            <div className="pt-3 flex items-center justify-between text-[14px] text-gray-600">
+              <span>{selectedItems.length} seleccionadas</span>
+              <span>({selectedItems.length}/{maxSelections})</span>
+            </div>
+          </>
+        )}
+
+      </div>
+    </div>
   )
 
   return (
     <div className={`w-full ${className}`}>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <div className="relative">
-            {showPillsDisplay && showColorPills && selectedItems.length > 0 && selectedItems.some(item => item.color) ? (
-              <div
-                ref={containerRef}
-                className={`w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
-                  disabled ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                style={{ height: 32 }}
-                onClick={() => !disabled && setIsOpen(true)}
-              >
-                <div ref={pillsRef} className="flex items-center gap-1 flex-1 overflow-hidden h-[28px]">
+      <Dropdown
+        trigger={["click"]}
+        open={isOpen}
+        onOpenChange={handleDropdownOpenChange}
+        dropdownRender={() => overlay}
+        placement="bottomLeft"
+        menu={{ items: [] }}
+        disabled={disabled}
+        destroyPopupOnHide
+        overlayStyle={{ padding: 0 }}
+      >
+        <div ref={triggerRef} className="relative">
+          {showPillsDisplay && showColorPills && selectedItems.length > 0 && selectedItems.some(item => item.color) ? (
+            <div
+              ref={containerRef}
+              className={`w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
+                disabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              style={{ height: 32 }}
+            >
+              <div ref={pillsRef} className="flex items-center gap-1 flex-1 overflow-hidden h-[28px]">
+                {selectedItems.slice(0, dynamicVisiblePills).map((item) => (
+                  <span
+                    key={item.id}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[12px] text-white border max-w-[120px] flex-shrink-0"
+                    style={{ backgroundColor: (item as any).color }}
+                  >
+                    <span className="truncate">{item.name}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const newSelection = selectedItems.filter(selected => selected.id !== item.id)
+                        onSelectionChange(newSelection)
+                      }}
+                      className="ml-1 hover:bg-black/20 rounded-full p-0.5 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {selectedItems.length > dynamicVisiblePills && (
+                  <span key="dynamic-remaining-count" className="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] bg-gray-200 text-gray-600 border flex-shrink-0">
+                    +{selectedItems.length - dynamicVisiblePills}
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : showPillsDisplay ? (
+            <div
+              className={`w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
+                disabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              style={{ height: 32 }}
+            >
+              {renderDisplayContent()}
+            </div>
+          ) : (
+            <div
+              className={`w-full px-3 text-sm border border-gray-300 rounded-lg bg-white cursor-pointer text-gray-900 flex items-center box-border ${
+                disabled ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              style={{ height: 32 }}
+            >
+              {selectedItems.length === 0 ? (
+                <span className="text-gray-500">{placeholder || displayText}</span>
+              ) : showPillsDisplay && showColorPills ? (
+                <div className="flex gap-1 items-center overflow-hidden h-[28px]">
                   {selectedItems.slice(0, dynamicVisiblePills).map((item) => (
                     <span
                       key={item.id}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[12px] text-white border max-w-[120px] flex-shrink-0"
-                      style={{ backgroundColor: (item as any).color }}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white max-w-[120px] flex-shrink-0"
+                      style={{ backgroundColor: item.color || '#6B7280' }}
                     >
                       <span className="truncate">{item.name}</span>
                       <button
@@ -366,188 +552,28 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
                     </span>
                   ))}
                   {selectedItems.length > dynamicVisiblePills && (
-                    <span key="dynamic-remaining-count" className="inline-flex items-center px-2 py-0.5 rounded-md text-[12px] bg-gray-200 text-gray-600 border flex-shrink-0">
+                    <span key="alt-dynamic-remaining-count" className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-200 text-gray-600 flex-shrink-0">
                       +{selectedItems.length - dynamicVisiblePills}
                     </span>
                   )}
                 </div>
-              </div>
-            ) : showPillsDisplay ? (
-              <div
-                className={`w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
-                  disabled ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                style={{ height: 32 }}
-                onClick={() => !disabled && setIsOpen(true)}
-              >
-                {renderDisplayContent()}
-              </div>
-            ) : (
-              <div
-                className={`w-full px-3 text-sm border border-gray-300 rounded-lg bg-white cursor-pointer text-gray-900 flex items-center box-border ${
-                  disabled ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                style={{ height: 32 }}
-                onClick={() => !disabled && setIsOpen(true)}
-              >
-                {selectedItems.length === 0 ? (
-                  <span className="text-gray-500">{placeholder || displayText}</span>
-                ) : showPillsDisplay && showColorPills ? (
-                  <div className="flex gap-1 items-center overflow-hidden h-[28px]">
-                    {selectedItems.slice(0, dynamicVisiblePills).map((item) => (
-                      <span
-                        key={item.id}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white max-w-[120px] flex-shrink-0"
-                        style={{ backgroundColor: item.color || '#6B7280' }}
-                      >
-                        <span className="truncate">{item.name}</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            const newSelection = selectedItems.filter(selected => selected.id !== item.id)
-                            onSelectionChange(newSelection)
-                          }}
-                          className="ml-1 hover:bg-black/20 rounded-full p-0.5 transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                    {selectedItems.length > dynamicVisiblePills && (
-                      <span key="alt-dynamic-remaining-count" className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-200 text-gray-600 flex-shrink-0">
-                        +{selectedItems.length - dynamicVisiblePills}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <span>{displayText}</span>
-                )}
-              </div>
-            )}
-            <DownOutlined
-              style={{
-                position: 'absolute',
-                right: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                fontSize: 14,
-                color: '#9ca3af',
-              }}
-            />
-          </div>
-        </PopoverTrigger>
-        
-        <PopoverContent className="w-full p-0" align="start">
-          <div className="p-4">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[14px] font-medium text-gray-900">{title.includes('Etiquetas') ? 'Etiquetas de unidades' : title}</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsOpen(false)}
-                className="h-6 w-6 p-0"
-                disabled={disabled}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {/* Divider below title */}
-            <div className="border-t border-gray-200 -mx-4 mb-4"></div>
-
-            {/* Search */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder={searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-9"
-                  disabled={disabled}
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAll}
-                className="text-[12px] text-blue-600 hover:text-blue-800 h-9 px-3 whitespace-nowrap"
-                disabled={disabled || selectedItems.length === 0}
-              >
-                Limpiar
-              </Button>
-            </div>
-
-            {/* Items List */}
-            <div className="max-h-64 overflow-y-auto">
-              {filteredItems.length === 0 ? (
-                <div className="flex items-center justify-center h-20 text-[14px] text-gray-500">
-                  {searchTerm ? "No se encontraron elementos" : "No hay elementos disponibles"}
-                </div>
               ) : (
-                <div className="space-y-1">
-                  {filteredItems.map((item) => {
-                    const isSelected = selectedItems.some(selected => selected.id === item.id)
-                    return (
-                      <div
-                        key={item.id}
-                        className={`flex items-center justify-between py-0.5 px-3 rounded cursor-pointer transition-colors ${
-                          isSelected 
-                            ? 'bg-blue-50 border border-blue-200' 
-                            : 'hover:bg-gray-50 border border-transparent'
-                        }`}
-                        onClick={() => handleItemToggle(item)}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          {renderItemIcon && renderItemIcon(item)}
-                          <div className="flex-1 min-w-0">
-                            {showColorPills && item.color ? (
-                              <div className="flex items-center">
-                                <span 
-                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-medium text-white"
-                                  style={{ backgroundColor: item.color }}
-                                >
-                                  {item.name}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className={`text-[14px] truncate ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                                {item.name}
-                              </div>
-                            )}
-                            {renderItemDetails && renderItemDetails(item)}
-                          </div>
-                        </div>
-                        {isSelected && (
-                          <div className="ml-2 flex-shrink-0">
-                            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
+                <span>{displayText}</span>
               )}
             </div>
-
-            {/* Footer with count - only show when showFooterCount is true */}
-            {showFooterCount && maxSelections && (
-              <>
-                <div className="border-t border-gray-200 -mx-4 mt-4"></div>
-                <div className="pt-3 flex items-center justify-between text-[14px] text-gray-600">
-                  <span>{selectedItems.length} seleccionadas</span>
-                  <span>({selectedItems.length}/{maxSelections})</span>
-                </div>
-              </>
-            )}
-
-          </div>
-        </PopoverContent>
-      </Popover>
+          )}
+          <DownOutlined
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: 14,
+              color: '#9ca3af',
+            }}
+          />
+        </div>
+      </Dropdown>
     </div>
   )
 }
