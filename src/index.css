@@ -4730,14 +4730,16 @@ input[type="radio"]:focus {
 .nm-select .ant-select-arrow {
   position: absolute !important;
   right: 8px !important;
-  top: 8px !important;
-  bottom: 8px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+  height: 16px !important;
   transform: none !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   pointer-events: none;
-  height: calc(100% - 16px) !important;
   line-height: normal !important;
   font-size: 14px !important;
   color: #9ca3af !important;
