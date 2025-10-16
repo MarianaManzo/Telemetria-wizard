@@ -1701,7 +1701,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Email personalization states
   const [emailTemplates, setEmailTemplates] = useState<UserEmailTemplate[]>(initialEmailTemplates)
   const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || defaultEventMessage)
-  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(null)
+  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(rule?.notifications?.email?.templateId ?? null)
   const [templateDrawerOpen, setTemplateDrawerOpen] = useState(false)
 
   const [mapPreviewStart, setMapPreviewStart] = useState('Inicio del evento')
@@ -1947,15 +1947,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       )
     }).filter(Boolean) as React.ReactNode[]
   }, [customEmailMessage])
-
-  useEffect(() => {
-    if (!emailEnabled) return
-    if (selectedEmailTemplate) return
-    if (rule?.notifications?.email?.templateId) return
-    const defaultTemplate = emailTemplates[0]
-    if (!defaultTemplate) return
-    handleTemplateSelection(defaultTemplate)
-  }, [emailEnabled, selectedEmailTemplate, handleTemplateSelection, rule?.notifications?.email?.templateId, emailTemplates])
 
   const handleZonesChange = (zones) => {
     setSelectedZonesData(zones)
