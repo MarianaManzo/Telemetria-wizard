@@ -605,6 +605,27 @@ body :is(input:not([type='checkbox']):not([type='radio']),
   line-height: 32px;
 }
 
+.ant-input,
+.ant-input-affix-wrapper {
+  padding-block: 0 !important;
+  padding-inline: 12px !important;
+  border-radius: 8px !important;
+}
+
+.ant-input {
+  line-height: 32px !important;
+}
+
+.ant-input-affix-wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.ant-input-affix-wrapper .ant-input {
+  padding-inline: 0 !important;
+  padding-block: 0 !important;
+}
+
   :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) h1 {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-medium);
