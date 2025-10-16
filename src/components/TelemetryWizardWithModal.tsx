@@ -3219,7 +3219,17 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     <TooltipProvider>
       <div className="telemetry-wizard flex-1 flex flex-col bg-background relative">
         {/* Header */}
-        <div ref={headerRef} className="telemetry-wizard__header border-b border-border bg-background px-6 py-4">
+        <div
+          ref={headerRef}
+          className="telemetry-wizard__header border-b border-border bg-background"
+          style={{
+            position: 'sticky',
+            top: 'var(--app-header-height, 64px)',
+            zIndex: 120,
+            padding: '16px 24px',
+            backgroundColor: '#fff',
+          }}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex flex-col">
@@ -3259,7 +3269,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1">
           <div className="max-w-4xl mx-auto p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="pb-6">
               <TabsList

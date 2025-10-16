@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Row, Col } from "antd"
 import { Button } from "./ui/button"
 import { Card } from "./ui/card"
 import { ArrowLeft, Gauge, MapPin } from "lucide-react"
@@ -34,9 +35,19 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-background">
+    <div className="flex-1 flex flex-col bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-background px-6 py-4">
+      <div
+        style={{
+          padding: '16px 24px',
+          position: 'sticky',
+          top: 'var(--app-header-height, 64px)',
+          zIndex: 110,
+          backgroundColor: '#fff',
+          borderBottom: '1px solid #f0f0f0',
+          marginTop: 0,
+        }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -74,64 +85,66 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
           </div>
 
           <div className="max-w-5xl mx-auto px-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Row gutter={[16, 16]} justify="center">
               {ruleTypes.map((type) => {
                 const Icon = type.icon
                 const isSelected = selectedType === type.id
 
                 return (
-                  <Card
-                    key={type.id}
-                    className={`relative p-6 cursor-pointer transition-all hover:shadow-md h-full ${
-                      isSelected ? 'ring-2 ring-blue-500 border-blue-200' : ''
-                    } ${type.primary ? 'border-blue-200 bg-blue-50/30' : ''}`}
-                    onClick={() => setSelectedType(type.id)}
-                  >
-                    <div className="flex flex-col items-center text-center space-y-4 h-full">
-                      {/* Icon */}
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
-                        type.primary
-                          ? 'border-blue-500 bg-blue-500'
-                          : 'border-gray-300 bg-gray-100'
-                      }`}>
-                        <Icon
-                          className={`w-6 h-6 ${
-                            type.primary ? 'text-white' : 'text-gray-600'
-                          }`}
-                        />
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-lg font-medium text-foreground">
-                        {type.title}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-sm text-muted-foreground leading-relaxed min-h-[4rem] flex items-center">
-                        {type.description}
-                      </p>
-
-                      {/* Select Button */}
-                      <Button
-                        variant={type.primary ? 'default' : 'outline'}
-                        size="sm"
-                        className={`w-full mt-4 ${
+                  <Col key={type.id} xs={24} md={12}>
+                    <Card
+                      className={`relative p-6 cursor-pointer transition-all hover:shadow-md h-full ${
+                        isSelected ? 'ring-2 ring-blue-500 border-blue-200' : ''
+                      } ${type.primary ? 'border-blue-200 bg-blue-50/30' : ''}`}
+                      onClick={() => setSelectedType(type.id)}
+                      style={{ height: '100%' }}
+                    >
+                      <div className="flex flex-col items-center text-center space-y-4 h-full">
+                        {/* Icon */}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
                           type.primary
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                            : ''
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleSelect(type.id)
-                        }}
-                      >
-                        Seleccionar
-                      </Button>
-                    </div>
-                  </Card>
+                            ? 'border-blue-500 bg-blue-500'
+                            : 'border-gray-300 bg-gray-100'
+                        }`}>
+                          <Icon
+                            className={`w-6 h-6 ${
+                              type.primary ? 'text-white' : 'text-gray-600'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-lg font-medium text-foreground">
+                          {type.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-sm text-muted-foreground leading-relaxed min-h-[4rem] flex items-center text-center">
+                          {type.description}
+                        </p>
+
+                        {/* Select Button */}
+                        <Button
+                          variant={type.primary ? 'default' : 'outline'}
+                          size="sm"
+                          className={`w-full mt-4 ${
+                            type.primary
+                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                              : ''
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleSelect(type.id)
+                          }}
+                        >
+                          Seleccionar
+                        </Button>
+                      </div>
+                    </Card>
+                  </Col>
                 )
               })}
-            </div>
+            </Row>
           </div>
         </div>
       </div>

@@ -620,7 +620,6 @@ export default function App() {
               minHeight: 0,
               display: "flex",
               flexDirection: "column",
-              overflow: "hidden",
             }}
           >
             {renderContent()}
