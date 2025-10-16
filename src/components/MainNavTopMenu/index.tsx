@@ -171,7 +171,19 @@ export default function MainNavTopMenu({
   };
 
   const notificationsContent = (
-    <div style={{ width: '420px', maxHeight: '520px', backgroundColor: '#ffffff', borderRadius: '8px' }}>
+    <div className="nm-popover-base" style={{ width: '420px', maxHeight: '520px' }}>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxHeight: '520px',
+          backgroundColor: '#ffffff',
+          borderRadius: '8px',
+          boxShadow: '0 12px 32px rgba(15, 23, 42, 0.15)',
+          border: '1px solid #E5E7EB',
+          overflow: 'hidden'
+        }}
+      >
       <div style={{
         padding: '16px',
         borderBottom: '1px solid #f0f0f0',
@@ -295,6 +307,8 @@ export default function MainNavTopMenu({
           Ver todas las notificaciones
         </Button>
       </div>
+      </div>
+    </div>
     </div>
   );
 
