@@ -1701,7 +1701,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Email personalization states
   const [emailTemplates, setEmailTemplates] = useState<UserEmailTemplate[]>(initialEmailTemplates)
   const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || defaultEventMessage)
-  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(rule?.notifications?.email?.templateId || null)
+  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(null)
   const [templateDrawerOpen, setTemplateDrawerOpen] = useState(false)
 
   const [mapPreviewStart, setMapPreviewStart] = useState('Inicio del evento')
