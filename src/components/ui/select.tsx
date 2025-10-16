@@ -127,14 +127,14 @@ export const SelectTrigger = forwardRef<SelectRef, TriggerProps>(
     const antdSize: AntdSelectProps<string>["size"] = size === "sm" ? "small" : "middle";
 
     const currentValue = ctx.value === '' ? undefined : ctx.value;
-    const defaultIcon = <DownOutlined className="nm-select__arrow-icon" />;
+    const defaultIcon = <DownOutlined className="custom-select__arrow-icon" />;
 
     return (
       <>
         {children ? <span className="hidden">{children}</span> : null}
         <AntdSelect
           ref={ref}
-          className={cn("text-[14px] nm-select", className)}
+          className={cn("text-[14px] nm-select custom-select", className)}
           size={antdSize}
           value={currentValue}
           onChange={value => ctx.setValue(value)}

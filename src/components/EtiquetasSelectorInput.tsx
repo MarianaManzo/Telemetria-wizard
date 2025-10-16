@@ -2,7 +2,8 @@ import { useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { ChevronDown, Search, X } from "lucide-react"
+import { Search, X } from "lucide-react"
+import { DownOutlined } from "@ant-design/icons"
 import { PopoverBase } from "./PopoverPanel"
 
 interface TagData {
@@ -100,12 +101,22 @@ export function EtiquetasSelectorInput({
         <PopoverTrigger asChild>
           <div className="relative">
             <div
-              className="w-full min-h-[40px] px-3 py-1.5 text-[14px] border border-gray-300 rounded-md bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center"
+              className="w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border"
+              style={{ height: 32 }}
               onClick={() => setIsOpen(true)}
             >
               {renderDisplayContent()}
             </div>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <DownOutlined
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: 14,
+                color: '#9ca3af',
+              }}
+            />
           </div>
         </PopoverTrigger>
         <PopoverContent

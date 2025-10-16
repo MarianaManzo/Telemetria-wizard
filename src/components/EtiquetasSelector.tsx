@@ -89,7 +89,8 @@ export function EtiquetasSelector({ selectedTags, onSelectionChange, showError =
               : showError 
                 ? 'bg-red-50 text-red-700 border-red-200' 
                 : 'bg-gray-50 text-gray-700 border-gray-200'
-          } h-8 px-3 flex items-center gap-1 cursor-pointer hover:bg-blue-100 whitespace-nowrap text-[12px]`}
+          } px-3 flex items-center gap-1 cursor-pointer hover:bg-blue-100 whitespace-nowrap text-[12px] box-border`}
+          style={{ height: 32 }}
         >
           <Tag className={`w-4 h-4 ${
             selectedTags.length > 0 
