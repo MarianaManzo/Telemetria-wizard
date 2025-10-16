@@ -1037,7 +1037,7 @@ function DraggableConditionInGroup({
         <div 
           ref={drag}
           className="flex-shrink-0 cursor-move hover:bg-gray-100 rounded flex items-center justify-center"
-          style={{ width: '36px', height: '36px', marginTop: '34px' }}
+          style={{ width: '36px', height: '36px', marginTop: '28px' }}
         >
           <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
@@ -1137,7 +1137,7 @@ function DraggableConditionInGroup({
             size="icon"
             onClick={() => removeConditionFromGroup(groupId, condition.id)}
             className="w-8 h-8 bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-            style={{ marginTop: '34px' }}
+            style={{ marginTop: '28px' }}
           >
             <CloseOutlined className="text-gray-700 text-[14px]" />
           </Button>
@@ -1203,7 +1203,7 @@ function DraggableCondition({
         <div 
           ref={drag}
           className="flex-shrink-0 cursor-move hover:bg-gray-100 rounded flex items-center justify-center"
-          style={{ width: '36px', height: '36px', marginTop: '34px' }}
+          style={{ width: '36px', height: '36px', marginTop: '28px' }}
         >
           <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
