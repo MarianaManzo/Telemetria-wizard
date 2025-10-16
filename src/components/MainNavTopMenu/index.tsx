@@ -292,13 +292,15 @@ export default function MainNavTopMenu({
           );
         })}
       </div>
-      <div style={{
-        padding: '12px 16px',
-        borderTop: '1px solid #f0f0f0',
-        textAlign: 'center',
-        backgroundColor: '#ffffff',
-        borderRadius: '0 0 8px 8px'
-      }}>
+      <div
+        style={{
+          padding: '12px 16px',
+          borderTop: '1px solid #f0f0f0',
+          textAlign: 'center',
+          backgroundColor: '#ffffff',
+          borderRadius: '0 0 8px 8px'
+        }}
+      >
         <Button
           type="link"
           onClick={() => onViewAllNotifications?.()}
@@ -307,9 +309,8 @@ export default function MainNavTopMenu({
           Ver todas las notificaciones
         </Button>
       </div>
-      </div>
     </div>
-    </div>
+  </div>
   );
 
   return (
