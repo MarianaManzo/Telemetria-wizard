@@ -1061,7 +1061,7 @@ function DraggableConditionInGroup({
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'operator', value)}
             disabled={!condition.sensor}
           >
-            <SelectTrigger className="w-full flex items-center justify-start px-1" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Seleccionar operador" />
             </SelectTrigger>
             <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1084,7 +1084,7 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full flex items-center justify-start px-1" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1101,7 +1101,7 @@ function DraggableConditionInGroup({
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
               >
-                <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Seleccionar opción" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1113,15 +1113,15 @@ function DraggableConditionInGroup({
                 </SelectContent>
               </Select>
             ) : (
-              <Input
-                type="number"
-                placeholder="Valor"
-                value={condition.value}
-                onChange={(e) => updateConditionInGroup(groupId, condition.id, 'value', e.target.value)}
-                className="w-full text-[14px]"
-                style={{ height: '40px', borderRadius: '8px' }}
-                disabled={!condition.sensor}
-              />
+            <Input
+              type="number"
+              placeholder="Valor"
+              value={condition.value}
+              onChange={(e) => updateConditionInGroup(groupId, condition.id, 'value', e.target.value)}
+              className="w-full text-[14px]"
+              style={{ height: '32px', borderRadius: '8px' }}
+              disabled={!condition.sensor}
+            />
             )}
             {sensor && sensor.unit && (
               <span className="text-[14px] text-gray-600 whitespace-nowrap">
@@ -1269,7 +1269,7 @@ function DraggableCondition({
           onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
           disabled={!condition.sensor}
         >
-          <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Seleccionar operador" />
           </SelectTrigger>
             <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1293,7 +1293,7 @@ function DraggableCondition({
               onValueChange={(value) => updateCondition(condition.id, 'value', value)}
               disabled={!condition.sensor}
             >
-              <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleccionar estado" />
               </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1311,7 +1311,7 @@ function DraggableCondition({
               onValueChange={(value) => updateCondition(condition.id, 'value', value)}
               disabled={!condition.sensor}
             >
-              <SelectTrigger className="w-full" style={{ fontSize: '14px', height: '40px', borderRadius: '8px' }}>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleccionar opción" />
               </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1330,7 +1330,7 @@ function DraggableCondition({
               value={condition.value}
               onChange={(e) => updateCondition(condition.id, 'value', e.target.value)}
               className="w-full text-[14px]"
-              style={{ height: '40px', borderRadius: '8px' }}
+              style={{ height: '32px', borderRadius: '8px' }}
               disabled={!condition.sensor}
             />
             )}

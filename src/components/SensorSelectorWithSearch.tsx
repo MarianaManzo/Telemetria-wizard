@@ -5,7 +5,8 @@ import { Label } from "./ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "./ui/command"
 import { Separator } from "./ui/separator"
-import { Check, ChevronDown, Search, Gauge, User } from "lucide-react"
+import { Check, Search, Gauge, User } from "lucide-react"
+import { DownOutlined } from "@ant-design/icons"
 import { cn } from "./ui/utils"
 
 interface SensorOption {
@@ -78,12 +79,11 @@ export function SensorSelectorWithSearch({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          size="lg"
           role="combobox"
           aria-expanded={open}
-          style={{ fontSize: '14px', borderRadius: '8px', height: '40px', maxWidth: '180px', width: '100%', paddingLeft: '12px', paddingRight: '12px', ...style }}
+          style={{ fontSize: '14px', borderRadius: '8px', height: '32px', maxWidth: '180px', width: '100%', paddingLeft: '12px', paddingRight: '12px', ...style }}
           className={cn(
-            "w-full justify-between bg-white hover:bg-gray-50 text-[14px]",
+            "w-full justify-between bg-white hover:bg-gray-50 text-[14px] h-8",
             !value && "text-muted-foreground",
             className
           )}
@@ -93,7 +93,7 @@ export function SensorSelectorWithSearch({
           ) : (
             <span className="ant-typography ant-typography-secondary truncate">{placeholder}</span>
           )}
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <DownOutlined style={{ fontSize: 14, color: '#9ca3af' }} />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-lg" align="start" style={{ borderRadius: '8px' }}>
