@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import SectionCard from "./SectionCard"
 
 import type { LucideIcon, LucideIconProps } from 'lucide-react'
 
@@ -3337,17 +3338,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsContent>
               <TabsContent value="actions" className="mt-6 space-y-6">
                 {/* Section 1 - Clasificación del evento */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Clasificación del evento</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Configura la información básica del evento que genera la regla
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="space-y-6">
+                    <SectionCard
+                      icon={<AlertTriangle className="h-4 w-4 text-gray-600" />}
+                      title="Clasificación del evento"
+                      description="Configura la información básica del evento que genera la regla"
+                      contentClassName="space-y-6"
+                    >
                     {/* Row 1: Severidad del evento */}
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
@@ -3371,7 +3367,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           </PopoverTrigger>
                           <PopoverContent className="w-[200px] bg-white border border-gray-200 rounded-lg shadow-lg">
                             <div className="grid grid-cols-4 gap-2 max-h-[300px] overflow-y-auto px-2 py-2">
-                                {eventIconOptions.map(({ id, icon: IconOption }) => (
+                            {eventIconOptions.map(({ id, icon: IconOption }) => (
                                   <button
                                     key={id}
                                     className={`flex h-12 w-12 items-center justify-center rounded-lg border transition-colors ${
@@ -3523,8 +3519,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         />
                       </div>
                     </div>
-                  </div>
-                </div>
+
+                    </SectionCard>
 
                 {/* Section 4 - Cierre del evento */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
