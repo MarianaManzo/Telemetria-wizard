@@ -119,7 +119,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
   const relatedRule = rules.find(r => r.id === event.ruleId)
 
 
-  const seeMoreButtonClass = 'mt-3 inline-flex items-center justify-center rounded-full bg-[#3559FF] px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-[#1D37B7]'
+  const seeMoreButtonClass = 'h-auto p-0 text-[13px] font-medium text-[#1677FF] hover:text-[#125FCC] inline-flex items-center gap-1 border-0 bg-transparent'
 
   const formatDateTime = (date?: Date | null) => {
     if (!date) return '---'
@@ -154,21 +154,27 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
     return parts.join(' ')
   }
 
-  const eventMessageContent = useMemo(() => {
+  const eventMessageContent = useMemo<{ full: string; preview: string } | null>(() => {
     const source = event.eventMessageHtml || ''
     if (!source) {
       return null
     }
 
-    const pillBaseStyle = 'display:inline-flex;align-items:center;gap:8px;padding:2px 8px;border-radius:9999px;border:1px solid #E0E3EE;background:#F5F6FB;color:#313655;font-weight:500;font-size:12px;line-height:1'
-    const iconWrapperStyle = 'display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:9999px;background:#E8EAFF'
-    const pillIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3F4AE0" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79V7a2 2 0 0 0-2-2h-5.79a2 2 0 0 0-1.41.59L3 14l7 7 9.79-9.79a2 2 0 0 0 .59-1.41Z"></path><path d="M7 7h.01"></path></svg>'
+    const variableTextStyle = 'color:#7839EE;font-weight:600;'
 
     if (typeof DOMParser === 'undefined') {
-      return source
+      const sanitized = source
         .replace(/style="[^"]*"/g, '')
-        .replace(/class="template-pill"/g, `style="${pillBaseStyle}"`)
+        .replace(/class="template-pill"/g, `style="${variableTextStyle}"`)
         .replace(/<a\s+/g, '<a style="color:#3559FF;text-decoration:none;font-weight:600;" ')
+
+      const firstSentenceEnd = sanitized.indexOf('. ')
+      const preview = firstSentenceEnd === -1 ? sanitized : sanitized.slice(0, firstSentenceEnd + 1)
+
+      return {
+        full: sanitized,
+        preview
+      }
     }
 
     const parser = new DOMParser()
@@ -176,18 +182,10 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
 
     doc.querySelectorAll('.template-pill').forEach((pill) => {
       const pillElement = pill as HTMLElement
+      pillElement.querySelectorAll('[data-pill-icon]').forEach((icon) => icon.remove())
       pillElement.removeAttribute('class')
       pillElement.removeAttribute('style')
-      pillElement.setAttribute('style', pillBaseStyle)
-
-      const existingIcon = pillElement.querySelector('[data-pill-icon]')
-      if (!existingIcon) {
-        const iconSpan = doc.createElement('span')
-        iconSpan.setAttribute('data-pill-icon', 'true')
-        iconSpan.setAttribute('style', iconWrapperStyle)
-        iconSpan.innerHTML = pillIconSvg
-        pillElement.insertBefore(iconSpan, pillElement.firstChild)
-      }
+      pillElement.setAttribute('style', variableTextStyle)
     })
 
     doc.querySelectorAll('a').forEach((link) => {
@@ -195,17 +193,55 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
       linkElement.setAttribute('style', 'color:#3559FF;text-decoration:none;font-weight:600;')
     })
 
-    return doc.body.innerHTML
+    const fullHtml = doc.body.innerHTML
+
+    const previewDoc = parser.parseFromString(fullHtml, 'text/html')
+    const textWalker = previewDoc.createTreeWalker(previewDoc.body, NodeFilter.SHOW_TEXT)
+    let cutoffNode: Text | null = null
+    let cutoffIndex = -1
+
+    while (textWalker.nextNode()) {
+      const textNode = textWalker.currentNode as Text
+      const value = textNode.nodeValue ?? ''
+      const index = value.indexOf('.')
+      if (index !== -1) {
+        cutoffNode = textNode
+        cutoffIndex = index + 1
+        break
+      }
+    }
+
+    if (cutoffNode) {
+      const nodeValue = cutoffNode.nodeValue ?? ''
+      cutoffNode.nodeValue = nodeValue.slice(0, cutoffIndex)
+
+      let current: Node | null = cutoffNode
+      while (current && current !== previewDoc.body) {
+        let sibling = current.nextSibling
+        while (sibling) {
+          const next = sibling.nextSibling
+          sibling.parentNode?.removeChild(sibling)
+          sibling = next
+        }
+        current = current.parentNode
+      }
+    }
+
+    const previewHtml = previewDoc.body.innerHTML
+
+    return {
+      full: fullHtml,
+      preview: previewHtml || fullHtml
+    }
   }, [event.eventMessageHtml])
 
   const shouldShowMessageToggle = useMemo(() => {
-    if (!event.eventMessageHtml) {
+    if (!eventMessageContent) {
       return false
     }
 
-    const textContent = event.eventMessageHtml.replace(/<[^>]+>/g, '').trim()
-    return textContent.length > 160
-  }, [event.eventMessageHtml])
+    return eventMessageContent.preview.trim() !== eventMessageContent.full.trim()
+  }, [eventMessageContent])
 
   const sidebarItems = [
     { id: 'contenido', label: 'Contenido', icon: FileText },
@@ -399,16 +435,20 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
                         <>
                           <div
                             className={`mt-2 text-[14px] leading-[22px] text-[#313655] ${messageExpanded ? '' : 'line-clamp-3'}`}
-                            dangerouslySetInnerHTML={{ __html: eventMessageContent }}
+                            dangerouslySetInnerHTML={{ __html: messageExpanded ? eventMessageContent.full : eventMessageContent.preview }}
                           />
                           {shouldShowMessageToggle && (
-                            <button
-                              type="button"
-                              className={seeMoreButtonClass}
-                              onClick={() => setMessageExpanded((prev) => !prev)}
-                            >
-                              {messageExpanded ? 'Ver menos' : 'Ver más'}
-                            </button>
+                            <div className="mt-3 flex justify-end">
+                              <Button
+                                variant="link"
+                                type="button"
+                                size="sm"
+                                className={seeMoreButtonClass}
+                                onClick={() => setMessageExpanded((prev) => !prev)}
+                              >
+                                {messageExpanded ? 'Ver menos' : 'Ver más'}
+                              </Button>
+                            </div>
                           )}
                         </>
                       ) : (
