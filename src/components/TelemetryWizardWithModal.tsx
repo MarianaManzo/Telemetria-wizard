@@ -3628,13 +3628,112 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   </div>
                 </div>
 
-                {/* Section 5 - Asignar etiqueta a la unidad */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Asignar etiqueta a la unidad</h3>
+                {/* Section 3 - Cierre del evento */}
+                <SectionCard
+                  icon={<Clock className="h-4 w-4 text-gray-600" />}
+                  title="Cierre del evento"
+                  description="Configura la información básica del evento que genera la regla"
+                  contentClassName="space-y-6"
+                >
+                  {/* Row 1: Close policy selection */}
+                  <div className="grid grid-cols-2 gap-8 items-center">
+                    <div>
+                      <label className="text-[14px] font-medium text-gray-700">
+                        <span className="text-red-500">*</span> ¿Cómo debe cerrarse el evento?
+                      </label>
                     </div>
+                    <div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="w-full">
+                            <Select value={closePolicy} onValueChange={setClosePolicy}>
+                              <SelectTrigger className="w-full">
+                                <div className="truncate">
+                                  <SelectValue placeholder="Manualmente (Requiere nota al cerrar evento)" />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="manualmente">Manualmente</SelectItem>
+                                <SelectItem value="automaticamente-condiciones">Automáticamente (Cuando las condiciones ya no se cumplan)</SelectItem>
+                                <SelectItem value="automaticamente-tiempo">Automáticamente (Después de un tiempo definido)</SelectItem>
+                                <SelectItem value="inmediato">Cerrar evento de inmediato (sin requerir intervención del usuario)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-[12px]">
+                            {closePolicy === 'manualmente' 
+                              ? 'Manualmente'
+                              : closePolicy === 'automaticamente-condiciones'
+                              ? 'Automáticamente (Cuando las condiciones ya no se cumplan)'
+                              : closePolicy === 'inmediato'
+                              ? 'Cerrar evento de inmediato (sin requerir intervención del usuario)'
+                              : closePolicy === 'automaticamente-tiempo'
+                              ? 'Automáticamente (Después de un tiempo definido)'
+                              : 'Manualmente'
+                            }
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Require note toggle - only show when "manualmente" is selected */}
+                  {closePolicy === 'manualmente' && (
+                    <div className="grid grid-cols-2 gap-8 items-center">
+                      <div>
+                        <label className="text-[14px] font-medium text-gray-700">
+                          Requerir nota al cierre del evento
+                        </label>
+                      </div>
+                      <div className="flex justify-end">
+                        <Switch
+                          checked={requireNoteOnClose}
+                          onCheckedChange={setRequireNoteOnClose}
+                          className="switch-blue"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Row 3: Time configuration - only show when "automaticamente-tiempo" is selected */}
+                  {closePolicy === 'automaticamente-tiempo' && (
+                    <div className="grid grid-cols-2 gap-8 items-center">
+                      <div>
+                        <label className="text-[14px] font-medium text-gray-700">
+                          <span className="text-red-500">*</span> Después de cuánto tiempo se debe cerrar
+                        </label>
+                      </div>
+                      <div className="flex gap-4">
+                        <Input
+                          type="number"
+                          value={closureTimeValue}
+                          onChange={(e) => setClosureTimeValue(e.target.value)}
+                          className="w-20"
+                          min="1"
+                        />
+                        <Select value={closureTimeUnit} onValueChange={setClosureTimeUnit}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="minutos">Minutos</SelectItem>
+                            <SelectItem value="horas">Horas</SelectItem>
+                            <SelectItem value="dias">Días</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                </SectionCard>
+
+                {/* Section 5 - Asignar etiqueta a la unidad */}
+                <SectionCard
+                  icon={<Tag className="h-4 w-4 text-gray-600" />}
+                  title="Asignar etiqueta a la unidad"
+                  description="Selecciona la etiqueta que se asignará a la unidad cuando ocurra el evento"
+                  headerExtra={
                     <Switch
                       checked={unitTagsEnabled}
                       onCheckedChange={(checked) => {
@@ -3645,68 +3744,58 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       }}
                       className="switch-blue"
                     />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Selecciona la etiqueta que se le asignará a la unidad cuando ocurra el evento
-                  </p>
-                  
+                  }
+                  contentClassName={unitTagsEnabled ? 'space-y-6' : 'p-0'}
+                >
                   {unitTagsEnabled && (
-                    <>
-                      <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                      
-                      <div className="space-y-6">
-                        {/* Row 1: Etiquetas para la unidad */}
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-8 items-start">
-                            <div>
-                              <label className="text-[14px] font-medium text-gray-700">Asigna una etiqueta a la unidad</label>
-                            </div>
-                            <div>
-                              <GenericSelectorInput
-                                selectedItems={unitTags}
-                                onSelectionChange={(items) => {
-                                  if (items.length <= 10) {
-                                    setUnitTags(items)
-                                  }
-                                }}
-                                placeholder="Seleccionar etiquetas"
-                                title="Etiquetas para la unidad"
-                                items={initialTags.map(tag => ({
-                                  id: tag.id,
-                                  name: tag.name,
-                                  color: tag.color
-                                }))}
-                                searchPlaceholder="Buscar etiquetas..."
-                                getDisplayText={(count) => {
-                                  if (count === 0) return "Seleccionar etiquetas"
-                                  if (count === 1) return "1 etiqueta seleccionada"
-                                  return `${count} etiquetas seleccionadas${count >= 10 ? ' (máximo)' : ''}`
-                                }}
-                                maxSelections={10}
-                                multiSelect={true}
-                                showColorPills={true}
-                                showPillsDisplay={true}
-                                showFooterCount={true}
-                              />
-                            </div>
-                          </div>
-                          <p className="text-[13px] text-[rgba(145,145,145,1)]">
-                            <strong>Nota:</strong> Cada unidad puede tener un máximo de 10 etiquetas activas.<br />
-                            Si la regla que estás configurando intenta asignar una nueva etiqueta y la unidad ya alcanzó el límite, la etiqueta no será añadida.
-                          </p>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-8 items-start">
+                        <div>
+                          <label className="text-[14px] font-medium text-gray-700">Asignar etiquetas</label>
+                        </div>
+                        <div>
+                          <GenericSelectorInput
+                            selectedItems={unitTags}
+                            onSelectionChange={(items) => {
+                              if (items.length <= 10) {
+                                setUnitTags(items)
+                              }
+                            }}
+                            placeholder="Seleccionar etiquetas"
+                            title="Etiquetas para la unidad"
+                            items={initialTags.map(tag => ({
+                              id: tag.id,
+                              name: tag.name,
+                              color: tag.color
+                            }))}
+                            searchPlaceholder="Buscar etiquetas..."
+                            getDisplayText={(count) => {
+                              if (count === 0) return "Seleccionar etiquetas"
+                              if (count === 1) return "1 etiqueta seleccionada"
+                              return `${count} etiquetas seleccionadas${count >= 10 ? ' (máximo)' : ''}`
+                            }}
+                            maxSelections={10}
+                            multiSelect={true}
+                            showColorPills={true}
+                            showPillsDisplay={true}
+                            showFooterCount={true}
+                          />
                         </div>
                       </div>
-                    </>
+                      <p className="text-[13px] text-[rgba(145,145,145,1)]">
+                        <strong>Nota:</strong> Cada unidad puede tener un máximo de 10 etiquetas activas.<br />
+                        Si la regla que estás configurando intenta asignar una nueva etiqueta y la unidad ya alcanzó el límite, la etiqueta no será añadida.
+                      </p>
+                    </div>
                   )}
-                </div>
+                </SectionCard>
 
                 {/* Section 5.1 - Desasignar etiqueta a la unidad */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Desasignar etiqueta a la unidad</h3>
-                    </div>
+                <SectionCard
+                  icon={<Tag className="h-4 w-4 text-gray-600" />}
+                  title="Desasignar etiqueta a la unidad"
+                  description="Selecciona las etiquetas que se removerán de la unidad"
+                  headerExtra={
                     <Switch
                       checked={unitUntagsEnabled}
                       onCheckedChange={(checked) => {
@@ -3717,87 +3806,71 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       }}
                       className="switch-blue"
                     />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Selecciona la etiqueta que se le desasignará a la unidad cuando ocurra el evento
-                  </p>
-                  
+                  }
+                  contentClassName={unitUntagsEnabled ? 'space-y-6' : 'p-0'}
+                >
                   {unitUntagsEnabled && (
-                    <>
-                      <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                      
-                      <div className="space-y-6">
-                        {/* Row 1: Etiquetas para desasignar de la unidad */}
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-8 items-start">
-                            <div>
-                              <label className="text-[14px] font-medium text-gray-700">Desasigna una etiqueta de la unidad</label>
-                            </div>
-                            <div>
-                              <GenericSelectorInput
-                                selectedItems={unitUntags}
-                                onSelectionChange={(items) => {
-                                  if (items.length <= 10) {
-                                    setUnitUntags(items)
-                                  }
-                                }}
-                                placeholder="Seleccionar etiquetas"
-                                title="Etiquetas para desasignar de la unidad"
-                                items={initialTags.map(tag => ({
-                                  id: tag.id,
-                                  name: tag.name,
-                                  color: tag.color
-                                }))}
-                                searchPlaceholder="Buscar etiquetas..."
-                                getDisplayText={(count) => {
-                                  if (count === 0) return "Seleccionar etiquetas"
-                                  if (count === 1) return "1 etiqueta seleccionada"
-                                  return `${count} etiquetas seleccionadas${count >= 10 ? ' (máximo)' : ''}`
-                                }}
-                                maxSelections={10}
-                                multiSelect={true}
-                                showColorPills={true}
-                                showPillsDisplay={true}
-                                showFooterCount={true}
-                              />
-                            </div>
-                          </div>
-                          <p className="text-[13px] text-[rgba(145,145,145,1)]">
-                            <strong>Nota:</strong> Las etiquetas seleccionadas serán removidas de la unidad cuando ocurra el evento.<br />
-                            En caso que la etiqueta no esté asociada a la unidad, no se realizará ninguna acción.
-                          </p>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-8 items-start">
+                        <div>
+                          <label className="text-[14px] font-medium text-gray-700">Desasignar etiquetas</label>
+                        </div>
+                        <div>
+                          <GenericSelectorInput
+                            selectedItems={unitUntags}
+                            onSelectionChange={(items) => {
+                              if (items.length <= 10) {
+                                setUnitUntags(items)
+                              }
+                            }}
+                            placeholder="Seleccionar etiquetas"
+                            title="Etiquetas para desasignar"
+                            items={initialTags.map(tag => ({
+                              id: tag.id,
+                              name: tag.name,
+                              color: tag.color
+                            }))}
+                            searchPlaceholder="Buscar etiquetas..."
+                            getDisplayText={(count) => {
+                              if (count === 0) return "Seleccionar etiquetas"
+                              if (count === 1) return "1 etiqueta seleccionada"
+                              return `${count} etiquetas seleccionadas${count >= 10 ? ' (máximo)' : ''}`
+                            }}
+                            maxSelections={10}
+                            multiSelect={true}
+                            showColorPills={true}
+                            showPillsDisplay={true}
+                            showFooterCount={true}
+                          />
                         </div>
                       </div>
-                    </>
+                      <p className="text-[13px] text-[rgba(145,145,145,1)]">
+                        <strong>Nota:</strong> Al remover etiquetas se liberan espacios para nuevas asignaciones futuras.
+                      </p>
+                    </div>
                   )}
-                </div>
+                </SectionCard>
 
                 {/* Section 6 - Enviar comando al dispositivo */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Enviar comando al dispositivo</h3>
-                    </div>
+                <SectionCard
+                  icon={<Tag className="h-4 w-4 text-gray-600" />}
+                  title="Enviar comando al dispositivo"
+                  description="Selecciona si deseas ejecutar un comando automáticamente cuando se active el evento"
+                  headerExtra={
                     <Switch
                       checked={sendDeviceCommand}
                       onCheckedChange={setSendDeviceCommand}
-                      disabled={true}
+                      disabled
                       className="switch-blue"
                     />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Seleccionar como se notificará a usuarios cuando este evento ocurra. Puedes seleccionar múltiples opciones
-                  </p>
-                  {sendDeviceCommand && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  )}
-                  
+                  }
+                  contentClassName={sendDeviceCommand ? 'space-y-6' : 'p-0'}
+                >
                   {sendDeviceCommand && (
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
                         <label className="text-[14px] font-medium text-gray-700">
-                          * Seleccionar comando a enviar
+                          Seleccionar comando a enviar
                         </label>
                       </div>
                       <div>
@@ -3814,7 +3887,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </div>
                     </div>
                   )}
-                </div>
+                </SectionCard>
               </TabsContent>
 
               <TabsContent value="notifications" className="mt-6 space-y-6">
