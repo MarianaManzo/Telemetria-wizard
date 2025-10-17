@@ -1651,6 +1651,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   )
   const [selectedResponsible, setSelectedResponsible] = useState(defaultResponsible)
   const [eventIcon, setEventIcon] = useState(rule?.eventSettings?.icon || 'info')
+  const [iconSearch, setIconSearch] = useState('')
   const [eventSeverity, setEventSeverity] = useState(rule?.eventSettings?.severity || 'low')
   const [eventShortName, setEventShortName] = useState(rule?.eventSettings?.shortName || 'Evento')
   const iconPair = eventIcon ? eventIconMap[eventIcon] : undefined
@@ -1659,6 +1660,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const PreviewIconComponent: React.FC<LucideIconProps> = iconPair?.solid
     ? (props) => iconPair.solid({ ...props, color: props.color || previewSeverityStyles.previewText, stroke: props.stroke || '#FFFFFF' })
     : (props) => <AlertOctagon {...props} strokeWidth={0} fill={props.color || previewSeverityStyles.previewText} stroke={props.stroke || '#FFFFFF'} />
+  const filteredIconOptions = useMemo(
+    () => eventIconOptions.filter(({ id }) => id.toLowerCase().includes(iconSearch.toLowerCase())),
+    [iconSearch]
+  )
   const [eventTags, setEventTags] = useState<Array<{id: string, name: string, color: string}>>(
     rule?.eventSettings?.tags ? rule.eventSettings.tags.map((tag: string) => ({ 
       id: tag.toLowerCase().replace(/\s+/g, '-'), 
@@ -3364,20 +3369,21 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                               <ChevronDown className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-96 p-4" align="start">
-                            <div className="grid grid-cols-10 gap-2">
-                              {eventIconOptions.map(({ id, icon: IconOption }) => (
-                                <button
-                                  key={id}
-                                  type="button"
-                                  onClick={() => setEventIcon(id)}
-                                  className={`p-2 rounded border transition-all ${
-                                    eventIcon === id
-                                      ? 'bg-blue-500 border-blue-500 text-white'
-                                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
-                                  }`}
-                                >
-                                  <IconOption className="h-4 w-4" />
+                          <PopoverContent className="w-[200px] bg-white border border-gray-200 rounded-lg shadow-lg">
+                            <div className="grid grid-cols-4 gap-2 max-h-[300px] overflow-y-auto px-2 py-2">
+                                {eventIconOptions.map(({ id, icon: IconOption }) => (
+                                  <button
+                                    key={id}
+                                    className={`flex h-12 w-12 items-center justify-center rounded-lg border transition-colors ${
+                                      eventIcon === id
+                                        ? 'bg-blue-100 border-blue-500 text-blue-600'
+                                        : 'bg-gray-50 border-transparent text-gray-600 hover:bg-blue-50'
+                                    }`}
+                                    onClick={() => {
+                                      setEventIcon(id)
+                                    }}
+                                  >
+                                  <IconOption className="h-5 w-5" />
                                 </button>
                               ))}
                             </div>

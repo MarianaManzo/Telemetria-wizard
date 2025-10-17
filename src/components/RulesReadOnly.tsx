@@ -868,7 +868,7 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
 
                               <div>
                                 <span className="text-[14px] font-semibold text-foreground block mb-2">Vista previa en mapa</span>
-                                <div className="flex flex-col items-center gap-2" style={{ color: '#3559FF', marginLeft: 4 }}>
+                                <div className="flex flex-col items-center gap-2 text-[#3559FF]">
                                   <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect width="34" height="34" rx="17" fill="#3559FF" />
                                     <path d="M34 24.0387L24.0387 34H9.96129L0 24.0387V9.96129L9.96129 0H24.0387L34 9.96129V24.0387Z" fill="#3F64FF" />
