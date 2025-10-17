@@ -401,6 +401,7 @@ export const initialRules: Rule[] = [
       responsible: 'mariana.manzo@numaris.com',
       severity: 'high',
       icon: 'speed',
+      shortName: 'Velocidad',
       tags: ['seguridad', 'velocidad', 'monitoreo', 'alertas', 'cumplimiento'],
       unitTags: ['conductor-alerta', 'infraccion'],
       unitUntags: ['aprobado', 'excelente-conductor'],
@@ -478,6 +479,7 @@ export const initialRules: Rule[] = [
       responsible: 'juan.perez@numaris.com',
       severity: 'high',
       icon: 'warning',
+      shortName: 'Zona restr.',
       tags: ['seguridad', 'zona-violacion', 'acceso-restringido', 'perimetro', 'vigilancia', 'control-acceso', 'seguridad-critica', 'zona-protegida', 'autorizacion', 'restricciones'],
       unitTags: ['acceso-restringido', 'seguridad-critica'],
       unitUntags: ['acceso-autorizado'],
@@ -582,6 +584,7 @@ export const initialRules: Rule[] = [
       responsible: 'ana.garcia@numaris.com',
       severity: 'medium',
       icon: 'thermometer',
+      shortName: 'Temp carga',
       tags: ['cadena-frio', 'temperatura'],
       unitTags: ['refrigeracion']
     },
@@ -679,6 +682,7 @@ export const initialRules: Rule[] = [
       responsible: 'carlos.rodriguez@numaris.com',
       severity: 'informative',
       icon: 'clock',
+      shortName: 'Parada',
       tags: []
     },
     notifications: {
@@ -734,6 +738,7 @@ export const initialRules: Rule[] = [
       responsible: 'jefe-seguridad',
       severity: 'high',
       icon: 'alert',
+      shortName: 'Pánico',
       tags: [],
       unitTags: ['emergencia', 'alta-prioridad', 'seguridad-critica'],
       unitUntags: ['rutina', 'normal'],
@@ -824,6 +829,7 @@ export const initialRules: Rule[] = [
       responsible: 'supervisor-logistica',
       severity: 'medium',
       icon: 'signal',
+      shortName: 'GPS off',
       tags: ['conectividad', 'gps', 'comunicacion', 'rastreo', 'monitoreo'],
       unitTags: ['monitoreo']
     },

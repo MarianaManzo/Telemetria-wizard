@@ -25,9 +25,14 @@ import {
   Copy,
   Monitor,
   Smartphone, 
-  Mail
+  Mail,
+  Gauge,
+  Thermometer,
+  Radio,
+  AlertOctagon
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import type { LucideIcon } from "lucide-react"
 import { Rule, Event, RuleConditionGroup } from "../types"
 import { userEmailTemplates } from "../constants/emailTemplates"
 import { DeleteRuleModal } from "./DeleteRuleModal"
@@ -473,7 +478,34 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
   }
 
   // Helper function to render tags dynamically
-  const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor = "text-purple-700", hoverColor = "hover:bg-purple-200") => {
+const eventIconMap: Record<string, LucideIcon> = {
+  speed: Gauge,
+  warning: AlertTriangle,
+  alert: AlertOctagon,
+  thermometer: Thermometer,
+  clock: Clock,
+  signal: Radio
+}
+
+const mapIconColors: Record<'high' | 'medium' | 'low' | 'informative', { outer: string; inner: string }> = {
+  high: { outer: '#DC2626', inner: '#DF3F40' },
+  medium: { outer: '#F97316', inner: '#FB923C' },
+  low: { outer: '#1D4ED8', inner: '#3B82F6' },
+  informative: { outer: '#0E7490', inner: '#38BDF8' }
+}
+
+const MapPreviewIcon = ({ severity }: { severity: 'high' | 'medium' | 'low' | 'informative' }) => {
+  const colors = mapIconColors[severity] ?? mapIconColors.low
+  return (
+    <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="34" height="34" rx="17" fill={colors.outer} />
+      <path d="M34 24.0387L24.0387 34H9.96129L0 24.0387V9.96129L9.96129 0H24.0387L34 9.96129V24.0387Z" fill={colors.inner} />
+      <path d="M23.875 21.375C23.875 19.1953 22.5977 17.3125 20.75 16.4355V13.1973C20.75 12.9023 20.6465 12.6172 20.4551 12.3926L17.4785 8.86328C17.3535 8.71484 17.1758 8.64062 17 8.64062C16.8242 8.64062 16.6465 8.71484 16.5215 8.86328L13.5449 12.3926C13.3548 12.6176 13.2504 12.9027 13.25 13.1973V16.4355C11.4023 17.3125 10.125 19.1953 10.125 21.375H13.1816C13.1367 21.5156 13.1133 21.668 13.1133 21.8398C13.1133 22.2715 13.2617 22.6934 13.5312 23.0273C13.7513 23.3005 14.0426 23.5074 14.373 23.625C14.8242 24.6797 15.8496 25.3594 17 25.3594C17.5684 25.3594 18.1191 25.1914 18.5898 24.875C19.0508 24.5664 19.4082 24.1348 19.625 23.625C19.9553 23.5081 20.2467 23.3019 20.4668 23.0293C20.7367 22.6923 20.8841 22.2736 20.8848 21.8418C20.8848 21.6777 20.8633 21.5215 20.8242 21.377L23.875 21.375ZM17 13.875C17.2453 13.88 17.4789 13.981 17.6506 14.1562C17.8224 14.3315 17.9186 14.5671 17.9186 14.8125C17.9186 15.0579 17.8224 15.2935 17.6506 15.4687C17.4789 15.644 17.2453 15.745 17 15.75C16.7547 15.745 16.5211 15.644 16.3494 15.4687C16.1776 15.2935 16.0814 15.0579 16.0814 14.8125C16.0814 14.5671 16.1776 14.3315 16.3494 14.1562C16.5211 13.981 16.7547 13.88 17 13.875ZM19.2676 22.3164C19.166 22.375 19.0488 22.3984 18.9336 22.3828L18.5527 22.3359L18.498 22.7148C18.3926 23.4551 17.748 24.0137 17 24.0137C16.252 24.0137 15.6074 23.4551 15.502 22.7148L15.4473 22.334L15.0664 22.3828C14.9506 22.3966 14.8335 22.3726 14.7324 22.3145C14.5625 22.2168 14.457 22.0352 14.457 21.8379C14.457 21.6309 14.5723 21.459 14.7422 21.373H19.2598C19.4316 21.4609 19.5449 21.6328 19.5449 21.8379C19.543 22.0371 19.4375 22.2207 19.2676 22.3164Z" fill="white" />
+    </svg>
+  )
+}
+
+const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor = "text-purple-700", hoverColor = "hover:bg-purple-200") => {
     if (tagIds.length === 0) return (
       <span className="text-[12px] text-muted-foreground">Sin etiquetas específicas</span>
     )
@@ -531,6 +563,10 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
 
   const severityInfo = severityConfig[rule.eventSettings.severity]
   const SeverityIcon = severityInfo.icon
+  const shortNameRaw = (rule.eventSettings.shortName || '').trim()
+  const shortNameValue = shortNameRaw || 'Evento'
+  const shortNameDisplay = shortNameValue.slice(0, 10)
+  const EventIconComponent = eventIconMap[rule.eventSettings.icon] || AlertTriangle
 
   const emailSettings = rule.notifications.email
   const emailRecipients = emailSettings?.recipients || []
@@ -823,22 +859,45 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
                           icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
                           title="Clasificación del evento"
                         >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <span className="text-[14px] font-semibold text-foreground block mb-3">Severidad del evento:</span>
-                              <div className="flex items-center gap-3">
-                                <div className={`flex items-center gap-2 px-3 py-1 rounded-md ${severityInfo.bgColor}`}>
-                                  <SeverityIcon className={`w-4 h-4 ${severityInfo.iconColor}`} />
-                                  <span className={`text-[14px] ${severityInfo.textColor}`}>
-                                    {severityInfo.label}
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                              <div>
+                                <span className="text-[14px] font-semibold text-foreground block mb-1">Nombre corto</span>
+                                <span className="text-[14px] text-foreground" title={shortNameValue}>{shortNameDisplay}</span>
+                              </div>
+
+                              <div>
+                                <span className="text-[14px] font-semibold text-foreground block mb-2">Vista previa en mapa</span>
+                                <div className="flex flex-col items-center gap-2" style={{ color: '#3559FF', marginLeft: 4 }}>
+                                  <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="34" height="34" rx="17" fill="#3559FF" />
+                                    <path d="M34 24.0387L24.0387 34H9.96129L0 24.0387V9.96129L9.96129 0H24.0387L34 9.96129V24.0387Z" fill="#3F64FF" />
+                                    <path d="M23.875 21.375C23.875 19.1953 22.5977 17.3125 20.75 16.4355V13.1973C20.75 12.9023 20.6465 12.6172 20.4551 12.3926L17.4785 8.86328C17.3535 8.71484 17.1758 8.64062 17 8.64062C16.8242 8.64062 16.6465 8.71484 16.5215 8.86328L13.5449 12.3926C13.3548 12.6176 13.2504 12.9027 13.25 13.1973V16.4355C11.4023 17.3125 10.125 19.1953 10.125 21.375H13.1816C13.1367 21.5156 13.1133 21.668 13.1133 21.8398C13.1133 22.2715 13.2617 22.6934 13.5312 23.0273C13.7513 23.3005 14.0426 23.5074 14.373 23.625C14.8242 24.6797 15.8496 25.3594 17 25.3594C17.5684 25.3594 18.1191 25.1914 18.5898 24.875C19.0508 24.5664 19.4082 24.1348 19.625 23.625C19.9553 23.5081 20.2467 23.3019 20.4668 23.0293C20.7367 22.6923 20.8841 22.2736 20.8848 21.8418C20.8848 21.6777 20.8633 21.5215 20.8242 21.377L23.875 21.375ZM17 13.875C17.2453 13.88 17.4789 13.981 17.6506 14.1562C17.8224 14.3315 17.9186 14.5671 17.9186 14.8125C17.9186 15.0579 17.8224 15.2935 17.6506 15.4687C17.4789 15.644 17.2453 15.745 17 15.75C16.7547 15.745 16.5211 15.644 16.3494 15.4687C16.1776 15.2935 16.0814 15.0579 16.0814 14.8125C16.0814 14.5671 16.1776 14.3315 16.3494 14.1562C16.5211 13.981 16.7547 13.88 17 13.875ZM19.2676 22.3164C19.166 22.375 19.0488 22.3984 18.9336 22.3828L18.5527 22.3359L18.498 22.7148C18.3926 23.4551 17.748 24.0137 17 24.0137C16.252 24.0137 15.6074 23.4551 15.502 22.7148L15.4473 22.334L15.0664 22.3828C14.9506 22.3966 14.8335 22.3726 14.7324 22.3145C14.5625 22.2168 14.457 22.0352 14.457 21.8379C14.457 21.6309 14.5723 21.459 14.7422 21.373H19.2598C19.4316 21.4609 19.5449 21.6328 19.5449 21.8379C19.543 22.0371 19.4375 22.2207 19.2676 22.3164Z" fill="white" />
+                                  </svg>
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ backgroundColor: '#3559FF', color: '#FFFFFF', padding: '4px 8px', borderRadius: 8 }}>
+                                    {shortNameDisplay}
                                   </span>
                                 </div>
                               </div>
                             </div>
 
-                            <div>
-                              <span className="text-[14px] font-semibold text-foreground block mb-3">Etiquetas del evento:</span>
-                              {renderTagsList(rule.eventSettings.tags || [], "bg-green-100", "text-green-700", "hover:bg-green-200")}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                              <div>
+                                <span className="text-[14px] font-semibold text-foreground block mb-3">Severidad del evento:</span>
+                                <div className="flex items-center gap-3">
+                                  <div className={`flex items-center gap-2 px-3 py-1 rounded-md ${severityInfo.bgColor}`}>
+                                    <SeverityIcon className={`w-4 h-4 ${severityInfo.iconColor}`} />
+                                    <span className={`text-[14px] ${severityInfo.textColor}`}>
+                                      {severityInfo.label}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <span className="text-[14px] font-semibold text-foreground block mb-3">Etiquetas del evento:</span>
+                                {renderTagsList(rule.eventSettings.tags || [], "bg-green-100", "text-green-700", "hover:bg-green-200")}
+                              </div>
                             </div>
                           </div>
                         </SectionCard>

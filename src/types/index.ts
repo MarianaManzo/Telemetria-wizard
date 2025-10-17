@@ -129,6 +129,7 @@ export interface RuleEventSettings {
   responsible: string
   severity: 'informative' | 'low' | 'medium' | 'high'
   icon: string
+  shortName?: string
   tags: string[]
   unitTags?: string[]
   unitUntags?: string[]
