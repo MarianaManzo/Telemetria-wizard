@@ -2968,20 +2968,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   const renderAdvancedCard = () => (
     <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white border border-gray-200 rounded-lg">
         <CollapsibleTrigger className="w-full">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <Settings className="h-4 w-4 text-gray-600" />
-              <h3 className="text-[14px] font-medium text-gray-700">Configuración avanzada</h3>
+          <div className="px-4 py-4 bg-gray-100 border-b border-gray-200 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
+                  <Settings className="h-4 w-4" />
+                </div>
+                <h3 className="text-[14px] font-semibold text-gray-900 leading-5">Configuración avanzada</h3>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
+            <p className="text-[14px] text-gray-600 text-left mt-2 leading-5">
+              Define las condiciones adicionales de tu regla, cuándo debe activarse y otras configuraciones avanzadas
+            </p>
           </div>
-          <p className="text-[14px] text-gray-600 text-left mt-2">
-            Define las condiciones adicionales de tu regla, cuándo debe activarse y otras configuraciones avanzadas
-          </p>
         </CollapsibleTrigger>
-        <CollapsibleContent className="mt-6">
+        <CollapsibleContent className="px-4 pb-4 pt-6">
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-8 items-center">
               <div>
@@ -3891,18 +3895,13 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </TabsContent>
 
               <TabsContent value="notifications" className="mt-6 space-y-6">
-                {/* Section 1 - Mensaje del evento */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Bell className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Mensaje del evento</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Redacta el mensaje que se enviará cuando ocurra este evento. Puedes usar variables para personalizar el contenido.
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="space-y-4">
+              {/* Section 1 - Mensaje del evento */}
+                <SectionCard
+                  icon={<Bell className="h-4 w-4 text-gray-600" />}
+                  title="Mensaje del evento"
+                  description="Redacta el mensaje que se enviará cuando ocurra este evento. Puedes usar variables para personalizar el contenido."
+                  contentClassName="space-y-4"
+                >
                     <div className="border border-gray-200 rounded-lg bg-gray-50 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 whitespace-nowrap">
@@ -4020,21 +4019,15 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </div>
                       )}
                     </div>
-                </div>
-              </div>
+                  </SectionCard>
 
               {/* Section 2 - Canales de notificación */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Bell className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Canales de notificación</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Selecciona por qué medios quieres enviar el mensaje cuando ocurra este evento
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="space-y-4">
+              <SectionCard
+                icon={<Bell className="h-4 w-4 text-gray-600" />}
+                title="Canales de notificación"
+                description="Selecciona por qué medios quieres enviar el mensaje cuando ocurra este evento"
+                contentClassName="space-y-4"
+              >
                     {/* Notificación Web (siempre activada) */}
                     <div className="border border-gray-200 rounded-lg">
                       <div className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors">
@@ -4242,35 +4235,28 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </div>
                       )}
                     </div>
+              </SectionCard>
 
-                  </div>
-                </div>
+              {/* Section 3 - Webhook */}
+              <SectionCard
+                icon={<Link className="h-4 w-4 text-gray-600" />}
+                title="Webhook"
+                description="Configura un webhook para enviar datos del evento a sistemas externos"
+                contentClassName={webhookEnabled ? 'space-y-4' : 'hidden'}
+                headerExtra={
+                  <Switch
+                    checked={webhookEnabled}
+                    onCheckedChange={setWebhookEnabled}
+                    className="switch-blue"
+                    disabled
+                  />
+                }
+              >
+                {webhookEnabled && <div className="-mx-4 border-b border-gray-200 mb-4"></div>}
 
-                    {/* Section 3 - Webhook */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Link className="h-4 w-4 text-gray-600" />
-                          <h3 className="text-[14px] font-medium text-gray-700">Webhook</h3>
-                        </div>
-                        <Switch
-                          checked={webhookEnabled}
-                          onCheckedChange={setWebhookEnabled}
-                          className="switch-blue"
-                        />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Configura un webhook para enviar datos del evento a sistemas externos
-                  </p>
-                  {webhookEnabled && <div className="-mx-4 border-b border-gray-200 mb-4"></div>}
-
+                {/* Webhook Configuration */}
+                {webhookEnabled && (
                   <div className="space-y-4">
-                    {/* Webhook Enable Switch */}
-
-
-                    {/* Webhook Configuration */}
-                    {webhookEnabled && (
-                      <div className="space-y-4">
                         {/* URL Field */}
                         <div>
                           <label className="block text-[12px] font-medium text-gray-700 mb-1">
@@ -4371,8 +4357,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
+                </SectionCard>
               </TabsContent>
             </Tabs>
           </div>
