@@ -2967,22 +2967,28 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   )
 
   const renderAdvancedCard = () => (
-    <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+    <Collapsible
+      open={advancedOpen}
+      onOpenChange={setAdvancedOpen}
+      collapseProps={{ className: "advanced-collapse", collapsible: "header" }}
+    >
       <div className="bg-white border border-gray-200 rounded-lg">
-        <CollapsibleTrigger className="w-full">
-          <div className="px-4 py-4 bg-gray-100 border-b border-gray-200 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
-                  <Settings className="h-4 w-4" />
-                </div>
-                <h3 className="text-[14px] font-semibold text-gray-900 leading-5">Configuración avanzada</h3>
-              </div>
-              <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
+        <CollapsibleTrigger className="w-full bg-gray-100 border-b border-gray-200 rounded-t-[8px] px-4 py-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
+              <Settings className="h-4 w-4" />
             </div>
-            <p className="text-[14px] text-gray-600 text-left mt-2 leading-5">
-              Define las condiciones adicionales de tu regla, cuándo debe activarse y otras configuraciones avanzadas
-            </p>
+            <div className="flex-1 min-w-0 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-[14px] font-semibold text-gray-900 leading-5">Configuración avanzada</h3>
+                <p className="text-[14px] text-gray-600 leading-5 mt-2">
+                  Define las condiciones adicionales de tu regla, cuándo debe activarse y otras configuraciones avanzadas
+                </p>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 text-gray-600 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}
+              />
+            </div>
           </div>
         </CollapsibleTrigger>
         <CollapsibleContent className="px-4 pb-4 pt-6">
