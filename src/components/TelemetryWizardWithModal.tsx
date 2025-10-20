@@ -2683,7 +2683,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             isZone && !validateZoneEntry ? 'bg-gray-50' : 'bg-gray-100'
           }`}
         >
-          <div className={`w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center ${isZone && !validateZoneEntry ? 'bg-white' : 'bg-white'} text-gray-600`}>
+          <div className="flex items-center justify-center w-8 h-8 text-gray-600">
             <Gauge className="h-4 w-4" />
           </div>
           <div className="flex-1">
@@ -2871,7 +2871,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const renderApplyCard = () => (
     <div className="bg-white border border-gray-200 rounded-lg">
       <div className="flex items-start gap-3 px-4 py-4 bg-gray-100 rounded-t-lg border-b border-gray-200">
-        <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
+        <div className="flex items-center justify-center w-8 h-8 text-gray-600">
           <Truck className="h-4 w-4" />
         </div>
         <div>
@@ -2975,7 +2975,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       <div className="bg-white border border-gray-200 rounded-lg">
         <CollapsibleTrigger className="w-full bg-gray-100 border-b border-gray-200 rounded-t-[8px] px-4 py-4">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600">
+            <div className="flex items-center justify-center w-8 h-8 text-gray-600">
               <Settings className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0 flex items-start justify-between gap-3">
