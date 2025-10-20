@@ -355,7 +355,7 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
                       </div>
                     </td>
                     <td className="px-6 py-4 text-[14px]">
-                      <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full ${severityInfo.bgColor}`}>
+                      <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-[8px] ${severityInfo.bgColor}`}>
                         <SeverityIcon className={`w-4 h-4 ${severityInfo.iconColor}`} />
                         <span className={`text-[12px] font-medium ${severityInfo.textColor}`}>{severityInfo.label}</span>
                       </div>

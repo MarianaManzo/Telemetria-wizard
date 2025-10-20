@@ -418,8 +418,8 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
                         {showColorPills && item.color ? (
                           <div className="flex items-center">
                             <span 
-                              className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-medium text-white"
-                              style={{ backgroundColor: item.color }}
+                              className="inline-flex items-center px-3 py-1.5 text-[12px] font-medium text-white"
+                              style={{ backgroundColor: item.color, borderRadius: '8px' }}
                             >
                               {item.name}
                             </span>

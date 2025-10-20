@@ -3461,11 +3461,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             <PreviewIconComponent color={previewSeverityStyles.previewBg} stroke={previewSeverityStyles.previewBg} className="h-4 w-4" />
                           </div>
                           <span
-                            className="inline-flex items-center gap-1 text-[11px] font-medium rounded-full"
+                            className="inline-flex items-center gap-1 text-[11px] font-medium"
                             style={{
                               backgroundColor: previewSeverityStyles.previewText,
                               color: previewSeverityStyles.previewBg,
                               padding: '4px 8px',
+                              borderRadius: '8px',
                             }}
                           >
                             {eventShortName || 'Evento'}
@@ -4084,7 +4085,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                         selectedEmailTemplateData.sender.map((sender: string) => (
                                           <span
                                             key={sender}
-                                            className="inline-flex items-center rounded-full border border-[#D5DCFF] bg-white px-3 py-1 text-[12px] font-medium text-[#394074]"
+                                            className="inline-flex items-center rounded-[8px] border border-[#D5DCFF] bg-white px-3 py-1 text-[12px] font-medium text-[#394074]"
                                           >
                                             {sender}
                                           </span>
@@ -4105,7 +4106,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                         emailRecipients.map((recipient) => (
                                           <span
                                             key={recipient}
-                                            className="inline-flex items-center rounded-full border border-[#D5DCFF] bg-white px-3 py-1 text-[12px] font-medium text-[#394074]"
+                                            className="inline-flex items-center rounded-[8px] border border-[#D5DCFF] bg-white px-3 py-1 text-[12px] font-medium text-[#394074]"
                                           >
                                             {recipient}
                                           </span>

@@ -290,7 +290,7 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
                         </div>
                       </td>
                       <td className="px-6 py-4 text-[14px] text-gray-500">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${severityVisual.badgeClass}`}>
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] border ${severityVisual.badgeClass}`}>
                           <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${severityVisual.dotBorderClass}`}>
                             <span className={`text-[10px] font-bold ${severityVisual.dotTextClass}`}>!</span>
                           </div>

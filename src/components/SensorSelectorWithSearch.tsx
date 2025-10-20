@@ -169,7 +169,7 @@ export function SensorSelectorWithSearch({
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="text-[14px] text-gray-900">{sensor.label}</span>
-                          <span className="text-[10px] text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-[8px]">
                             Custom
                           </span>
                         </div>

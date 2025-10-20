@@ -582,7 +582,7 @@ export function ReportsList({
                                 {(report as any).format?.toUpperCase() || 'PDF'}
                               </TableCell>
                               <TableCell className="text-sm py-4">
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                <span className={`inline-flex items-center px-2 py-1 rounded-[8px] text-xs font-medium ${
                                   (report as any).isActive 
                                     ? 'bg-green-100 text-green-800' 
                                     : 'bg-gray-100 text-gray-800'

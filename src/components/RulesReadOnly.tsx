@@ -987,7 +987,7 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
                           </div>
 
                           {emailSettings && (
-                            <div className="rounded-lg border border-[#E5E9FF] bg-white shadow-sm">
+                            <div className="rounded-lg border border-[#E5E9FF] bg-white">
                               <div className="flex items-center justify-between gap-3 border-b border-[#E5E9FF] bg-[#F8F9FF] px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <Mail className="w-4 h-4 text-muted-foreground" />

@@ -25,6 +25,10 @@ import {
   RefreshCw,
   CheckCircle,
   ExternalLink,
+  AlertOctagon,
+  AlertTriangle,
+  Clock,
+  Info,
 } from "lucide-react"
 import { Event, Rule } from "../types"
 
@@ -39,23 +43,31 @@ interface EventsDetailProps {
 const severityConfig = {
   high: {
     label: 'Alta',
-    tagClass: 'bg-red-100 text-red-700 border-red-200',
-    dotClass: 'bg-red-500',
+    bgColor: '#FEE4E2',
+    textColor: '#B42318',
+    borderColor: '#FDD6D1',
+    icon: AlertOctagon,
   },
   medium: {
     label: 'Media',
-    tagClass: 'bg-orange-100 text-orange-700 border-orange-200',
-    dotClass: 'bg-orange-500',
+    bgColor: '#FFEED7',
+    textColor: '#B54708',
+    borderColor: '#FFD9A0',
+    icon: AlertTriangle,
   },
   low: {
     label: 'Baja',
-    tagClass: 'bg-blue-100 text-blue-700 border-blue-200',
-    dotClass: 'bg-blue-500',
+    bgColor: '#E3F0FF',
+    textColor: '#1D4ED8',
+    borderColor: '#C5E0FF',
+    icon: Clock,
   },
   informative: {
     label: 'Informativo',
-    tagClass: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-    dotClass: 'bg-cyan-500',
+    bgColor: '#DCF5FF',
+    textColor: '#0E7490',
+    borderColor: '#BAE9FF',
+    icon: Info,
   },
 }
 
@@ -113,7 +125,8 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
     handleStatusChange(newStatus, note)
   }
 
-  const severityInfo = severityConfig[event.severity]
+  const severityInfo = severityConfig[event.severity] ?? severityConfig.informative
+  const SeverityIcon = severityInfo.icon
   const statusInfo = statusConfig[status]
 
   const relatedRule = rules.find(r => r.id === event.ruleId)
@@ -353,9 +366,18 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
 
                     <div>
                       <p className="text-[13px] font-medium text-gray-700 mb-1">Severidad</p>
-                      <div className={`mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full border ${severityInfo.tagClass}`}>
-                        <span className={`w-2 h-2 rounded-full ${severityInfo.dotClass}`} />
-                        <span className="text-[12px] font-medium">{severityInfo.label}</span>
+                      <div
+                        className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-[8px] border"
+                        style={{
+                          backgroundColor: severityInfo.bgColor,
+                          color: severityInfo.textColor,
+                          borderColor: severityInfo.borderColor,
+                        }}
+                      >
+                        <SeverityIcon className="h-4 w-4" strokeWidth={2} style={{ color: severityInfo.textColor }} />
+                        <span className="text-[12px] font-medium leading-none" style={{ color: severityInfo.textColor }}>
+                          {severityInfo.label}
+                        </span>
                       </div>
                     </div>
 
