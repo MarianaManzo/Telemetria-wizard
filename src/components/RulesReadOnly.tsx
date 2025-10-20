@@ -505,6 +505,17 @@ const MapPreviewIcon = ({ severity }: { severity: 'high' | 'medium' | 'low' | 'i
   )
 }
 
+const randomTagStyles = [
+  { bg: '#FFEAD5', text: '#B54708' },
+  { bg: '#E0F2FE', text: '#1D4ED8' },
+  { bg: '#DCFCE7', text: '#166534' },
+  { bg: '#EDE9FE', text: '#5B21B6' },
+  { bg: '#FDECF4', text: '#9D174D' },
+  { bg: '#E0F7FA', text: '#0D9488' },
+]
+
+const getTagStyle = (index: number) => randomTagStyles[index % randomTagStyles.length]
+
 const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor = "text-purple-700", hoverColor = "hover:bg-purple-200") => {
     if (tagIds.length === 0) return (
       <span className="text-[12px] text-muted-foreground">Sin etiquetas específicas</span>
@@ -516,20 +527,32 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
     return (
       <div className="flex flex-wrap gap-2">
         {visibleTags.map((tagId, index) => {
+          const style = getTagStyle(index)
           const tagName = tagId.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
           return (
-            <Badge key={index} variant="secondary" className={`text-[12px] ${bgColor} ${textColor} ${hoverColor}`}>
+            <span
+              key={index}
+              className="inline-flex items-center px-3 py-1 text-[12px] font-medium leading-none"
+              style={{ backgroundColor: style.bg, color: style.text, borderRadius: '4px' }}
+            >
               {tagName}
-            </Badge>
+            </span>
           )
         })}
         {remainingCount > 0 && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="secondary" className={`text-[12px] ${bgColor} ${textColor} ${hoverColor} cursor-help`}>
+                <span
+                  className="inline-flex items-center px-3 py-1 text-[12px] font-medium leading-none cursor-help"
+                  style={{
+                    backgroundColor: getTagStyle(visibleTags.length).bg,
+                    color: getTagStyle(visibleTags.length).text,
+                    borderRadius: '4px',
+                  }}
+                >
                   +{remainingCount}
-                </Badge>
+                </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="bg-slate-800 text-white border-slate-700 p-3 max-w-xs">
                 <div className="space-y-1">
