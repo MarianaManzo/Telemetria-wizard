@@ -43,7 +43,7 @@ const getButtonStyles = (active: boolean): CSSProperties => ({
   backgroundColor: active ? "#e8e8e8" : "transparent",
   color: active ? "#1f1f1f" : "#4a4a4a",
   fontSize: "14px",
-  fontWeight: active ? 600 : 400,
+  fontWeight: 400,
   cursor: "pointer",
   transition: "background-color 0.2s ease, color 0.2s ease",
 });
