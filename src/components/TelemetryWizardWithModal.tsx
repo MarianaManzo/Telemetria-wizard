@@ -1683,6 +1683,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [requireNoteOnClose, setRequireNoteOnClose] = useState(true)
   const [closureTimeValue, setClosureTimeValue] = useState('120')
   const [closureTimeUnit, setClosureTimeUnit] = useState('minutos')
+  const [reopenPolicy, setReopenPolicy] = useState('manualmente')
+  const [requireNoteOnReopen, setRequireNoteOnReopen] = useState(true)
+  const [reopenTimeValue, setReopenTimeValue] = useState('120')
+  const [reopenTimeUnit, setReopenTimeUnit] = useState('minutos')
   const [webhookEnabled, setWebhookEnabled] = useState(false)
   const [sendDeviceCommand, setSendDeviceCommand] = useState(false)
   const [unitTagsEnabled, setUnitTagsEnabled] = useState(false)
@@ -3630,6 +3634,123 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </Select>
                       </div>
                     </div>
+                  )}
+                </SectionCard>
+
+                {/* Section 3.1 - Reapertura del evento */}
+                <SectionCard
+                  icon={
+                    <span className="inline-flex items-center justify-center w-4 h-4 bg-black rounded-full">
+                      <span className="w-1.5 h-1.5 bg-white rounded-full" />
+                    </span>
+                  }
+                  title="Reapertura del evento"
+                  description="Configura cómo se reanuda un evento previamente cerrado"
+                  contentClassName="space-y-6"
+                >
+                  {/* Row 1: Reopen policy selection */}
+                  <div className="grid grid-cols-2 gap-8 items-center">
+                    <div>
+                      <label className="text-[14px] font-medium text-gray-700">
+                        <span className="text-red-500">*</span> ¿Cómo debe reabrirse el evento?
+                      </label>
+                    </div>
+                    <div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="w-full">
+                            <Select value={reopenPolicy} onValueChange={setReopenPolicy}>
+                              <SelectTrigger className="w-full">
+                                <div className="truncate">
+                                  <SelectValue placeholder="Selecciona cómo se podrá reabrir" />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="manualmente">Manualmente</SelectItem>
+                                <SelectItem value="tiempo-limitado">
+                                  Dentro de un tiempo determinado
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-[12px]">
+                            {reopenPolicy === 'manualmente' 
+                              ? 'Manualmente'
+                              : reopenPolicy === 'tiempo-limitado'
+                              ? 'Dentro de un tiempo determinado'
+                              : 'Manualmente'
+                            }
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Require note toggle - manual reopening */}
+                  {reopenPolicy === 'manualmente' && (
+                    <div className="grid grid-cols-2 gap-8 items-center">
+                      <div>
+                        <label className="text-[14px] font-medium text-gray-700">
+                          Requerir nota al reabrir el evento
+                        </label>
+                      </div>
+                      <div className="flex justify-end">
+                        <Switch
+                          checked={requireNoteOnReopen}
+                          onCheckedChange={setRequireNoteOnReopen}
+                          className="switch-blue"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Row 3: Time configuration - only show when "tiempo-limitado" is selected */}
+                  {reopenPolicy === 'tiempo-limitado' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-8 items-start">
+                        <div>
+                          <label className="text-[14px] font-medium text-gray-700">
+                            <span className="text-red-500">*</span> Plazo máximo para permitir la reapertura
+                          </label>
+                        </div>
+                        <div className="flex gap-4">
+                          <Input
+                            type="number"
+                            value={reopenTimeValue}
+                            onChange={(e) => setReopenTimeValue(e.target.value)}
+                            className="w-20"
+                            min="1"
+                          />
+                          <Select value={reopenTimeUnit} onValueChange={setReopenTimeUnit}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="minutos">Minutos</SelectItem>
+                              <SelectItem value="horas">Horas</SelectItem>
+                              <SelectItem value="dias">Días</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-[14px] font-medium text-gray-700">
+                            Requerir nota después del plazo máximo
+                          </label>
+                        </div>
+                        <div className="flex justify-end">
+                          <Switch
+                            checked={requireNoteOnReopen}
+                            onCheckedChange={setRequireNoteOnReopen}
+                            className="switch-blue"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-[12px] text-gray-500">
+                        Nota: Una vez superado el plazo indicado, el evento permanecerá cerrado y ya no podrá reabrirse.
+                      </p>
+                    </>
                   )}
                 </SectionCard>
 
