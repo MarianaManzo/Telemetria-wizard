@@ -3,7 +3,6 @@ import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Badge } from "./ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
-import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
 import { 
   Select,
   SelectContent,
@@ -88,49 +87,6 @@ const statusConfig = {
   active: { label: 'Activado', color: 'text-blue-600' },
   inactive: { label: 'Desactivado', color: 'text-gray-500' },
   draft: { label: 'Borrador', color: 'text-orange-600' }
-}
-
-const responsibleProfiles: Record<string, { name: string; email: string; avatar: string }> = {
-  'mariana.manzo@numaris.com': {
-    name: 'Mariana Manzo',
-    email: 'mariana.manzo@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHdvbWFuJTIwcHJvZmVzc2lvbmFsJTIwaGVhZHNob3R8ZW58MXx8fHwxNzU4NjIzODAyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'juan.perez@numaris.com': {
-    name: 'Juan Pérez',
-    email: 'juan.perez@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1652471943570-f3590a4e52ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1hbiUyMHByb2Zlc3Npb25hbCUyMGhlYWRzaG90fGVufDF8fHx8MTc1ODYwNDk4M3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'ana.garcia@numaris.com': {
-    name: 'Ana García',
-    email: 'ana.garcia@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGJ1c2luZXNzJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzU4NjE2NTgwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'carlos.rodriguez@numaris.com': {
-    name: 'Carlos Rodríguez',
-    email: 'carlos.rodriguez@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1752778935828-bf6fdd5a834a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBleGVjdXRpdmUlMjBoZWFkc2hvdCUyMGxhdGlub3xlbnwxfHx8fDE3NTg2NTExNzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'supervisor-flota': {
-    name: 'Supervisor de Flota',
-    email: 'supervisor@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1524538198441-241ff79d153b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMGV4ZWN1dGl2ZSUyMHByb2Zlc3Npb25hbCUyMG1hbnxlbnwxfHx8fDE3NTg2NTExODF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'jefe-seguridad': {
-    name: 'Jefe de Seguridad',
-    email: 'seguridad@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1755033016-0ed3cef4ad61?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1hbiUyMHByb2Zlc3Npb25hbCUyMGV4ZWN1dGl2ZXxlbnwxfHx8fDE3NTg2NDIwNjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'supervisor-logistica': {
-    name: 'Supervisor de Logística',
-    email: 'logistica@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1745053227142-bbabcf52b92c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHdvbWFuJTIwcHJvZmVzc2lvbmFsfGVufDF8fHx8MTc1ODY0NzI1NHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  },
-  'coordinador-operaciones': {
-    name: 'Coordinador de Operaciones',
-    email: 'operaciones@numaris.com',
-    avatar: 'https://images.unsplash.com/photo-1524538198441-241ff79d153b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1hbiUyMHByb2Zlc3Npb25hbCUyMGV4ZWN1dGl2ZXxlbnwxfHx8fDE3NTg2NDIwNjJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral'
-  }
 }
 
 export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavorite, onEventClick, onStatusChange, onRename, onDelete, onDuplicate }: RulesListProps) {
@@ -313,7 +269,6 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
                 <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-24">Estado</th>
                 <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28">Severidad</th>
                 <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28">Último evento</th>
-                <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-48">Responsable</th>
                 <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-24 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">Acciones</th>
               </tr>
             </thead>
@@ -372,28 +327,6 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
                           className="pr-2"
                         />
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-[14px] text-gray-500">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage 
-                            src={responsibleProfiles[rule.eventSettings?.responsible]?.avatar} 
-                            alt={`Avatar de ${responsibleProfiles[rule.eventSettings?.responsible]?.name || rule.eventSettings?.responsible}`}
-                          />
-                          <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">
-                            {responsibleProfiles[rule.eventSettings?.responsible]?.name ? 
-                              responsibleProfiles[rule.eventSettings.responsible].name.split(' ').map(name => name.charAt(0)).join('').toUpperCase().slice(0, 2) :
-                              (rule.eventSettings?.responsible || rule.owner).split('@')[0].slice(0, 2).toUpperCase()
-                            }
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <TruncatedText 
-                            text={responsibleProfiles[rule.eventSettings?.responsible]?.email || rule.eventSettings?.responsible || rule.owner}
-                            className="text-[14px] text-foreground"
-                          />
-                        </div>
-                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
                       <div className="flex justify-center items-center">
