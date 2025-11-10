@@ -32,6 +32,7 @@ import {
   AlertOctagon
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { Row, Col } from "antd"
 import type { LucideIcon } from "lucide-react"
 import { Rule, Event, RuleConditionGroup } from "../types"
 import { userEmailTemplates } from "../constants/emailTemplates"
@@ -869,23 +870,22 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
                         contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
                       >
                         {configAvanzadaOpen && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
-                            <div>
-                              <span className="text-[14px] font-semibold text-foreground block mb-2">Zona geográfica</span>
-                              <p className="text-[14px] text-muted-foreground">En cualquier lugar</p>
-                            </div>
-                            <div>
-                              <span className="text-[14px] font-semibold text-foreground block mb-2">Activación de la regla</span>
-                              <p className="text-[14px] text-muted-foreground">En todo momento</p>
-                            </div>
-                            <div>
-                              <span className="text-[14px] font-semibold text-foreground block mb-2">Generación de evento</span>
-                              <p className="text-[14px] text-muted-foreground">Cuando se cumplan las condiciones</p>
-                            </div>
-                            <div>
-                              <span className="text-[14px] font-semibold text-foreground block mb-2">Cierre del evento</span>
-                              <p className="text-[14px] text-muted-foreground">Cuando deje de cumplirse la condición</p>
-                            </div>
+                          <div className="pb-4">
+                            <Row gutter={[24, 24]}>
+                              {[
+                                { title: "Zona geográfica", value: "En cualquier lugar" },
+                                { title: "Activación de la regla", value: "En todo momento" },
+                                { title: "Generación de evento", value: "Cuando se cumplan las condiciones" },
+                                { title: "Cierre del evento", value: "Cuando deje de cumplirse la condición" },
+                              ].map((item) => (
+                                <Col key={item.title} xs={24} md={12}>
+                                  <div className="flex flex-col gap-1">
+                                    <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
+                                    <p className="text-[14px] text-muted-foreground">{item.value}</p>
+                                  </div>
+                                </Col>
+                              ))}
+                            </Row>
                           </div>
                         )}
                       </SectionCard>
