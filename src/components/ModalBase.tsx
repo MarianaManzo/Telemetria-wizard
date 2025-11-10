@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { Children, useEffect, useRef } from 'react'
 import { Modal, Typography, Button } from 'antd'
 import { CloseOutlined } from '@ant-design/icons'
 
@@ -43,6 +43,7 @@ export default function ModalBase({
   rootClassName,
 }: ModalBaseProps) {
   const triggerRef = useRef<HTMLElement | null>(document.activeElement as HTMLElement)
+  const hasBodyChildren = Children.count(children) > 0
 
   useEffect(() => {
     if (!open && triggerRef.current) {
@@ -89,7 +90,15 @@ export default function ModalBase({
 
         <div className="ModalBase_standardContent" style={{ padding: 24, fontFamily: 'Source Sans 3, sans-serif', fontSize: 14 }}>
           {subtitle && (
-            <Text style={{ display: 'block', fontSize: 14, lineHeight: '20px', color: '#6B7280', marginBottom: 24 }}>
+            <Text
+              style={{
+                display: 'block',
+                fontSize: 14,
+                lineHeight: '20px',
+                color: '#6B7280',
+                marginBottom: hasBodyChildren ? 24 : 0,
+              }}
+            >
               {subtitle}
             </Text>
           )}

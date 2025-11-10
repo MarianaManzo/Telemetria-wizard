@@ -655,10 +655,20 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
     }
   }
 
+  const appHeaderVar = 'var(--app-header-height, 64px)'
+  const ruleHeaderHeight = 72
+  const mainTabsHeight = 48
+  const headerStickyTop = appHeaderVar
+  const mainTabsStickyTop = `calc(${appHeaderVar} + ${ruleHeaderHeight}px)`
+  const subTabsStickyTop = `calc(${appHeaderVar} + ${ruleHeaderHeight + mainTabsHeight}px)`
+
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-white">
+    <div className="flex-1 flex flex-col bg-white min-h-0">
       {/* Header */}
-      <div className="border-b border-border bg-white px-6 py-4">
+      <div
+        className="border-b border-border bg-white px-6 py-4"
+        style={{ position: 'sticky', top: appHeaderVar, zIndex: 50, boxShadow: '0 1px 2px rgba(15,23,42,0.08)' }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -733,12 +743,15 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0">
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
           <div className="p-6">
             {/* Main Tabs */}
-            <div className="border-b border-border mb-6">
+            <div
+              className="border-b border-border mb-6 bg-white px-6 -mx-6"
+              style={{ position: 'sticky', top: mainTabsStickyTop, zIndex: 45 }}
+            >
               <nav className="-mb-px flex space-x-8">
                 <button
                   onClick={() => setActiveMainTab('informacion-general')}
@@ -768,7 +781,10 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
                 <h2 className="text-[18px] text-foreground mb-6">Información general</h2>
 
                 {/* Sub Tabs */}
-                <div className="border-b border-border mb-6">
+                <div
+                  className="border-b border-border mb-6 bg-white px-6 -mx-6"
+                  style={{ position: 'sticky', top: subTabsStickyTop, zIndex: 35, paddingTop: '0.5rem' }}
+                >
                   <nav className="-mb-px flex space-x-8">
                       <button
                         onClick={() => setActiveSubTab('parametros')}

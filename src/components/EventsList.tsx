@@ -103,6 +103,9 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
   const [severityFilter, setSeverityFilter] = useState<string>("all")
   const [selectedEventForModal, setSelectedEventForModal] = useState<Event | null>(null)
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
+  const [tagFilter, setTagFilter] = useState<string>("all")
+  const availableTags = Array.from(new Set(events.flatMap(event => event.tags ?? [])))
+  const hasActiveFilters = statusFilter !== "all" || severityFilter !== "all" || tagFilter !== "all"
 
   const filteredEvents = events.filter(event => {
     const matchesSearch =
@@ -111,8 +114,9 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
       event.id.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === "all" || event.status === statusFilter
     const matchesSeverity = severityFilter === "all" || event.severity === severityFilter
+    const matchesTag = tagFilter === "all" || event.tags?.includes(tagFilter)
 
-    return matchesSearch && matchesStatus && matchesSeverity
+    return matchesSearch && matchesStatus && matchesSeverity && matchesTag
   })
 
   const formatDate = (date: Date) => {
@@ -152,39 +156,58 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 mb-6 px-6 pt-6">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="flex-1">
-            <SelectValue placeholder="Estatus" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="open">Abierto</SelectItem>
-            <SelectItem value="closed">Cerrado</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap items-center gap-4 mb-6 px-6 pt-6">
+        <div className="flex flex-1 flex-wrap gap-4 min-w-[200px]">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="min-w-[180px] flex-1">
+              <SelectValue placeholder="Estatus" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="open">Abierto</SelectItem>
+              <SelectItem value="closed">Cerrado</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="flex-1">
-            <SelectValue placeholder="Severidad" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las severidades</SelectItem>
-            <SelectItem value="informative">Informativo</SelectItem>
-            <SelectItem value="low">Baja</SelectItem>
-            <SelectItem value="medium">Media</SelectItem>
-            <SelectItem value="high">Alta</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={severityFilter} onValueChange={setSeverityFilter}>
+            <SelectTrigger className="min-w-[180px] flex-1">
+              <SelectValue placeholder="Severidad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las severidades</SelectItem>
+              <SelectItem value="informative">Informativo</SelectItem>
+              <SelectItem value="low">Baja</SelectItem>
+              <SelectItem value="medium">Media</SelectItem>
+              <SelectItem value="high">Alta</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select>
-          <SelectTrigger className="flex-1">
-            <SelectValue placeholder="Etiquetas" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las etiquetas</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={tagFilter} onValueChange={setTagFilter}>
+            <SelectTrigger className="min-w-[180px] flex-1">
+              <SelectValue placeholder="Etiquetas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las etiquetas</SelectItem>
+              {availableTags.map(tag => (
+                <SelectItem key={tag} value={tag}>
+                  {tag}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          variant="link"
+          className="ml-auto h-auto px-0"
+          onClick={() => {
+            setStatusFilter("all")
+            setSeverityFilter("all")
+            setTagFilter("all")
+          }}
+          disabled={!hasActiveFilters}
+        >
+          Limpiar todo
+        </Button>
       </div>
 
       {/* Events Table */}
@@ -319,7 +342,7 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
                                 className="flex items-center gap-2"
                               >
                                 <CheckCircle className="w-4 h-4" />
-                                <span>Cambiar estado</span>
+                                <span>{event.status === 'open' ? 'Cerrar evento' : 'Reabrir evento'}</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

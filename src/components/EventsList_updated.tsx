@@ -19,7 +19,6 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-  Users,
   CheckCircle
 } from "lucide-react"
 import { Event, AppView } from "../types"
@@ -270,13 +269,6 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType }: E
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex items-center gap-2"
-                              >
-                                <Users className="w-4 h-4" />
-                                <span>Cambiar responsable</span>
-                              </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={(e) => e.stopPropagation()}
                                 className="flex items-center gap-2"

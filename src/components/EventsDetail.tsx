@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
-import { ChangeResponsibleModal } from "./ChangeResponsibleModal"
 import { ChangeStatusModal } from "./ChangeStatusModal"
 import {
   X,
@@ -21,7 +20,6 @@ import {
   Tag as TagIcon,
   MoreHorizontal,
   MoreVertical,
-  UserCheck,
   RefreshCw,
   CheckCircle,
   ExternalLink,
@@ -37,7 +35,6 @@ interface EventsDetailProps {
   onClose: () => void
   rules: Rule[]
   onStatusChange?: (eventId: string, newStatus: 'open' | 'closed', note?: string) => void
-  onResponsibleChange?: (eventId: string, newResponsible: string) => void
 }
 
 const severityConfig = {
@@ -76,20 +73,18 @@ const statusConfig: Record<'open' | 'closed', { label: string }> = {
   closed: { label: 'Cerrado' },
 }
 
-export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsibleChange }: EventsDetailProps) {
+export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDetailProps) {
   const [activeTab, setActiveTab] = useState<'evento' | 'historial'>('evento')
   const [sidebarActiveItem, setSidebarActiveItem] = useState('evento')
   const [newNote, setNewNote] = useState("")
   const [status, setStatus] = useState<'open' | 'closed'>(event.status === 'closed' ? 'closed' : 'open')
-  const [assignedTo, setAssignedTo] = useState(event.responsible)
-  const [showChangeResponsibleModal, setShowChangeResponsibleModal] = useState(false)
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
+  const [statusModalMode, setStatusModalMode] = useState<'close' | 'reopen'>('close')
   const [messageExpanded, setMessageExpanded] = useState(false)
 
   useEffect(() => {
     setStatus(event.status)
-    setAssignedTo(event.responsible)
-  }, [event.status, event.responsible])
+  }, [event.status])
 
   useEffect(() => {
     setMessageExpanded(false)
@@ -102,22 +97,8 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
     }
   }
 
-  const handleResponsibleChange = (newResponsible: string) => {
-    setAssignedTo(newResponsible)
-    if (onResponsibleChange) {
-      onResponsibleChange(event.id, newResponsible)
-    }
-  }
-
-  const handleOpenChangeResponsibleModal = () => {
-    setShowChangeResponsibleModal(true)
-  }
-
-  const handleChangeResponsibleFromModal = (newResponsible: string) => {
-    handleResponsibleChange(newResponsible)
-  }
-
-  const handleOpenChangeStatusModal = () => {
+  const handleOpenChangeStatusModal = (mode: 'close' | 'reopen') => {
+    setStatusModalMode(mode)
     setShowChangeStatusModal(true)
   }
 
@@ -297,17 +278,12 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
               <DropdownMenuContent align="end" className="w-56 bg-white shadow-lg border rounded-lg p-1">
                 <DropdownMenuItem 
                   className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer"
-                  onClick={handleOpenChangeResponsibleModal}
-                >
-                  <UserCheck className="h-4 w-4 text-gray-500" />
-                  <span className="text-[14px] text-gray-900">Cambiar responsable</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer"
-                  onClick={handleOpenChangeStatusModal}
+                  onClick={() => handleOpenChangeStatusModal(status === 'open' ? 'close' : 'reopen')}
                 >
                   <RefreshCw className="h-4 w-4 text-gray-500" />
-                  <span className="text-[14px] text-gray-900">Cambiar estado</span>
+                  <span className="text-[14px] text-gray-900">
+                    {status === 'open' ? 'Cerrar evento' : 'Reabrir evento'}
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -582,21 +558,12 @@ export function EventsDetail({ event, onClose, rules, onStatusChange, onResponsi
         {/* Right Panel */}
 
       </div>
-
-      {/* Change Responsible Modal */}
-      <ChangeResponsibleModal
-        isOpen={showChangeResponsibleModal}
-        onClose={() => setShowChangeResponsibleModal(false)}
-        onSave={handleChangeResponsibleFromModal}
-        currentResponsible={assignedTo}
-      />
-
       {/* Change Status Modal */}
       <ChangeStatusModal
         isOpen={showChangeStatusModal}
         onClose={() => setShowChangeStatusModal(false)}
         onSave={handleChangeStatusFromModal}
-        currentStatus={status}
+        mode={statusModalMode}
       />
     </div>
   )

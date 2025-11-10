@@ -12,13 +12,18 @@ const sidebarItems = [
   { id: "etiquetas", label: "Etiquetas" },
 ];
 
+const headerVar = "var(--app-header-height, 64px)";
+
 const containerStyles: CSSProperties = {
-  height: "100%",
+  height: `calc(100vh - ${headerVar})`,
   background: "#fafafa",
   padding: `${toPx(spacing.md)} ${toPx(spacing.sm)}`,
   display: "flex",
   flexDirection: "column",
   gap: toPx(spacing.lg),
+  position: "sticky",
+  top: headerVar,
+  overflowY: "auto",
 };
 
 const navStyles: CSSProperties = {

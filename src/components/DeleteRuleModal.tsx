@@ -16,11 +16,12 @@ export function DeleteRuleModal({ isOpen, onClose, onConfirmDelete, ruleName }: 
         Cancelar
       </Button>
       <Button
+        variant="destructive"
         onClick={() => {
           onConfirmDelete()
           onClose()
         }}
-        className="bg-red-500 hover:bg-red-600 text-white border-red-500 hover:border-red-600 px-4 py-2 h-auto"
+        className="px-4 py-2 h-auto"
       >
         Sí, eliminar
       </Button>

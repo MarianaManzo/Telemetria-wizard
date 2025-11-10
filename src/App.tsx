@@ -266,39 +266,6 @@ export default function App() {
     })
   }, [])
 
-  const handleEventResponsibleChange = useCallback((eventId: string, newResponsible: string) => {
-    setEvents(prevEvents => {
-      return prevEvents.map(event => {
-        if (event.id === eventId) {
-          return { 
-            ...event, 
-            responsible: newResponsible,
-            updatedAt: new Date()
-          }
-        }
-        return event
-      })
-    })
-
-    // Update selectedEvent if it's the same event
-    setSelectedEvent(prev => {
-      if (prev && prev.id === eventId) {
-        return { 
-          ...prev, 
-          responsible: newResponsible,
-          updatedAt: new Date()
-        }
-      }
-      return prev
-    })
-    
-    // Show toast notification
-    showCustomToast({
-      title: "Responsable del evento actualizado",
-      description: `El evento ha sido asignado a ${newResponsible}`
-    })
-  }, [])
-
   const handleRuleStatusChange = useCallback((ruleId: string, newStatus: 'active' | 'inactive') => {
     console.log('handleRuleStatusChange called with:', ruleId, newStatus)
     setRules(prevRules => {
@@ -452,7 +419,6 @@ export default function App() {
           onClose={handleCloseEventDetail}
           rules={rules}
           onStatusChange={handleEventStatusChange}
-          onResponsibleChange={handleEventResponsibleChange}
         />
       )
     }

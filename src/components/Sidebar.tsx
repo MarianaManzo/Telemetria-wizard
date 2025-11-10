@@ -17,6 +17,8 @@ type SidebarSection = {
   items: SidebarItem[]
 }
 
+const headerVar = "var(--app-header-height, 64px)";
+
 const containerStyles: CSSProperties = {
   flex: 1,
   minHeight: 0,
@@ -25,6 +27,10 @@ const containerStyles: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: "30px",
+  position: "sticky",
+  top: headerVar,
+  height: `calc(100vh - ${headerVar})`,
+  overflowY: "auto",
 }
 
 const sectionStyles: CSSProperties = {
