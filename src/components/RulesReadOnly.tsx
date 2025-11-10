@@ -168,21 +168,29 @@ const highlightEmailTemplateMessage = (text: string) => {
   let tokenIndex = 0
   const nodes: React.ReactNode[] = []
 
-  parts.forEach((part, index) => {
-    if (part) {
-      nodes.push(<React.Fragment key={`text-${index}`}>{part}</React.Fragment>)
+  // Split text into lines to preserve line breaks
+  const lines = parts.flatMap((part) => part.split(/\n/))
+  let lineIndex = 0
+
+  lines.forEach((line, linePos) => {
+    if (line) {
+      nodes.push(<React.Fragment key={`line-${lineIndex++}`}>{line}</React.Fragment>)
     }
 
     if (tokenIndex < tokens.length) {
       const token = tokens[tokenIndex++]
       nodes.push(
         <span
-          key={`token-${index}`}
+          key={`token-${lineIndex}`}
           className="inline-flex items-center rounded-sm bg-purple-100 px-1 py-0.5 text-[12px] font-semibold text-purple-700"
         >
           {token}
         </span>
       )
+    }
+
+    if (linePos < lines.length - 1) {
+      nodes.push(<br key={`br-${lineIndex++}`} />)
     }
   })
 
