@@ -669,8 +669,6 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
 
   const appHeaderVar = 'var(--app-header-height, 64px)'
   const ruleHeaderHeight = 72
-  const mainTabsHeight = 48
-  const subTabsStickyTop = `calc(${appHeaderVar} + ${ruleHeaderHeight + mainTabsHeight}px)`
 
   return (
     <div className="flex-1 flex flex-col bg-white min-h-0">
@@ -785,14 +783,13 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
           <div className="flex-1 overflow-auto">
             <div className="p-6">
               {activeMainTab === 'informacion-general' && (
-                <>
-                  <h2 className="text-[18px] text-foreground mb-6">Información general</h2>
+                <div className="rounded-lg border border-gray-200 bg-white">
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-[18px] text-foreground">Información general</h2>
+                  </div>
 
                   {/* Sub Tabs */}
-                  <div
-                    className="border-b border-border mb-6 bg-white px-6 -mx-6"
-                    style={{ position: 'sticky', top: subTabsStickyTop, zIndex: 35, paddingTop: '0.5rem' }}
-                  >
+                  <div className="border-b border-gray-200 bg-white px-6">
                     <nav className="-mb-px flex space-x-8">
                         <button
                           onClick={() => setActiveSubTab('parametros')}
@@ -827,11 +824,12 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
                     </nav>
                   </div>
 
-                  {activeSubTab === 'parametros' && (
-                    <div className="space-y-4">
-                      <SectionCard
-                        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
-                        title="Parámetros a evaluar"
+                  <div className="p-6">
+                    {activeSubTab === 'parametros' && (
+                      <div className="space-y-4">
+                        <SectionCard
+                          icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                          title="Parámetros a evaluar"
                         description={<span className="text-[14px] font-medium text-foreground">Condiciones de activación</span>}
                       >
                         {renderConditionGroups(rule)}
@@ -1105,8 +1103,9 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
 
                     </div>
                   )}
-              </>
-            )}
+                  </div>
+              </div>
+              )}
 
             {activeMainTab === 'historial-registro' && (
               <div className="bg-white rounded-lg border p-6">
