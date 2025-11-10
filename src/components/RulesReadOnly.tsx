@@ -670,168 +670,164 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
   const appHeaderVar = 'var(--app-header-height, 64px)'
   const ruleHeaderHeight = 72
   const mainTabsHeight = 48
-  const headerStickyTop = appHeaderVar
-  const mainTabsStickyTop = `calc(${appHeaderVar} + ${ruleHeaderHeight}px)`
   const subTabsStickyTop = `calc(${appHeaderVar} + ${ruleHeaderHeight + mainTabsHeight}px)`
 
   return (
     <div className="flex-1 flex flex-col bg-white min-h-0">
-      {/* Header */}
+      {/* Header + Main Tabs */}
       <div
-        className="border-b border-border bg-white px-6 py-4"
+        className="bg-white"
         style={{ position: 'sticky', top: appHeaderVar, zIndex: 50, boxShadow: '0 1px 2px rgba(15,23,42,0.08)' }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="p-1"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <h1 className="text-[16px] text-foreground">{rule.name}</h1>
+        <div className="border-b border-border px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="p-1"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <h1 className="text-[16px] text-foreground">{rule.name}</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                className="text-[14px] px-4 py-2 h-9 font-normal"
+                onClick={() => onEdit?.(rule)}
+              >
+                Editar
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2"
+                    onClick={() => setShowRenameModal(true)}
+                  >
+                    <Edit className="w-4 h-4" />
+                    <span className="pt-[0px] pr-[0px] pb-[0px] pl-[20px]">Renombrar</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      if (onStatusChange) {
+                        const newStatus = rule.status === 'active' ? 'inactive' : 'active'
+                        console.log('Changing rule status from', rule.status, 'to', newStatus)
+                        onStatusChange(rule.id, newStatus)
+                      }
+                    }}
+                  >
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      <Switch 
+                        checked={rule.status === 'active'} 
+                        className="switch-blue scale-75 pointer-events-none"
+                      />
+                    </div>
+                    <span className="pt-[0px] pr-[0px] pb-[0px] pl-[20px]">
+                      {rule.status === 'active' ? 'Desactivar regla' : 'Activar regla'}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2 text-destructive"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <span className="pt-[0px] pr-[0px] pb-[0px] pl-[20px]">Eliminar regla</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline"
-              className="text-[14px] px-4 py-2 h-9 font-normal"
-              onClick={() => onEdit?.(rule)}
+        </div>
+        <div className="border-b border-border px-6 bg-white">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveMainTab('informacion-general')}
+              className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                activeMainTab === 'informacion-general'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
             >
-              Editar
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem 
-                  className="flex items-center gap-2"
-                  onClick={() => setShowRenameModal(true)}
-                >
-                  <Edit className="w-4 h-4" />
-                  <span className="pt-[0px] pr-[0px] pb-[0px] pl-[20px]">Renombrar</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="flex items-center gap-2"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    if (onStatusChange) {
-                      const newStatus = rule.status === 'active' ? 'inactive' : 'active'
-                      console.log('Changing rule status from', rule.status, 'to', newStatus)
-                      onStatusChange(rule.id, newStatus)
-                    }
-                  }}
-                >
-                  <div className="w-4 h-4 flex items-center justify-center">
-                    <Switch 
-                      checked={rule.status === 'active'} 
-                      className="switch-blue scale-75 pointer-events-none"
-                    />
-                  </div>
-                  <span className="pt-[0px] pr-[0px] pb-[0px] pl-[20px]">
-                    {rule.status === 'active' ? 'Desactivar regla' : 'Activar regla'}
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="flex items-center gap-2 text-destructive"
-                  onClick={() => setShowDeleteModal(true)}
-                >
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                  <span className="pt-[0px] pr-[0px] pb-[0px] pl-[20px]">Eliminar regla</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              Información general
+            </button>
+            <button
+              onClick={() => setActiveMainTab('historial-registro')}
+              className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                activeMainTab === 'historial-registro'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+            >
+              Historial del registro
+            </button>
+          </nav>
         </div>
       </div>
 
       <div className="flex flex-1 min-h-0">
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
-          <div className="p-6">
-            {/* Main Tabs */}
-            <div
-              className="border-b border-border mb-6 bg-white px-6 -mx-6"
-              style={{ position: 'sticky', top: mainTabsStickyTop, zIndex: 45 }}
-            >
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveMainTab('informacion-general')}
-                  className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                    activeMainTab === 'informacion-general'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                  }`}
-                >
-                  Información general
-                </button>
-                <button
-                  onClick={() => setActiveMainTab('historial-registro')}
-                  className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                    activeMainTab === 'historial-registro'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                  }`}
-                >
-                  Historial del registro
-                </button>
-              </nav>
-            </div>
+        <div className="flex flex-1 min-h-0 flex-col">
+          <div className="flex-1 overflow-auto">
+            <div className="p-6">
+              {activeMainTab === 'informacion-general' && (
+                <>
+                  <h2 className="text-[18px] text-foreground mb-6">Información general</h2>
 
-            {activeMainTab === 'informacion-general' && (
-              <>
-                <h2 className="text-[18px] text-foreground mb-6">Información general</h2>
+                  {/* Sub Tabs */}
+                  <div
+                    className="border-b border-border mb-6 bg-white px-6 -mx-6"
+                    style={{ position: 'sticky', top: subTabsStickyTop, zIndex: 35, paddingTop: '0.5rem' }}
+                  >
+                    <nav className="-mb-px flex space-x-8">
+                        <button
+                          onClick={() => setActiveSubTab('parametros')}
+                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                            activeSubTab === 'parametros'
+                              ? 'border-blue-500 text-blue-600'
+                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                          }`}
+                        >
+                          Parámetros
+                        </button>
+                        <button
+                          onClick={() => setActiveSubTab('configuracion')}
+                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                            activeSubTab === 'configuracion'
+                              ? 'border-blue-500 text-blue-600'
+                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                          }`}
+                        >
+                          Configuración
+                        </button>
+                        <button
+                          onClick={() => setActiveSubTab('acciones')}
+                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
+                            activeSubTab === 'acciones'
+                              ? 'border-blue-500 text-blue-600'
+                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                          }`}
+                        >
+                          Acciones a realizar
+                        </button>
+                    </nav>
+                  </div>
 
-                {/* Sub Tabs */}
-                <div
-                  className="border-b border-border mb-6 bg-white px-6 -mx-6"
-                  style={{ position: 'sticky', top: subTabsStickyTop, zIndex: 35, paddingTop: '0.5rem' }}
-                >
-                  <nav className="-mb-px flex space-x-8">
-                      <button
-                        onClick={() => setActiveSubTab('parametros')}
-                        className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                          activeSubTab === 'parametros'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                      >
-                        Parámetros
-                      </button>
-                      <button
-                        onClick={() => setActiveSubTab('configuracion')}
-                        className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                          activeSubTab === 'configuracion'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                      >
-                        Configuración
-                      </button>
-                      <button
-                        onClick={() => setActiveSubTab('acciones')}
-                        className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                          activeSubTab === 'acciones'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                        }`}
-                      >
-                        Acciones a realizar
-                      </button>
-                  </nav>
-                </div>
-
-                {activeSubTab === 'parametros' && (
+                  {activeSubTab === 'parametros' && (
                     <div className="space-y-4">
                       <SectionCard
                         icon={<Settings className="w-4 h-4 text-muted-foreground" />}
@@ -1161,14 +1157,15 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
           </div>
         </div>
       </div>
+    </div>
 
-      {/* Delete Modal */}
-      {showDeleteModal && (
-        <DeleteRuleModal
-          ruleName={rule.name}
-          onConfirm={() => {
-            onDelete?.(rule.id)
-            setShowDeleteModal(false)
+    {/* Delete Modal */}
+    {showDeleteModal && (
+      <DeleteRuleModal
+        ruleName={rule.name}
+        onConfirm={() => {
+          onDelete?.(rule.id)
+          setShowDeleteModal(false)
             onBack()
           }}
           onCancel={() => setShowDeleteModal(false)}
