@@ -17,11 +17,19 @@ const variantToColor: Record<Variant, TagProps["color"] | undefined> = {
 };
 
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ variant = "default", className, ...props }, ref) => {
-    const color = props.color ?? variantToColor[variant];
+  ({ variant = "default", className, style, color, ...rest }, ref) => {
+    const resolvedColor = color ?? variantToColor[variant];
 
-    return <Tag ref={ref} color={color} className={cn('inline-flex items-center gap-1', className)} {...props} />;
-  },
+    return (
+      <Tag
+        ref={ref}
+        color={resolvedColor}
+        className={cn("inline-flex items-center gap-1 rounded-[4px]", className)}
+        style={{ borderRadius: 4, ...(style || {}) }}
+        {...rest}
+      />
+    );
+  }
 );
 
 Badge.displayName = "Badge";
