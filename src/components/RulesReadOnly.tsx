@@ -363,32 +363,45 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
   
   // Helper function to render email recipients dynamically
   const renderEmailRecipients = (recipients: string[]) => {
-    if (recipients.length === 0) return null
-    
-    const visibleRecipients = recipients.slice(0, 3)
-    const remainingCount = recipients.length - 3
-    
+    if (recipients.length === 0) {
+      return <span className="text-[12px] text-muted-foreground">Sin destinatarios configurados.</span>
+    }
+
+    const visibleRecipients = recipients.slice(0, 2)
+    const remainingCount = recipients.length - visibleRecipients.length
+
     return (
-      <div className="flex flex-wrap gap-1 p-0 overflow-hidden" style={{ maxHeight: '3rem' }}>
-        {visibleRecipients.map((recipient, index) => (
-          <Badge key={index} variant="secondary" className="text-xs font-semibold mr-0">
-            {recipient}
-          </Badge>
-        ))}
+      <div className="flex items-center gap-1 overflow-hidden">
+        <div className="flex items-center gap-1 overflow-hidden flex-nowrap">
+          {visibleRecipients.map((recipient, index) => (
+            <Badge
+              key={`${recipient}-${index}`}
+              variant="secondary"
+              className="text-xs font-semibold whitespace-nowrap"
+            >
+              {recipient}
+            </Badge>
+          ))}
+        </div>
         {remainingCount > 0 && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="secondary" className="text-xs font-semibold cursor-help mr-0">
+                <Badge
+                  variant="secondary"
+                  className="text-xs font-semibold cursor-help whitespace-nowrap"
+                >
                   +{remainingCount}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="top" className="bg-slate-800 text-white border-slate-700 p-3 max-w-xs">
                 <div className="space-y-1">
                   <div className="font-semibold text-sm mb-2">Destinatarios adicionales:</div>
-                  {recipients.slice(3).map((recipient, index) => (
-                    <div key={index} className="text-sm">{recipient}</div>
-                  ))}
+                  <div className="grid grid-cols-1 gap-1 max-h-32 overflow-y-auto">
+                    {recipients.slice(visibleRecipients.length).map((recipient, index) => (
+                      <div key={index} className="text-sm">{recipient}</div>
+                    ))}
+                  </div>
                 </div>
               </TooltipContent>
             </Tooltip>
@@ -1044,38 +1057,43 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
                               <div className="space-y-6 p-4">
                                 {emailSettings.enabled ? (
                                   <>
-                                    <div className="grid gap-6 md:grid-cols-2">
-                                      <div>
-                                        <span className="text-[14px] font-semibold text-foreground block mb-2">Asunto</span>
-                                        <p className="text-[14px] text-[rgba(113,113,130,1)]">{emailSubjectDisplay}</p>
-                                      </div>
-                                      <div>
-                                        <span className="text-[14px] font-semibold text-foreground block mb-2">Destinatarios</span>
-                                        {emailRecipients.length > 0 ? (
-                                          renderEmailRecipients(emailRecipients)
-                                        ) : (
-                                          <span className="text-[12px] text-muted-foreground">No hay destinatarios configurados.</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="grid gap-6 md:grid-cols-2">
-                                      <div>
-                                        <span className="text-[14px] font-semibold text-foreground block mb-2">Remitentes</span>
-                                        {renderEmailSenders(emailSenders)}
-                                      </div>
-                                      <div>
-                                        <span className="text-[14px] font-semibold text-foreground block mb-2">Plantilla seleccionada</span>
-                                        <p className="text-[14px] text-[rgba(113,113,130,1)]">
-                                          {emailTemplate ? emailTemplate.name : 'Sin plantilla asociada'}
-                                        </p>
-                                        {emailTemplate?.description && (
-                                          <p className="text-[12px] text-muted-foreground mt-1">
-                                            {emailTemplate.description}
+                                    <Row gutter={[24, 24]}>
+                                      <Col xs={24} md={12}>
+                                        <div>
+                                          <span className="text-[14px] font-semibold text-foreground block mb-2">Asunto</span>
+                                          <p className="text-[14px] text-[rgba(113,113,130,1)]">{emailSubjectDisplay}</p>
+                                        </div>
+                                      </Col>
+                                      <Col xs={24} md={12}>
+                                        <div>
+                                          <span className="text-[14px] font-semibold text-foreground block mb-2">Destinatarios</span>
+                                          {emailRecipients.length > 0 ? (
+                                            renderEmailRecipients(emailRecipients)
+                                          ) : (
+                                            <span className="text-[12px] text-muted-foreground">No hay destinatarios configurados.</span>
+                                          )}
+                                        </div>
+                                      </Col>
+                                      <Col xs={24} md={12}>
+                                        <div>
+                                          <span className="text-[14px] font-semibold text-foreground block mb-2">Remitentes</span>
+                                          {renderEmailSenders(emailSenders)}
+                                        </div>
+                                      </Col>
+                                      <Col xs={24} md={12}>
+                                        <div>
+                                          <span className="text-[14px] font-semibold text-foreground block mb-2">Plantilla seleccionada</span>
+                                          <p className="text-[14px] text-[rgba(113,113,130,1)]">
+                                            {emailTemplate ? emailTemplate.name : 'Sin plantilla asociada'}
                                           </p>
-                                        )}
-                                      </div>
-                                    </div>
+                                          {emailTemplate?.description && (
+                                            <p className="text-[12px] text-muted-foreground mt-1">
+                                              {emailTemplate.description}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </Col>
+                                    </Row>
 
                                     <div className="space-y-2 rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-4">
                                       <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
