@@ -429,44 +429,56 @@ export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, on
   }
 
   // Helper function to render units dynamically
-  const renderUnits = (unitIds: string[]) => {
-    if (unitIds.length === 0) return (
-      <span className="text-[12px] text-muted-foreground">Todas las unidades</span>
-    )
-    
-    const visibleUnits = unitIds.slice(0, 6)
-    const remainingCount = unitIds.length - 6
-    
+  const renderUnits = (units: (string | { id?: string; name?: string })[]) => {
+    if (!units || units.length === 0) {
+      return <span className="text-[12px] text-muted-foreground">Todas las unidades</span>
+    }
+
+    const formatUnitLabel = (unit: string | { id?: string; name?: string }, index: number) => {
+      if (typeof unit === 'string') {
+        const segments = unit.split('-')
+        if (segments.length > 1) {
+          const unitNumber = segments[segments.length - 1]
+          const parsedNumber = parseInt(unitNumber, 10)
+          if (!Number.isNaN(parsedNumber)) {
+            return `T-${unitNumber}-${123 + parsedNumber}`
+          }
+        }
+        return unit
+      }
+      return unit?.name || unit?.id || `Unidad ${index + 1}`
+    }
+
+    const normalizedUnits = units.map((unit, index) => ({
+      key: typeof unit === 'string' ? `${unit}-${index}` : unit?.id || `${index}-${unit?.name ?? 'unidad'}`,
+      label: formatUnitLabel(unit, index)
+    }))
+
+    const visibleUnits = normalizedUnits.slice(0, 6)
+    const remainingUnits = normalizedUnits.slice(6)
+
     return (
       <div className="flex flex-wrap gap-2">
-        {visibleUnits.map((unitId, index) => {
-          const unitNumber = unitId.split('-')[1] || (index + 1)
-          const vehicleCode = `T-${unitNumber}-${123 + parseInt(unitNumber)}`
-          return (
-            <Badge key={index} variant="secondary" className="text-[12px] bg-blue-100 text-blue-700 hover:bg-blue-200">
-              {vehicleCode}
-            </Badge>
-          )
-        })}
-        {remainingCount > 0 && (
+        {visibleUnits.map(({ key, label }) => (
+          <Badge key={key} variant="secondary" className="text-[12px] bg-blue-100 text-blue-700 hover:bg-blue-200">
+            {label}
+          </Badge>
+        ))}
+        {remainingUnits.length > 0 && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Badge variant="secondary" className="text-[12px] bg-blue-100 text-blue-700 hover:bg-blue-200 cursor-help">
-                  +{remainingCount}
+                  +{remainingUnits.length}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="top" className="bg-slate-800 text-white border-slate-700 p-3 max-w-xs">
                 <div className="space-y-1">
                   <div className="font-semibold text-sm mb-2">Unidades adicionales:</div>
                   <div className="grid grid-cols-2 gap-1 max-h-32 overflow-y-auto">
-                    {unitIds.slice(6).map((unitId, index) => {
-                      const unitNumber = unitId.split('-')[1] || (index + 7)
-                      const vehicleCode = `T-${unitNumber}-${123 + parseInt(unitNumber)}`
-                      return (
-                        <div key={index} className="text-sm">{vehicleCode}</div>
-                      )
-                    })}
+                    {remainingUnits.map(({ key, label }) => (
+                      <div key={key} className="text-sm">{label}</div>
+                    ))}
                   </div>
                 </div>
               </TooltipContent>

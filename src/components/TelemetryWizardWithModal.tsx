@@ -130,6 +130,35 @@ interface TagData {
   vehicleCount: number
 }
 
+const DEFAULT_UNIT_STATUS = 'Activo'
+const DEFAULT_UNIT_TYPE = 'Camión'
+
+const normalizeUnitSelection = (unit: UnidadData | string, fallbackIndex = 0): UnidadData => {
+  if (unit && typeof unit === 'object') {
+    return {
+      id: unit.id || `unit-${fallbackIndex + 1}`,
+      name: unit.name || unit.id || `Unidad ${fallbackIndex + 1}`,
+      status: unit.status || DEFAULT_UNIT_STATUS,
+      vehicleType: unit.vehicleType || DEFAULT_UNIT_TYPE
+    }
+  }
+
+  const normalizedId =
+    typeof unit === 'string' && unit.trim().length > 0
+      ? unit
+      : `unit-${fallbackIndex + 1}`
+
+  return {
+    id: normalizedId,
+    name: normalizedId,
+    status: DEFAULT_UNIT_STATUS,
+    vehicleType: DEFAULT_UNIT_TYPE
+  }
+}
+
+const normalizeUnitsSelection = (units: (UnidadData | string)[] = []): UnidadData[] =>
+  units.map((unit, index) => normalizeUnitSelection(unit, index))
+
 // Import email templates from separate file
 import { userEmailTemplates as initialEmailTemplates, type UserEmailTemplate } from "../constants/emailTemplates"
 import { showCustomToast } from "./CustomToast"
@@ -2100,7 +2129,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       if (rule.appliesTo) {
         if (rule.appliesTo.type === 'units' && rule.appliesTo.units && rule.appliesTo.units.length > 0) {
           setAppliesTo('custom')
-          setSelectedUnitsLocal(rule.appliesTo.units as any)
+          const normalizedUnits = normalizeUnitsSelection(rule.appliesTo.units as (UnidadData | string)[])
+          setSelectedUnitsLocal(normalizedUnits)
         } else if (rule.appliesTo.type === 'tags' && rule.appliesTo.tags && rule.appliesTo.tags.length > 0) {
           setAppliesTo('custom')
           const mappedTags = rule.appliesTo.tags.map(tagName => {
@@ -2113,8 +2143,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             }
           })
           setSelectedTags(mappedTags as any)
+          setSelectedUnitsLocal([])
         } else {
           setAppliesTo('all-units')
+          setSelectedUnitsLocal([])
         }
       }
 
@@ -2545,6 +2577,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       appliesToData = { type: 'units', units: [] }
     } else if (appliesTo === 'custom') {
       const unitsPayload = selectedUnitsLocal
+        .map(unit => unit.id)
+        .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
       const tagsPayload = selectedTags.map(tag => tag.name)
 
       appliesToData = {
