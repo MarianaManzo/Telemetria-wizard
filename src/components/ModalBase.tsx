@@ -19,6 +19,8 @@ export type ModalBaseProps = {
   /** If provided, will be rendered instead of the default footer */
   customFooter?: React.ReactNode
   rootClassName?: string
+  hideHeaderDivider?: boolean
+  hideFooterDivider?: boolean
 }
 
 const WIDTH_MAP: Record<NonNullable<ModalBaseProps['size']>, number> = {
@@ -41,6 +43,8 @@ export default function ModalBase({
   children,
   customFooter,
   rootClassName,
+  hideHeaderDivider = false,
+  hideFooterDivider = false,
 }: ModalBaseProps) {
   const triggerRef = useRef<HTMLElement | null>(document.activeElement as HTMLElement)
   const hasBodyChildren = Children.count(children) > 0
@@ -76,8 +80,8 @@ export default function ModalBase({
       >
         {(title || true) && (
           <div
-            className="ModalBase_header flex items-center justify-between border-b"
-            style={{ padding: 16, minHeight: 64, fontFamily: 'Source Sans 3, sans-serif' }}
+            className={`ModalBase_header flex items-center justify-between ${hideHeaderDivider ? '' : 'border-b'}`}
+            style={{ padding: 16, minHeight: 64, fontFamily: 'Source Sans 3, sans-serif', borderColor: hideHeaderDivider ? 'transparent' : undefined }}
           >
             {title ? (
               <Typography.Title level={5} style={{ margin: 0, fontSize: 16, lineHeight: '24px', fontWeight: 600 }}>
@@ -108,17 +112,17 @@ export default function ModalBase({
         {customFooter ? (
           <div
             className="ModalBase_footer custom-footer"
-            style={{ padding: '16px 24px', borderTop: '1px solid #E5E7EB' }}
+            style={{ padding: '16px 24px', borderTop: hideFooterDivider ? 'none' : '1px solid #E5E7EB' }}
           >
             {customFooter}
           </div>
         ) : (
           <div
-            className="ModalBase_footer flex items-center justify-end gap-3 border-t"
+            className={`ModalBase_footer flex items-center justify-end gap-3 ${hideFooterDivider ? '' : 'border-t'}`}
             style={{
               padding: '16px 24px',
               fontFamily: 'Source Sans 3, sans-serif',
-              borderTop: '1px solid #E5E7EB',
+              borderTop: hideFooterDivider ? 'none' : '1px solid #E5E7EB',
             }}
           >
             {!hideSecondary && (
