@@ -48,6 +48,8 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
     onClose()
   }
 
+  const nameIsValid = ruleName.trim().length > 0 && ruleName.trim().length <= 50
+
   const footer = (
     <div className="flex justify-end gap-4">
       <Button
@@ -58,7 +60,7 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
       >
         Cancelar
       </Button>
-      <Button onClick={handleSave} disabled={!ruleName.trim() || isSaving} className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal">
+      <Button onClick={handleSave} disabled={!nameIsValid || isSaving} className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal">
         {isSaving ? 'Guardando...' : 'Guardar'}
       </Button>
     </div>
@@ -71,7 +73,17 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
           <Label htmlFor="rule-name" className="text-[14px] font-medium text-gray-700 mb-2 block text-left">
             Nombre de la regla
           </Label>
-          <Input id="rule-name" value={ruleName} onChange={(e) => setRuleName(e.target.value)} placeholder="Escribe un nombre" className="text-[14px] w-full" />
+          <Input
+            id="rule-name"
+            value={ruleName}
+            onChange={(e) => {
+              const value = e.target.value.slice(0, 50)
+              setRuleName(value)
+            }}
+            maxLength={50}
+            placeholder="Escribe un nombre"
+            className="text-[14px] w-full"
+          />
         </div>
 
         <div>
