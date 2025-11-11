@@ -1706,6 +1706,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [selectedUnitsLocal, setSelectedUnitsLocal] = useState<UnidadData[]>([])
   const [selectedTags, setSelectedTags] = useState<TagData[]>([])
   const [showAppliesErrors, setShowAppliesErrors] = useState(false)
+  const [showDurationError, setShowDurationError] = useState(false)
 
   // Advanced configuration
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -1726,7 +1727,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [eventTiming, setEventTiming] = useState('cumplan-condiciones')
   
   // Duration configuration
-  const [durationValue, setDurationValue] = useState('41')
+  const [durationValue, setDurationValue] = useState('')
   const [durationUnit, setDurationUnit] = useState('segundos')
   
   // Rule schedule
@@ -2053,6 +2054,15 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   const handleZonesChange = (zones) => {
     setSelectedZonesData(zones)
+  }
+
+  const handleEventTimingChange = (value: string) => {
+    setEventTiming(value as 'cumplan-condiciones' | 'despues-tiempo')
+    if (value !== 'despues-tiempo') {
+      setShowDurationError(false)
+    } else if (Number(durationValue) > 0) {
+      setShowDurationError(false)
+    }
   }
 
   const removeZone = (zoneId: string) => {
@@ -2768,6 +2778,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
       setShowAppliesErrors(true)
     }
+    if (eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)) {
+      setShowDurationError(true)
+    }
     showCustomToast({
       title: "Completa los campos obligatorios antes de continuar."
     })
@@ -2792,13 +2805,17 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   const hasAtLeastOneGroup = conditionGroups.length > 0
   const needsCustomTargets = appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
+  const needsDurationValue = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
   const showCustomTargetsError = appliesTo === 'custom' && showAppliesErrors && needsCustomTargets
-  const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets
+  const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue
 
   const handleNextStep = () => {
     if (currentTabIndex === 0 && !canProceedToConfig) {
       if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
         setShowAppliesErrors(true)
+      }
+      if (needsDurationValue) {
+        setShowDurationError(true)
       }
       notifyIncompleteParameters()
       return
@@ -2818,6 +2835,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     if (currentTabIndex === 0 && nextTab !== 'parameters' && !canProceedToConfig) {
       if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
         setShowAppliesErrors(true)
+      }
+      if (needsDurationValue) {
+        setShowDurationError(true)
       }
       notifyIncompleteParameters()
       return
@@ -3174,7 +3194,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
               </div>
               <div>
-                <Select value={eventTiming} onValueChange={setEventTiming}>
+                <Select value={eventTiming} onValueChange={handleEventTimingChange}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -3187,19 +3207,36 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             </div>
 
             {eventTiming === 'despues-tiempo' && (
-              <div className="grid grid-cols-2 gap-8 items-center">
+              <div className="grid grid-cols-2 gap-8 items-start">
                 <div>
-                  <label className="text-[14px] font-medium text-gray-700">Duración</label>
+                  <label className="text-[14px] font-medium text-gray-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Duración
+                  </label>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
                   <Input
                     type="number"
-                    min="1"
-                    max="9999"
                     value={durationValue}
-                    onChange={(e) => setDurationValue(e.target.value)}
-                    className="w-20"
-                    placeholder="41"
+                    onChange={(e) => {
+                      setDurationValue(e.target.value)
+                      if (Number(e.target.value) > 0) {
+                        setShowDurationError(false)
+                      }
+                    }}
+                    className="w-24"
+                    style={{
+                      height: '32px',
+                      borderRadius: '8px',
+                      ...(showDurationError
+                        ? {
+                            border: '1px solid #F04438',
+                            boxShadow: 'none'
+                          }
+                        : {})
+                    }}
+                    placeholder="Ingresa duración"
                   />
                   <Select value={durationUnit} onValueChange={setDurationUnit}>
                     <SelectTrigger className="w-32">
@@ -3211,6 +3248,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       <SelectItem value="horas">horas</SelectItem>
                     </SelectContent>
                   </Select>
+                  </div>
+                  {showDurationError && (
+                    <p className="text-[12px] text-red-500">Ingresa una duración válida para continuar.</p>
+                  )}
                 </div>
               </div>
             )}
