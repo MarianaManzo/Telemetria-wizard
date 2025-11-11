@@ -2980,10 +2980,13 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             <h3 className="text-[14px] font-semibold text-gray-900">
               {isZone ? 'Validar parámetros al momento de entrar a la zona' : 'Parámetros a evaluar'}
             </h3>
-            <p className="text-[14px] text-gray-600">
-              {isZone
-                ? 'El evento sólo será generado si las condiciones se cumplen al momento de entrar a la zona'
-                : '¿Qué condiciones evalúa esta regla?'}
+            <p className="text-[14px] text-gray-600 flex items-start gap-1">
+              {!isZone && <span className="text-red-500 leading-5">*</span>}
+              <span>
+                {isZone
+                  ? 'El evento sólo será generado si las condiciones se cumplen al momento de entrar a la zona'
+                  : '¿Qué condiciones evalúa esta regla?'}
+              </span>
             </p>
           </div>
           {isZone && (
@@ -3308,13 +3311,22 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             {resolvedRuleType !== 'zone' && (
               <>
                 <div className="grid grid-cols-2 gap-8 items-start">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-600" />
-                      <label className="text-[14px] font-medium text-gray-700">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-start gap-1">
+                      <span className="text-red-500 leading-5">*</span>
+                      <label className="text-[14px] font-medium text-gray-700 leading-5">
                         ¿En qué zona geográfica aplica esta regla?
                       </label>
                     </div>
+                    {shouldRestrictByZone && (
+                      <p
+                        className={`text-[12px] ${
+                          showZoneScopeError ? 'text-red-500' : 'text-gray-500'
+                        } pl-4`}
+                      >
+                        Selecciona al menos una zona o etiqueta.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Select
@@ -3342,11 +3354,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 {shouldRestrictByZone && (
                   <>
                     <div className="grid grid-cols-2 gap-8 items-start">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-gray-700 pl-4">
                         <MapPin className="h-4 w-4 text-gray-600" />
-                        <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
-                          <span className="text-red-500">*</span>Zonas
-                        </label>
+                        <span className="text-[14px] font-medium">Zonas</span>
                       </div>
                       <div>
                         <ZonasSelectorInput
@@ -3355,18 +3365,13 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           placeholder="Seleccionar zona"
                           hasError={showZoneScopeError}
                         />
-                        {showZoneScopeError && (
-                          <p className="text-[12px] text-red-500 mt-1">Selecciona al menos una zona o etiqueta.</p>
-                        )}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-8 items-start">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-gray-700 pl-4">
                         <Tag className="h-4 w-4 text-gray-600" />
-                        <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
-                          <span className="text-red-500">*</span>Etiquetas
-                        </label>
+                        <span className="text-[14px] font-medium">Etiquetas</span>
                         <Tooltip>
                           <TooltipTrigger>
                             <Info className="h-4 w-4 text-gray-400" />
@@ -3383,9 +3388,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           placeholder="Seleccionar etiquetas"
                           hasError={showZoneScopeError}
                         />
-                        {showZoneScopeError && (
-                          <p className="text-[12px] text-red-500 mt-1">Selecciona al menos una zona o etiqueta.</p>
-                        )}
                       </div>
                     </div>
                   </>
@@ -3394,12 +3396,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             )}
 
             <div className="grid grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-600" />
-                  <label className="text-[14px] font-medium text-gray-700">¿En qué momento se debe generar el evento?</label>
-                </div>
-              </div>
+                  <div>
+                    <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
+                      <span className="text-red-500">*</span>
+                      ¿En qué momento se debe generar el evento?
+                    </label>
+                  </div>
               <div>
                 <Select value={eventTiming} onValueChange={handleEventTimingChange}>
                   <SelectTrigger className="w-full">
@@ -3415,11 +3417,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
             {eventTiming === 'despues-tiempo' && (
               <div className="grid grid-cols-2 gap-8 items-start">
-                <div>
-                  <label className="text-[14px] font-medium text-gray-700">
-                    <span className="text-red-500 mr-1">*</span>
-                    Duración
-                  </label>
+                <div className="pl-4">
+                  <label className="text-[14px] font-medium text-gray-700">Duración</label>
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
@@ -3475,12 +3474,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             )}
 
             <div className="grid grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-600" />
-                  <label className="text-[14px] font-medium text-gray-700">¿Cuándo estará activa esta regla?</label>
-                </div>
-              </div>
+                  <div>
+                    <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
+                      <span className="text-red-500">*</span>
+                      ¿Cuándo estará activa esta regla?
+                    </label>
+                  </div>
               <div>
                 <Select value={ruleSchedule} onValueChange={setRuleSchedule}>
                   <SelectTrigger className="w-full">
@@ -3609,7 +3608,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         <div className="p-4 flex flex-col gap-4">
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-6 items-center">
-              <label className="text-[14px] font-medium text-gray-700">¿Qué acción activará el evento?</label>
+              <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
+                <span className="text-red-500">*</span>
+                ¿Qué acción activará el evento?
+              </label>
               <Select value={zoneEventAction} onValueChange={(value: 'entrada' | 'salida') => setZoneEventAction(value)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
