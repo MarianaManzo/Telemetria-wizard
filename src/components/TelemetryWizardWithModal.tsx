@@ -113,6 +113,8 @@ import { ExitRuleConfirmationModal } from "./ExitRuleConfirmationModal"
 import { SensorSelectorWithSearch } from "./SensorSelectorWithSearch"
 import { initialTags } from "../constants/data"
 import { spacing, toPx, radii } from "../styles/tokens"
+import markerBody from "../assets/event.svg?raw"
+import markerLabel from "../assets/Label event.svg?raw"
 
 const { Title, Paragraph } = Typography;
 
@@ -874,6 +876,42 @@ const severityConfig = {
     previewText: '#0E7490',
   },
 } as const
+
+const mapMarkerPalette = {
+  high: { accent: '#DF3F40', fill: '#FECACA' },
+  medium: { accent: '#EA580C', fill: '#FED7AA' },
+  low: { accent: '#0891B2', fill: '#A5F3FC' },
+  informative: { accent: '#0891B2', fill: '#A5F3FC' },
+} as const
+
+type MapMarkerSeverity = keyof typeof mapMarkerPalette
+
+function WizardMapPreview({ severity, label }: { severity: MapMarkerSeverity; label: string }) {
+  const palette = mapMarkerPalette[severity] ?? mapMarkerPalette.low
+  const tintedBody = markerBody
+    .replace(/#DC2626/g, palette.accent)
+    .replace(/#FECDD2/g, palette.fill)
+    .replace(/#DF3F40/g, palette.accent)
+
+  const tintedLabel = markerLabel
+    .replace(/#FECDD2/g, palette.fill)
+    .replace(/#DF3F40/g, palette.accent)
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div dangerouslySetInnerHTML={{ __html: tintedBody }} />
+      <div className="relative" style={{ width: 74, height: 20 }}>
+        <div dangerouslySetInnerHTML={{ __html: tintedLabel }} />
+        <span
+          className="absolute inset-0 flex items-center justify-center text-[11px] font-medium"
+          style={{ color: palette.accent }}
+        >
+          {label}
+        </span>
+      </div>
+    </div>
+  )
+}
 
 const eventIconOptions = [
   { id: 'info', icon: Info },
@@ -1756,10 +1794,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [eventShortName, setEventShortName] = useState(rule?.eventSettings?.shortName ?? '')
   const iconPair = eventIcon ? eventIconMap[eventIcon] : undefined
   const EventIconComponent = iconPair?.outline
-  const previewSeverityStyles = severityConfig[eventSeverity] || severityConfig.low
-  const PreviewIconComponent: React.FC<LucideIconProps> = iconPair?.solid
-    ? (props) => iconPair.solid({ ...props, color: props.color || previewSeverityStyles.previewText, stroke: props.stroke || '#FFFFFF' })
-    : (props) => <AlertOctagon {...props} strokeWidth={0} fill={props.color || previewSeverityStyles.previewText} stroke={props.stroke || '#FFFFFF'} />
   const filteredIconOptions = useMemo(
     () => eventIconOptions.filter(({ id }) => id.toLowerCase().includes(iconSearch.toLowerCase())),
     [iconSearch]
@@ -3742,29 +3776,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </div>
                       <div className="space-y-2">
                         <span className="text-[14px] font-medium text-gray-700">Vista previa en mapa</span>
-                        <div className="flex flex-col items-center gap-2 p-2 text-[12px]" style={{ color: previewSeverityStyles.previewText, background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                          <div
-                            className="inline-flex h-9 w-9 items-center justify-center"
-                            style={{
-                              clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                              paddingInline: '8px',
-                              backgroundColor: previewSeverityStyles.previewText,
-                            }}
-                          >
-                            <PreviewIconComponent color={previewSeverityStyles.previewBg} stroke={previewSeverityStyles.previewBg} className="h-4 w-4" />
-                          </div>
-                          <span
-                            className="inline-flex items-center gap-1 text-[11px] font-medium"
-                            style={{
-                              backgroundColor: previewSeverityStyles.previewText,
-                              color: previewSeverityStyles.previewBg,
-                              padding: '4px 8px',
-                              borderRadius: '8px',
-                            }}
-                          >
-                            {eventShortName || 'Evento'}
-                          </span>
-                        </div>
+                        <WizardMapPreview
+                          severity={eventSeverity}
+                          label={eventShortName.trim() || 'Evento'}
+                        />
                       </div>
                     </div>
 
