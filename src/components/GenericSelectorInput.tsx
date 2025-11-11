@@ -41,7 +41,8 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
   showColorPills = false,
   showPillsDisplay = false,
   maxVisiblePills = 3,
-  showFooterCount = false
+  showFooterCount = false,
+  hasError = false
 }: GenericSelectorInputProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -478,7 +479,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
           {showPillsDisplay && showColorPills && selectedItems.length > 0 && selectedItems.some(item => item.color) ? (
             <div
               ref={containerRef}
-              className={`w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
+              className={`w-full px-3 text-[14px] border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               style={{ height: 32 }}
@@ -513,7 +514,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
             </div>
           ) : showPillsDisplay ? (
             <div
-              className={`w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
+              className={`w-full px-3 text-[14px] border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               style={{ height: 32 }}
@@ -522,7 +523,7 @@ export function GenericSelectorInput<T extends { id: string; name: string; color
             </div>
           ) : (
             <div
-              className={`w-full px-3 text-sm border border-gray-300 rounded-lg bg-white cursor-pointer text-gray-900 flex items-center box-border ${
+              className={`w-full px-3 text-sm border ${hasError ? 'border-red-500' : 'border-gray-300'} rounded-lg bg-white cursor-pointer text-gray-900 flex items-center box-border ${
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               style={{ height: 32 }}

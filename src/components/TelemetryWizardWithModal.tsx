@@ -983,6 +983,7 @@ interface DraggableConditionGroupProps {
   telemetrySensors: any[];
   operatorOptions: any[];
   totalGroups: number;
+  showValidationErrors: boolean;
 }
 
 interface DraggableConditionInGroupProps {
@@ -996,6 +997,7 @@ interface DraggableConditionInGroupProps {
   operatorOptions: any[];
   conditionsInGroupLength: number;
   showRemoveButton: boolean;
+  showValidationErrors: boolean;
 }
 
 // Legacy DraggableCondition component for backward compatibility
@@ -1020,7 +1022,8 @@ function DraggableConditionInGroup({
   telemetrySensors,
   operatorOptions,
   conditionsInGroupLength,
-  showRemoveButton
+  showRemoveButton,
+  showValidationErrors
 }: DraggableConditionInGroupProps) {
   const [{ isDragging }, drag] = useDrag({
     type: 'condition-in-group',
@@ -1054,6 +1057,21 @@ function DraggableConditionInGroup({
   }
 
   const availableOperators = sensor ? getAvailableOperators(sensor.dataType) : operatorOptions
+  const isValueProvided = condition.value !== '' && condition.value !== null && condition.value !== undefined
+  const isOperatorDisabled = !condition.sensor
+  const isValueDisabled = !condition.sensor
+  const showSensorError = showValidationErrors && !condition.sensor
+  const showOperatorError = showValidationErrors && !condition.operator && !isOperatorDisabled
+  const showValueError = showValidationErrors && !isValueProvided && !isValueDisabled
+  const getInputErrorStyles = (hasError: boolean) =>
+    hasError
+      ? ({
+          border: '1px solid #F04438',
+          borderRadius: '8px',
+          boxShadow: 'none'
+        } as React.CSSProperties)
+      : undefined
+
 
   return (
     <TooltipProvider>
@@ -1073,7 +1091,10 @@ function DraggableConditionInGroup({
         </div>
 
         <div className="min-w-0" style={{ flex: '0 0 180px' }}>
-          <Label className="block mb-2" textClassName="text-[14px]">Sensor</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">
+            <span className="text-red-500 mr-1">*</span>
+            Sensor
+          </Label>
           <SensorSelectorWithSearch
             value={condition.sensor}
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'sensor', value)}
@@ -1081,17 +1102,28 @@ function DraggableConditionInGroup({
             customSensors={customTelemetrySensors}
             placeholder="Seleccionar sensor"
             className="w-full max-w-[180px] text-[14px]"
+            hasError={showSensorError}
           />
+          {showSensorError && (
+            <p className="mt-1 text-[12px] text-red-500">Campo obligatorio.</p>
+          )}
         </div>
 
         <div className="min-w-0" style={{ flex: '0 0 180px' }}>
-          <Label className="block mb-2" textClassName="text-[14px]">Operador</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">
+            <span className="text-red-500 mr-1">*</span>
+            Operador
+          </Label>
           <Select
             value={condition.operator}
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'operator', value)}
             disabled={!condition.sensor}
+            aria-invalid={showOperatorError}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger
+              className="w-full"
+              status={showOperatorError ? "error" : undefined}
+            >
               <SelectValue placeholder="Seleccionar operador" />
             </SelectTrigger>
             <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1102,10 +1134,16 @@ function DraggableConditionInGroup({
               ))}
             </SelectContent>
           </Select>
+          {showOperatorError && (
+            <p className="mt-1 text-[12px] text-red-500">Campo obligatorio.</p>
+          )}
         </div>
 
         <div className="min-w-0" style={{ flex: '0 0 180px' }}>
-          <Label className="block mb-2" textClassName="text-[14px]">Valor</Label>
+          <Label className="block mb-2" textClassName="text-[14px]">
+            <span className="text-red-500 mr-1">*</span>
+            Valor
+          </Label>
           <div className="flex items-center gap-2">
             {/* Render different input types based on sensor dataType */}
             {sensor?.dataType === 'boolean' ? (
@@ -1113,8 +1151,12 @@ function DraggableConditionInGroup({
                 value={condition.value}
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
+                aria-invalid={showValueError}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger
+                  className="w-full"
+                  status={showValueError ? "error" : undefined}
+                >
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1130,8 +1172,12 @@ function DraggableConditionInGroup({
                 value={condition.value}
                 onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
                 disabled={!condition.sensor}
+                aria-invalid={showValueError}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger
+                  className="w-full"
+                  status={showValueError ? "error" : undefined}
+                >
                   <SelectValue placeholder="Seleccionar opción" />
                 </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
@@ -1149,7 +1195,12 @@ function DraggableConditionInGroup({
               value={condition.value}
               onChange={(e) => updateConditionInGroup(groupId, condition.id, 'value', e.target.value)}
               className="w-full text-[14px]"
-              style={{ height: '32px', borderRadius: '8px' }}
+              aria-invalid={showValueError}
+              style={{
+                height: '32px',
+                borderRadius: '8px',
+                ...getInputErrorStyles(showValueError)
+              }}
               disabled={!condition.sensor}
             />
             )}
@@ -1159,6 +1210,9 @@ function DraggableConditionInGroup({
               </span>
             )}
           </div>
+          {showValueError && (
+            <p className="mt-1 text-[12px] text-red-500">Campo obligatorio.</p>
+          )}
         </div>
 
         {showRemoveButton && (
@@ -1299,9 +1353,12 @@ function DraggableCondition({
           onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
           disabled={!condition.sensor}
         >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Seleccionar operador" />
-          </SelectTrigger>
+            <SelectTrigger
+              className="w-full"
+              status={showOperatorError ? "error" : undefined}
+            >
+              <SelectValue placeholder="Seleccionar operador" />
+            </SelectTrigger>
             <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
               {availableOperators.map((op) => (
                 <SelectItem key={op.value} value={op.value} className="text-[14px]">
@@ -1323,9 +1380,12 @@ function DraggableCondition({
               onValueChange={(value) => updateCondition(condition.id, 'value', value)}
               disabled={!condition.sensor}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar estado" />
-              </SelectTrigger>
+                <SelectTrigger
+                  className="w-full"
+                  status={showValueError ? "error" : undefined}
+                >
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
                     <SelectItem key={option.value} value={option.value} className="text-[14px]">
@@ -1341,9 +1401,12 @@ function DraggableCondition({
               onValueChange={(value) => updateCondition(condition.id, 'value', value)}
               disabled={!condition.sensor}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar opción" />
-              </SelectTrigger>
+                <SelectTrigger
+                  className="w-full"
+                  status={showValueError ? "error" : undefined}
+                >
+                  <SelectValue placeholder="Seleccionar opción" />
+                </SelectTrigger>
                 <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
                   {sensor.options?.map((option) => (
                     <SelectItem key={option.value} value={option.value} className="text-[14px]">
@@ -1401,7 +1464,8 @@ function DraggableConditionGroup({
   moveConditionInGroup,
   telemetrySensors,
   operatorOptions,
-  totalGroups
+  totalGroups,
+  showValidationErrors
 }: DraggableConditionGroupProps) {
   const [{ isDragging }, drag] = useDrag({
     type: 'group',
@@ -1516,6 +1580,7 @@ function DraggableConditionGroup({
                 operatorOptions={operatorOptions}
                 conditionsInGroupLength={group.conditions.length}
                 showRemoveButton={group.conditions.length > 1}
+                showValidationErrors={showValidationErrors}
               />
             ))}
           </DndProvider>
@@ -1550,10 +1615,11 @@ interface TelemetryWizardProps {
   rule?: Rule
   onRename?: (ruleId: string, newName: string, newDescription?: string) => void
   wizardType?: 'telemetry' | 'zone'
+  forceCreateMode?: boolean
 }
 
-export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, onRename, wizardType = 'telemetry' }: TelemetryWizardProps) {
-  const isEditing = !!rule
+export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, onRename, wizardType = 'telemetry', forceCreateMode = false }: TelemetryWizardProps) {
+  const isEditing = !!rule && !forceCreateMode
   const { addNotification } = useNotifications()
 
   const resolvedRuleType: 'telemetry' | 'zone' = rule?.ruleType === 'zone' || wizardType === 'zone' ? 'zone' : 'telemetry'
@@ -1565,6 +1631,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [showParametersErrors, setShowParametersErrors] = useState(false)
 
   const [isSaving, setIsSaving] = useState(false)
   
@@ -1638,6 +1705,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [appliesTo, setAppliesTo] = useState('all-units')
   const [selectedUnitsLocal, setSelectedUnitsLocal] = useState<UnidadData[]>([])
   const [selectedTags, setSelectedTags] = useState<TagData[]>([])
+  const [showAppliesErrors, setShowAppliesErrors] = useState(false)
 
   // Advanced configuration
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -2003,10 +2071,16 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   const handleUnitsChange = (units: UnidadData[]) => {
     setSelectedUnitsLocal(units)
+    if (appliesTo === 'custom' && (units.length > 0 || selectedTags.length > 0)) {
+      setShowAppliesErrors(false)
+    }
   }
 
   const handleTagsChange = (tags: TagData[]) => {
     setSelectedTags(tags)
+    if (appliesTo === 'custom' && (selectedUnitsLocal.length > 0 || tags.length > 0)) {
+      setShowAppliesErrors(false)
+    }
   }
 
   const handleZoneTagsChange = (tags: TagData[]) => {
@@ -2038,7 +2112,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   // Effect to initialize form data when editing an existing rule
   useEffect(() => {
-    if (rule && isEditing) {
+    if (rule && (isEditing || forceCreateMode)) {
       console.log('Initializing form with rule data:', rule)
       console.log('Current form state before initialization:', {
         ruleName,
@@ -2235,7 +2309,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         eventMessage
       })
     }
-  }, [rule, isEditing, defaultResponsible])
+  }, [rule, isEditing, defaultResponsible, forceCreateMode])
 
   // Debug effect to track form state changes
   useEffect(() => {
@@ -2621,6 +2695,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     const finalRuleType: 'telemetry' | 'zone' =
       ruleData.ruleType === 'zone' || resolvedRuleType === 'zone' ? 'zone' : 'telemetry'
 
+    const finalName = ruleData.name ?? ruleName
+    const finalDescription = ruleData.description ?? ruleDescription
+
     const completeRuleData: Partial<Rule> = {
       ...ruleData,
       // Preserve existing rule properties when editing
@@ -2632,8 +2709,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         isFavorite: rule.isFavorite,
         status: rule.status
       } : {}),
-      name: ruleName,
-      description: ruleDescription,
+      name: finalName,
+      description: finalDescription,
       conditions: flattenedConditions, // For backward compatibility
       conditionGroups: validConditionGroups, // New grouped structure
       appliesTo: appliesToData,
@@ -2686,13 +2763,46 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   }
 
   // Navigation functions
+  const notifyIncompleteParameters = () => {
+    setShowParametersErrors(true)
+    if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
+      setShowAppliesErrors(true)
+    }
+    showCustomToast({
+      title: "Completa los campos obligatorios antes de continuar."
+    })
+  }
+
   const handlePreviousStep = () => {
     if (currentTabIndex > 0) {
       setActiveTab(tabs[currentTabIndex - 1])
     }
   }
 
+  const isConditionComplete = useCallback((condition: RuleCondition) => {
+    if (!condition) return false
+    const hasValue = condition.value !== '' && condition.value !== null && condition.value !== undefined
+    return Boolean(condition.sensor && condition.operator && hasValue)
+  }, [])
+
+  const hasValidCondition = useMemo(
+    () => conditionGroups.some(group => group.conditions.some(isConditionComplete)),
+    [conditionGroups, isConditionComplete]
+  )
+
+  const hasAtLeastOneGroup = conditionGroups.length > 0
+  const needsCustomTargets = appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
+  const showCustomTargetsError = appliesTo === 'custom' && showAppliesErrors && needsCustomTargets
+  const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets
+
   const handleNextStep = () => {
+    if (currentTabIndex === 0 && !canProceedToConfig) {
+      if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
+        setShowAppliesErrors(true)
+      }
+      notifyIncompleteParameters()
+      return
+    }
     if (currentTabIndex < tabs.length - 1) {
       setActiveTab(tabs[currentTabIndex + 1])
     }
@@ -2703,8 +2813,20 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Tab states
   const tabs = ['parameters', 'actions', 'notifications']
   const currentTabIndex = tabs.indexOf(activeTab)
+  const handleTabChange = (nextTab: string) => {
+    if (nextTab === activeTab) return
+    if (currentTabIndex === 0 && nextTab !== 'parameters' && !canProceedToConfig) {
+      if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
+        setShowAppliesErrors(true)
+      }
+      notifyIncompleteParameters()
+      return
+    }
+    setActiveTab(nextTab)
+  }
   const isFirstTab = currentTabIndex === 0
   const isLastTab = currentTabIndex === tabs.length - 1
+  const isNextButtonBlocked = currentTabIndex === 0 && !canProceedToConfig
 
   const renderConditionsCard = () => {
     const isZone = resolvedRuleType === 'zone'
@@ -2758,6 +2880,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       telemetrySensors={telemetrySensors}
                       operatorOptions={operatorOptions}
                       totalGroups={conditionGroups.length}
+                      showValidationErrors={showParametersErrors}
                     />
 
                     {groupIndex === 0 && conditionGroups.length === 2 && (
@@ -2818,7 +2941,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               </Button>
             </div>
 
-            {conditionGroups.some(group => group.conditions.some(c => c.sensor && c.operator && c.value)) && (
+            {hasValidCondition && (
               <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Info className="h-4 w-4 text-gray-600" />
@@ -2921,7 +3044,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             <label className="text-[14px] font-medium text-gray-700">¿A qué unidades aplicará la regla?</label>
           </div>
           <div>
-            <Select value={appliesTo} onValueChange={setAppliesTo}>
+            <Select value={appliesTo} onValueChange={(value) => {
+              setAppliesTo(value)
+              if (value !== 'custom') {
+                setShowAppliesErrors(false)
+              }
+            }}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -2939,7 +3067,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               <div>
                 <div className="flex items-center gap-2">
                   <Truck className="h-4 w-4 text-gray-600" />
-                  <label className="text-[14px] font-medium text-gray-700">Unidades</label>
+                  <label className="text-[14px] font-medium text-gray-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Unidades
+                  </label>
                 </div>
               </div>
               <div>
@@ -2947,7 +3078,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   selectedUnits={selectedUnitsLocal}
                   onSelectionChange={handleUnitsChange}
                   placeholder="Seleccionar unidades"
+                  hasError={showCustomTargetsError}
                 />
+                {showCustomTargetsError && (
+                  <p className="mt-1 text-[12px] text-red-500">Selecciona al menos una unidad o etiqueta.</p>
+                )}
               </div>
             </div>
 
@@ -2955,7 +3090,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
               <div>
                 <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4 text-gray-600" />
-                  <label className="text-[14px] font-medium text-gray-700">Etiquetas</label>
+                  <label className="text-[14px] font-medium text-gray-700">
+                    <span className="text-red-500 mr-1">*</span>
+                    Etiquetas
+                  </label>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center hover:bg-gray-400 transition-colors cursor-help">
@@ -2991,6 +3129,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   multiSelect
                   showColorPills
                   showPillsDisplay
+                  hasError={showCustomTargetsError}
                 />
               </div>
             </div>
@@ -3312,16 +3451,16 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         {/* Content */}
         <div className="flex-1">
           <div className="max-w-4xl mx-auto p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="pb-6">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="pb-6">
               <TabsList
                 className="telemetry-wizard__tabs w-full justify-start h-auto p-0 space-x-8"
                 style={{ top: `${tabsStickyTop}px` }}
               >
                 <TabsTrigger 
                   value="parameters" 
-                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 pointer-events-none ${
+                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 ${
                     currentTabIndex >= 0 ? 'text-blue-600' : 'text-gray-500'
-                  }`}
+                  } cursor-pointer`}
                 >
                   <div className="flex items-center gap-2">
                     <div className={`w-5 h-5 rounded-full text-white text-[12px] font-medium flex items-center justify-center ${
@@ -3334,9 +3473,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </TabsTrigger>
                 <TabsTrigger 
                   value="actions"
-                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 pointer-events-none ${
+                  aria-disabled={currentTabIndex === 0 && !canProceedToConfig}
+                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 ${
                     currentTabIndex >= 1 ? 'text-blue-600' : 'text-gray-500'
-                  }`}
+                  } ${currentTabIndex === 0 && !canProceedToConfig ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <div className="flex items-center gap-2">
                     <div className={`w-5 h-5 rounded-full text-white text-[12px] font-medium flex items-center justify-center ${
@@ -3349,9 +3489,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </TabsTrigger>
                 <TabsTrigger 
                   value="notifications"
-                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 pointer-events-none ${
+                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 ${
                     currentTabIndex >= 2 ? 'text-blue-600' : 'text-gray-500'
-                  }`}
+                  } cursor-pointer`}
                 >
                   <div className="flex items-center gap-2">
                     <div className={`w-5 h-5 rounded-full text-white text-[12px] font-medium flex items-center justify-center ${

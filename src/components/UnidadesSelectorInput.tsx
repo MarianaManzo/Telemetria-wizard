@@ -15,6 +15,7 @@ interface UnidadesSelectorInputProps {
   placeholder?: string
   className?: string
   disabled?: boolean
+  hasError?: boolean
 }
 
 // Generate the complete mock units array without runtime modification
@@ -69,7 +70,8 @@ export function UnidadesSelectorInput({
   onSelectionChange, 
   placeholder = "Seleccionar unidades",
   className = "",
-  disabled = false
+  disabled = false,
+  hasError = false
 }: UnidadesSelectorInputProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   
@@ -131,7 +133,9 @@ export function UnidadesSelectorInput({
     <div className={`w-full ${className}`}>
       <div className="relative">
         <div
-          className={`w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
+          className={`w-full px-3 text-[14px] rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
+            hasError ? 'border border-red-500' : 'border border-gray-300'
+          } ${
             disabled ? 'opacity-50 cursor-not-allowed' : ''
           }`}
           style={{ height: 32 }}

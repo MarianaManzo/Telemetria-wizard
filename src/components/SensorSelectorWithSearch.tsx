@@ -28,6 +28,7 @@ interface SensorSelectorWithSearchProps {
   placeholder?: string
   className?: string
   style?: CSSProperties
+  hasError?: boolean
 }
 
 export function SensorSelectorWithSearch({
@@ -37,7 +38,8 @@ export function SensorSelectorWithSearch({
   customSensors = [],
   placeholder = "Seleccionar sensor",
   className,
-  style
+  style,
+  hasError = false
 }: SensorSelectorWithSearchProps) {
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
@@ -81,7 +83,19 @@ export function SensorSelectorWithSearch({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          style={{ fontSize: '14px', borderRadius: '8px', height: '32px', maxWidth: '180px', width: '100%', paddingLeft: '12px', paddingRight: '12px', ...style }}
+          aria-invalid={hasError}
+          style={{
+            fontSize: '14px',
+            borderRadius: '8px',
+            height: '32px',
+            maxWidth: '180px',
+            width: '100%',
+            paddingLeft: '12px',
+            paddingRight: '12px',
+            border: hasError ? '1px solid #F04438' : undefined,
+            boxShadow: hasError ? 'none' : undefined,
+            ...style
+          }}
           className={cn(
             "w-full justify-between bg-white hover:bg-gray-50 text-[14px] h-8",
             !value && "text-muted-foreground",
