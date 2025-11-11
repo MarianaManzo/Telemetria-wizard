@@ -2676,9 +2676,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const flagActionErrors = useCallback(() => {
     let isValid = true
 
-    if (!eventShortName.trim()) {
+    if (eventShortName.trim().length < 3) {
       setShowActionsErrors(true)
       isValid = false
+    } else if (showActionsErrors) {
+      setShowActionsErrors(false)
     }
 
     if (requiresClosureTime) {
@@ -2713,6 +2715,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     needsUnitUntags,
     unitTags.length,
     unitUntags.length,
+    showActionsErrors,
   ])
 
   const handleSave = async () => {
@@ -2915,7 +2918,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const showZoneScopeError = shouldRestrictByZone && showZoneScopeErrors && zoneSelectionEmpty
   const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue
   const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
-  const shortNameHasError = showActionsErrors && !eventShortName.trim()
+  const shortNameHasError = showActionsErrors && eventShortName.trim().length < 3
 
   useEffect(() => {
     if (!shouldRestrictByZone || !zoneSelectionEmpty) {
@@ -3874,7 +3877,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           onChange={(event) => {
                             const value = event.target.value.slice(0, 10)
                             setEventShortName(value)
-                            if (showActionsErrors && value.trim().length > 0) {
+                            if (showActionsErrors && value.trim().length >= 3) {
                               setShowActionsErrors(false)
                             }
                           }}
@@ -3894,7 +3897,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           }}
                         />
                         {shortNameHasError && (
-                          <p className="text-[12px] text-red-500">Ingresa un nombre corto.</p>
+                          <p className="text-[12px] text-red-500">Ingresa al menos 3 caracteres.</p>
                         )}
                       </div>
                       <div className="space-y-2">
