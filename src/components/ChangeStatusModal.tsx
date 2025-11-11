@@ -8,9 +8,10 @@ interface ChangeStatusModalProps {
   onClose: () => void
   onSave: (newStatus: 'open' | 'closed', note?: string) => void
   mode: 'close' | 'reopen'
+  requireNote?: boolean
 }
 
-export function ChangeStatusModal({ isOpen, onClose, onSave, mode }: ChangeStatusModalProps) {
+export function ChangeStatusModal({ isOpen, onClose, onSave, mode, requireNote = false }: ChangeStatusModalProps) {
   const targetStatus: 'open' | 'closed' = mode === 'close' ? 'closed' : 'open'
   const [note, setNote] = useState('')
 
@@ -21,7 +22,11 @@ export function ChangeStatusModal({ isOpen, onClose, onSave, mode }: ChangeStatu
   }, [isOpen, mode])
 
   const handleSave = () => {
-    onSave(targetStatus, note.trim() ? note.trim() : undefined)
+    const trimmedNote = note.trim()
+    if (requireNote && !trimmedNote) {
+      return
+    }
+    onSave(targetStatus, trimmedNote || undefined)
     onClose()
   }
 
@@ -42,6 +47,7 @@ export function ChangeStatusModal({ isOpen, onClose, onSave, mode }: ChangeStatu
           </Button>
           <Button
             onClick={handleSave}
+            disabled={requireNote && !note.trim()}
             className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Continuar
@@ -57,7 +63,8 @@ export function ChangeStatusModal({ isOpen, onClose, onSave, mode }: ChangeStatu
         </p>
         <div>
           <label className="text-[14px] text-foreground block mb-2">
-            Nota (opcional)
+            {requireNote && <span className="text-red-500 mr-1">*</span>}
+            Nota {!requireNote && '(opcional)'}
           </label>
           <Textarea
             placeholder="Describe el motivo del cambio..."

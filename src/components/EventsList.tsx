@@ -129,8 +129,13 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
     })
   }
 
+  const [statusModalMode, setStatusModalMode] = useState<'close' | 'reopen'>('close')
+  const [isNoteRequired, setIsNoteRequired] = useState(false)
+
   const handleChangeStatus = (event: Event) => {
     setSelectedEventForModal(event)
+    setStatusModalMode('close')
+    setIsNoteRequired(event.severity === 'high')
     setShowChangeStatusModal(true)
   }
 
@@ -320,34 +325,46 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
                           <span className="text-[12px] font-medium">{severityInfo.label}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
-                        <div className="flex justify-center items-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleChangeStatus(event)
-                                }}
-                                className="flex items-center gap-2"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                <span>{event.status === 'open' ? 'Cerrar evento' : 'Reabrir evento'}</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
+                    <div className="flex justify-center items-center">
+                      {event.status === 'open' ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleChangeStatus(event)
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                              <span>Cerrar evento</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled
+                          className="p-2 text-gray-400 cursor-not-allowed opacity-50"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </td>
                     </tr>
                   )
                 })}
@@ -391,7 +408,8 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
           isOpen={showChangeStatusModal}
           onClose={handleCloseModals}
           onSave={handleStatusSave}
-          currentStatus={selectedEventForModal.status}
+          mode={statusModalMode}
+          requireNote={isNoteRequired}
         />
       )}
     </div>

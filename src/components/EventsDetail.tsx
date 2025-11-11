@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
 import { ChangeStatusModal } from "./ChangeStatusModal"
+import { Table, type TableColumnsType } from "antd"
 import {
   X,
   ChevronDown,
@@ -73,6 +74,11 @@ const statusConfig: Record<'open' | 'closed', { label: string }> = {
   closed: { label: 'Cerrado' },
 }
 
+const ruleStatusBadgeConfig: Record<'active' | 'inactive', { label: string; className: string }> = {
+  active: { label: 'Activada', className: 'text-[#2065FF] font-semibold' },
+  inactive: { label: 'Desactivada', className: 'text-[#7A7A7A]' },
+}
+
 export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDetailProps) {
   const [activeTab, setActiveTab] = useState<'evento' | 'historial'>('evento')
   const [sidebarActiveItem, setSidebarActiveItem] = useState('evento')
@@ -111,6 +117,79 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
   const statusInfo = statusConfig[status]
 
   const relatedRule = rules.find(r => r.id === event.ruleId)
+  const relatedRuleSeverityInfo = relatedRule ? severityConfig[relatedRule.severity] : undefined
+  const RelatedRuleSeverityIcon = relatedRuleSeverityInfo?.icon
+  const ruleTableData = useMemo(() => {
+    if (!relatedRule) return []
+    return [
+      {
+        key: relatedRule.id,
+        name: relatedRule.name,
+        description: relatedRule.description || 'Sin descripción',
+        status: relatedRule.status,
+        severity: relatedRule.severity
+      }
+    ]
+  }, [relatedRule])
+
+  const ruleTableColumns: TableColumnsType<{
+    key: string
+    name: string
+    description: string
+    status: Rule['status']
+    severity: Rule['severity']
+  }> = useMemo(
+    () => [
+      {
+        title: 'Nombre de la regla',
+        dataIndex: 'name',
+        key: 'name',
+        render: (value: string) => (
+          <span className="text-[#3559FF] hover:underline">{value}</span>
+        )
+      },
+      {
+        title: 'Descripción',
+        dataIndex: 'description',
+        key: 'description'
+      },
+      {
+        title: 'Estado',
+        dataIndex: 'status',
+        key: 'status',
+        render: (value: Rule['status']) => (
+          <span className={`text-[14px] ${ruleStatusBadgeConfig[value].className}`}>
+            {ruleStatusBadgeConfig[value].label}
+          </span>
+        )
+      },
+      {
+        title: 'Severidad',
+        dataIndex: 'severity',
+        key: 'severity',
+        render: (value: Rule['severity']) => {
+          const info = severityConfig[value]
+          const Icon = info.icon
+          return (
+            <div
+              className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[8px] border"
+              style={{
+                backgroundColor: info.bgColor,
+                color: info.textColor,
+                borderColor: info.borderColor
+              }}
+            >
+              <Icon className="h-4 w-4" strokeWidth={2} style={{ color: info.textColor }} />
+              <span className="text-[12px] font-medium leading-none" style={{ color: info.textColor }}>
+                {info.label}
+              </span>
+            </div>
+          )
+        }
+      }
+    ],
+    []
+  )
 
 
   const seeMoreButtonClass = 'h-auto p-0 text-[13px] font-medium text-[#1677FF] hover:text-[#125FCC] inline-flex items-center gap-1 border-0 bg-transparent'
@@ -239,7 +318,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
 
   const sidebarItems = [
     { id: 'contenido', label: 'Contenido', icon: FileText },
-    { id: 'evento', label: 'Evento', icon: FileText, active: true },
+    { id: 'evento', label: 'Información general', icon: FileText, active: true },
     { id: 'notas', label: 'Notas', icon: StickyNote },
     { id: 'archivos', label: 'Archivos adjuntos', icon: Paperclip },
     { id: 'reglas', label: 'Reglas', icon: Settings },
@@ -274,28 +353,39 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white shadow-lg border rounded-lg p-1">
-                  <DropdownMenuItem 
-                    className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer"
-                    onClick={() => handleOpenChangeStatusModal(status === 'open' ? 'close' : 'reopen')}
-                  >
-                    <RefreshCw className="h-4 w-4 text-gray-500" />
-                    <span className="text-[14px] text-gray-900">
-                      {status === 'open' ? 'Cerrar evento' : 'Reabrir evento'}
-                    </span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {status === 'open' ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-white shadow-lg border rounded-lg p-1">
+                    <DropdownMenuItem 
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer"
+                      onClick={() => handleOpenChangeStatusModal('close')}
+                    >
+                      <RefreshCw className="h-4 w-4 text-gray-500" />
+                      <span className="text-[14px] text-gray-900">
+                        Cerrar evento
+                      </span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  className="p-2 text-gray-400 cursor-not-allowed opacity-50"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -309,7 +399,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Evento
+              Información general
             </button>
             <button
               onClick={() => setActiveTab('historial')}
@@ -334,10 +424,24 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
             {activeTab === 'evento' && (
               <div>
                 <div className="bg-white rounded-lg border p-6 space-y-6">
-                  <h2 className="text-[16px] text-[#1C2452]">Evento</h2>
+                  <h2 className="text-[16px] text-[#1C2452]">Información general</h2>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Estatus</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Nombre del evento</p>
+                      <p className="mt-2 text-[14px] text-gray-900">
+                        {relatedRule?.name || 'Sin nombre'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Identificador</p>
+                      <p className="mt-2 text-[14px] text-gray-900">
+                        {event.id}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Estatus</p>
                       <div className="mt-2 flex items-center gap-2">
                         {status === 'open' ? (
                           <span className="inline-flex items-center justify-center w-4 h-4 bg-green-500 rounded-full">
@@ -351,7 +455,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Severidad</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Severidad</p>
                       <div
                         className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-[8px] border"
                         style={{
@@ -368,7 +472,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Inicio del evento</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Inicio del evento</p>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
                         <span>{formatDateTime(event.createdAt)}</span>
                         {event.historyUrl && (
@@ -386,7 +490,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Cierre del evento</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Cierre del evento</p>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-[14px] text-gray-900">
                         <span>{formatDateTime(event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}</span>
                         {status === 'closed' && event.historyUrl && (
@@ -404,28 +508,28 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Ubicación inicial</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Ubicación inicial</p>
                       <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
                         {event.startAddress || '---'}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Ubicación final</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Ubicación final</p>
                       <p className="mt-2 text-[14px] text-gray-900 whitespace-pre-wrap">
                         {event.endAddress || '---'}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Duración</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Duración</p>
                       <p className="mt-2 text-[14px] text-gray-900">
                         {formatDuration(event.createdAt, event.closedAt ?? (status === 'closed' ? event.updatedAt : null))}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Unidad</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Unidad</p>
                       <div className="mt-2 text-[14px] text-blue-600 hover:text-blue-800">
                         {event.unitLink ? (
                           <a href={event.unitLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
@@ -438,7 +542,7 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
                     </div>
 
                     <div>
-                      <p className="text-[13px] font-medium text-gray-700 mb-1">Mensaje del evento</p>
+                      <p className="text-[13px] font-bold text-gray-700 mb-1">Mensaje del evento</p>
                       {eventMessageContent ? (
                         <>
                           <div
@@ -466,6 +570,21 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
 
                   </div>
                 </div>
+
+                {ruleTableData.length > 0 && (
+                  <div className="bg-white rounded-lg border p-6 mt-6">
+                    <div className="text-[16px] text-[#1C2452] mb-4">Reglas</div>
+                    <div className="rounded-[8px] border border-[#E4E7EC] bg-white overflow-hidden">
+                      <Table
+                        columns={ruleTableColumns}
+                        dataSource={ruleTableData}
+                        pagination={false}
+                        size="small"
+                        rowKey="key"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Notes Section Container */}
                 <div className="bg-white rounded-lg border p-6 mt-6">

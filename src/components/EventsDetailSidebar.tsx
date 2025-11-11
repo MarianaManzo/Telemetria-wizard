@@ -6,7 +6,7 @@ interface EventsDetailSidebarProps {
 }
 
 const sidebarItems = [
-  { id: "evento", label: "Evento" },
+  { id: "evento", label: "Información general" },
   { id: "notas", label: "Notas" },
   { id: "archivos", label: "Archivos adjuntos" },
   { id: "reglas", label: "Reglas" },
@@ -62,7 +62,7 @@ export function EventsDetailSidebar({ onViewChange }: EventsDetailSidebarProps) 
 
   return (
     <aside style={containerStyles}>
-      <h2 style={headingStyles}>Eventos</h2>
+      <h2 style={headingStyles}>Contenido</h2>
       <nav style={navStyles}>
         {sidebarItems.map((item) => {
           const active = activeItem === item.id;
