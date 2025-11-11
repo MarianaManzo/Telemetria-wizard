@@ -124,8 +124,7 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
   const filteredRules = rules.filter(rule => {
     const matchesStatus = statusFilter === "all" || rule.status === statusFilter
     const matchesSeverity = severityFilter === "all" || rule.severity === severityFilter
-    
-    return matchesSearch && matchesStatus && matchesSeverity
+    return matchesStatus && matchesSeverity
   })
 
   const formatDate = (date: Date) => {
