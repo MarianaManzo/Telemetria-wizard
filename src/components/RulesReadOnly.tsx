@@ -168,29 +168,21 @@ const highlightEmailTemplateMessage = (text: string) => {
   let tokenIndex = 0
   const nodes: React.ReactNode[] = []
 
-  // Split text into lines to preserve line breaks
-  const lines = parts.flatMap((part) => part.split(/\n/))
-  let lineIndex = 0
-
-  lines.forEach((line, linePos) => {
-    if (line) {
-      nodes.push(<React.Fragment key={`line-${lineIndex++}`}>{line}</React.Fragment>)
+  parts.forEach((part, index) => {
+    if (part) {
+      nodes.push(<React.Fragment key={`text-${index}`}>{part}</React.Fragment>)
     }
 
     if (tokenIndex < tokens.length) {
       const token = tokens[tokenIndex++]
       nodes.push(
         <span
-          key={`token-${lineIndex}`}
+          key={`token-${index}`}
           className="inline-flex items-center rounded-sm bg-purple-100 px-1 py-0.5 text-[12px] font-semibold text-purple-700"
         >
           {token}
         </span>
       )
-    }
-
-    if (linePos < lines.length - 1) {
-      nodes.push(<br key={`br-${lineIndex++}`} />)
     }
   })
 
@@ -363,9 +355,10 @@ interface RulesReadOnlyProps {
   onEdit?: (rule: Rule) => void
   onDelete?: (ruleId: string) => void
   onRename?: (ruleId: string, newName: string, newDescription?: string) => void
+  onDuplicate?: (rule: Rule) => void
 }
 
-export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, onDelete, onRename }: RulesReadOnlyProps) {
+export function RulesReadOnly({ rule, onBack, events, onStatusChange, onEdit, onDelete, onRename, onDuplicate }: RulesReadOnlyProps) {
   const [sidebarActiveItem, setSidebarActiveItem] = useState('regla')
   const [activeMainTab, setActiveMainTab] = useState('informacion-general')
   
@@ -732,6 +725,19 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
                     <Edit className="w-4 h-4" />
                     <span className="pt-[0px] pr-[0px] pb-[0px] pl-[20px]">Renombrar</span>
                   </DropdownMenuItem>
+                  {onDuplicate && (
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onDuplicate(rule)
+                      }}
+                    >
+                      <Copy className="w-4 h-4" />
+                      <span className="pt-[0px] pr-[0px] pb-[0px] pl-[20px]">Duplicar</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem 
                     className="flex items-center gap-2"
                     onClick={(e) => {
@@ -1192,17 +1198,15 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
       onClose={() => setShowDeleteModal(false)}
     />
 
-      {/* Rename Modal */}
-      {showRenameModal && (
-        <RenameRuleModal
-          rule={rule}
-          onConfirm={(newName, newDescription) => {
-            onRename?.(rule.id, newName, newDescription)
-            setShowRenameModal(false)
-          }}
-          onCancel={() => setShowRenameModal(false)}
-        />
-      )}
+      <RenameRuleModal
+        isOpen={showRenameModal}
+        rule={rule}
+        onClose={() => setShowRenameModal(false)}
+        onRename={(ruleId, newName, newDescription) => {
+          onRename?.(ruleId, newName, newDescription)
+          setShowRenameModal(false)
+        }}
+      />
     </div>
   )
 }

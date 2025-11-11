@@ -31,6 +31,7 @@ export default function App() {
   const [showEventDetail, setShowEventDetail] = useState(false)
   const [selectedRuleType, setSelectedRuleType] = useState<'telemetry' | 'zone' | null>(null)
   const [editingRule, setEditingRule] = useState<Rule | null>(null)
+  const [duplicatedRule, setDuplicatedRule] = useState<Rule | null>(null)
   // State management
   const [rules, setRules] = useState<Rule[]>(initialRules)
   const [events, setEvents] = useState<Event[]>(initialEvents)
@@ -111,6 +112,7 @@ export default function App() {
         description: "Puedes encontrarla en la lista de reglas"
       })
     }
+    setDuplicatedRule(null)
   }, [editingRule])
 
   const handleRuleClick = useCallback((rule: Rule) => {
@@ -133,6 +135,7 @@ export default function App() {
   const handleBackToRules = useCallback(() => {
     setSelectedRule(null)
     setEditingRule(null)
+    setDuplicatedRule(null)
     setSelectedRuleType(null)
     setRulesView('list')
   }, [])
@@ -155,6 +158,7 @@ export default function App() {
     }
     setSelectedRuleType(null)
     setEditingRule(null)
+    setDuplicatedRule(null)
   }, [editingRule])
 
   const handleEditRule = useCallback((rule: Rule) => {
@@ -327,47 +331,24 @@ export default function App() {
     })
   }, [])
 
-  const handleDuplicateRule = useCallback((ruleData: Partial<Rule>) => {
-    const newRule: Rule = {
-      id: `rule-${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: ruleData.name || 'Regla duplicada',
-      description: ruleData.description || '',
-      status: 'active',
-      severity: ruleData.severity || 'low',
-      conditions: ruleData.conditions || [],
-      conditionGroups: ruleData.conditionGroups || [],
-      appliesTo: ruleData.appliesTo || { type: 'units', units: [] },
-      zoneScope: ruleData.zoneScope || { type: 'all' },
-      schedule: ruleData.schedule || { type: 'always' },
-      closePolicy: ruleData.closePolicy || { type: 'manual' },
-      eventSettings: ruleData.eventSettings || {
-        instructions: '',
-        responsible: 'supervisor-flota',
-        severity: 'low',
-        icon: 'alert',
-        tags: []
-      },
-      notifications: ruleData.notifications || {
-        email: {
-          enabled: false,
-          recipients: [],
-          subject: '',
-          body: ''
-        }
-      },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      owner: 'Usuario Actual',
+  const handleDuplicateRule = useCallback((ruleToDuplicate: Rule) => {
+    const duplicatedData: Rule = {
+      ...ruleToDuplicate,
+      id: `dup-${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      name: `Copia de ${ruleToDuplicate.name}`,
+      status: 'draft',
+      isFavorite: false,
       relatedEventsCount: 0,
-      isFavorite: false
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
 
-    setRules(prev => [newRule, ...prev])
-    
-    showCustomToast({
-      title: "Regla duplicada con éxito",
-      description: "La nueva regla ha sido creada y activada"
-    })
+    setDuplicatedRule(duplicatedData)
+    setEditingRule(null)
+    setSelectedRule(null)
+    setSelectedRuleType(ruleToDuplicate.ruleType === 'zone' ? 'zone' : 'telemetry')
+    setRulesView('new')
+    setCurrentView('rules')
   }, [])
 
   const handleGlobalNavigation = useCallback((view: AppView) => {
@@ -452,6 +433,8 @@ export default function App() {
           return (
             <TelemetryWizard
               wizardType={selectedRuleType}
+              rule={duplicatedRule ?? undefined}
+              forceCreateMode={!!duplicatedRule}
               onSave={handleCreateRule}
               onCancel={handleBackToRules}
               onBackToTypeSelector={handleBackToTypeSelector}
@@ -468,11 +451,15 @@ export default function App() {
         )
       } else if (rulesView === 'edit' && editingRule) {
         // Edit mode with prefilled data
-        if (selectedRuleType === 'telemetry' || selectedRuleType === 'zone') {
+        const effectiveRuleType: 'telemetry' | 'zone' =
+          selectedRuleType ?? (editingRule.ruleType === 'zone' ? 'zone' : 'telemetry')
+
+        if (effectiveRuleType === 'telemetry' || effectiveRuleType === 'zone') {
           return (
             <TelemetryWizard
-              wizardType={selectedRuleType}
+              wizardType={effectiveRuleType}
               rule={editingRule}
+              forceCreateMode={false}
               onSave={handleCreateRule}
               onCancel={handleBackToTypeSelector}
               onBackToTypeSelector={handleBackToTypeSelector}
@@ -482,7 +469,7 @@ export default function App() {
         }
         return (
           <RulesWizard
-            ruleType={selectedRuleType}
+            ruleType={effectiveRuleType}
             rule={editingRule}
             onSave={handleCreateRule}
             onCancel={handleBackToTypeSelector}
@@ -499,6 +486,7 @@ export default function App() {
             onEdit={handleEditRule}
             onDelete={handleDeleteRule}
             onRename={handleRenameRule}
+            onDuplicate={handleDuplicateRule}
           />
         )
       }
