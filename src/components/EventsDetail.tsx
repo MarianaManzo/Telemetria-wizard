@@ -276,9 +276,9 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
                   >
                     <MoreVertical className="w-4 h-4" />
