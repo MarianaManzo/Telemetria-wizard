@@ -2659,7 +2659,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const hasValidActions = useMemo(
     () =>
       Boolean(
-        eventShortName.trim() &&
+        eventShortName.trim().length >= 3 &&
           (!requiresClosureTime || (closureTimeValue && Number(closureTimeValue) > 0)) &&
           !needsUnitTags &&
           !needsUnitUntags
@@ -3877,6 +3877,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </label>
                         <Input
                           id="event-short-name"
+                          minLength={3}
                           value={eventShortName}
                           onChange={(event) => {
                             const value = event.target.value.slice(0, 10)
