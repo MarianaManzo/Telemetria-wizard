@@ -91,6 +91,14 @@ const statusConfig = {
 export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavorite, onEventClick, onStatusChange, onRename, onDelete, onDuplicate }: RulesListProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [severityFilter, setSeverityFilter] = useState<string>("all")
+  const [tagFilter, setTagFilter] = useState<string>("all")
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>()
+    rules.forEach(rule => {
+      rule.appliesTo.tags?.forEach(tag => tagSet.add(tag))
+    })
+    return Array.from(tagSet)
+  }, [rules])
   const hasActiveFilters = statusFilter !== "all" || severityFilter !== "all"
   
   // Modal states
@@ -124,7 +132,10 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
   const filteredRules = rules.filter(rule => {
     const matchesStatus = statusFilter === "all" || rule.status === statusFilter
     const matchesSeverity = severityFilter === "all" || rule.severity === severityFilter
-    return matchesStatus && matchesSeverity
+    const matchesTag =
+      tagFilter === "all" ||
+      (rule.appliesTo.tags?.length ? rule.appliesTo.tags.includes(tagFilter) : false)
+    return matchesStatus && matchesSeverity && matchesTag
   })
 
   const formatDate = (date: Date) => {
@@ -242,12 +253,25 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
             </SelectContent>
           </Select>
 
+          <Select value={tagFilter} onValueChange={setTagFilter}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Todas las etiquetas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las etiquetas</SelectItem>
+              {availableTags.map(tag => (
+                <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Button
             variant="link"
             className="ml-auto h-auto px-0"
             onClick={() => {
               setStatusFilter("all")
               setSeverityFilter("all")
+              setTagFilter("all")
             }}
             disabled={!hasActiveFilters}
           >
