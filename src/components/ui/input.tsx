@@ -8,7 +8,7 @@ type InputProps = AntdInputProps;
 
 const sanitizeNumericValue = (value: string) => value.replace(/[^0-9.\-+]/g, '');
 
-export const Input = forwardRef<InputRef, InputProps>(({ className, onChange, type, ...props }, ref) => {
+export const Input = forwardRef<InputRef, InputProps>(({ className, onChange, onKeyDown, type, ...props }, ref) => {
   const handleChange: AntdInputProps['onChange'] = (event) => {
     if (type === 'number') {
       const sanitized = sanitizeNumericValue(event.target.value);
@@ -19,7 +19,24 @@ export const Input = forwardRef<InputRef, InputProps>(({ className, onChange, ty
     onChange?.(event);
   };
 
-  return <AntdInput ref={ref} className={cn(className)} type={type} onChange={handleChange} {...props} />;
+  const handleKeyDown: AntdInputProps['onKeyDown'] = (event) => {
+    if (type === 'number' && ['e', 'E', '+', '-'].includes(event.key)) {
+      event.preventDefault();
+      return;
+    }
+    onKeyDown?.(event);
+  };
+
+  return (
+    <AntdInput
+      ref={ref}
+      className={cn(className)}
+      type={type}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      {...props}
+    />
+  );
 });
 
 Input.displayName = "Input";
