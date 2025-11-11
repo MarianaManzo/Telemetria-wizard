@@ -89,10 +89,9 @@ const statusConfig = {
 }
 
 export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavorite, onEventClick, onStatusChange, onRename, onDelete, onDuplicate }: RulesListProps) {
-  const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [severityFilter, setSeverityFilter] = useState<string>("all")
-  const hasActiveFilters = searchQuery.trim().length > 0 || statusFilter !== "all" || severityFilter !== "all"
+  const hasActiveFilters = statusFilter !== "all" || severityFilter !== "all"
   
   // Modal states
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -123,9 +122,6 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
   }, [events])
 
   const filteredRules = rules.filter(rule => {
-    const matchesSearch = rule.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         rule.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         rule.owner.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === "all" || rule.status === statusFilter
     const matchesSeverity = severityFilter === "all" || rule.severity === severityFilter
     
@@ -221,53 +217,43 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
 
       {/* Filters */}
       <div className="px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
-        <div className="flex flex-col gap-4">
-          <Input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Buscar por nombre, descripción o propietario"
-            className="w-full max-w-xl text-[14px]"
-          />
+        <div className="flex flex-wrap items-center gap-4">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Todos los estados" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="active">Activadas</SelectItem>
+              <SelectItem value="inactive">Desactivadas</SelectItem>
+              <SelectItem value="draft">Borradores</SelectItem>
+            </SelectContent>
+          </Select>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="min-w-[180px] flex-1 md:flex-none">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="active">Activadas</SelectItem>
-                <SelectItem value="inactive">Desactivadas</SelectItem>
-                <SelectItem value="draft">Borradores</SelectItem>
-              </SelectContent>
-            </Select>
+          <Select value={severityFilter} onValueChange={setSeverityFilter}>
+            <SelectTrigger className="min-w-[200px]">
+              <SelectValue placeholder="Todas las severidades" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las severidades</SelectItem>
+              <SelectItem value="informative">Informativo</SelectItem>
+              <SelectItem value="low">Baja</SelectItem>
+              <SelectItem value="medium">Media</SelectItem>
+              <SelectItem value="high">Alta</SelectItem>
+            </SelectContent>
+          </Select>
 
-            <Select value={severityFilter} onValueChange={setSeverityFilter}>
-              <SelectTrigger className="min-w-[200px] flex-1 md:flex-none">
-                <SelectValue placeholder="Severidad" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las severidades</SelectItem>
-                <SelectItem value="informative">Informativo</SelectItem>
-                <SelectItem value="low">Baja</SelectItem>
-                <SelectItem value="medium">Media</SelectItem>
-                <SelectItem value="high">Alta</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="link"
-              className="ml-auto h-auto px-0"
-              onClick={() => {
-                setSearchQuery("")
-                setStatusFilter("all")
-                setSeverityFilter("all")
-              }}
-              disabled={!hasActiveFilters}
-            >
-              Limpiar todo
-            </Button>
-          </div>
+          <Button
+            variant="link"
+            className="ml-auto h-auto px-0"
+            onClick={() => {
+              setStatusFilter("all")
+              setSeverityFilter("all")
+            }}
+            disabled={!hasActiveFilters}
+          >
+            Limpiar todo
+          </Button>
         </div>
       </div>
 
@@ -277,18 +263,18 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
         <div className="flex flex-col items-center justify-center py-12">
           <FileX className="w-12 h-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            {searchQuery || statusFilter !== "all" || severityFilter !== "all" 
+            {statusFilter !== "all" || severityFilter !== "all" 
               ? "No se encontraron reglas que coincidan con los filtros" 
               : "No hay reglas configuradas"
             }
           </h3>
           <p className="text-muted-foreground mb-6 text-center max-w-md">
-            {searchQuery || statusFilter !== "all" || severityFilter !== "all"
+            {statusFilter !== "all" || severityFilter !== "all"
               ? "Prueba ajustando los criterios de búsqueda o filtros"
               : "Las reglas te permiten monitorear condiciones específicas y generar eventos automáticamente cuando se cumplan"
             }
           </p>
-          {(!searchQuery && statusFilter === "all" && severityFilter === "all") && (
+          {(statusFilter === "all" && severityFilter === "all") && (
             <Button onClick={onNewRule} className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
               Crear primera regla
