@@ -2987,13 +2987,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             <h3 className="text-[14px] font-semibold text-gray-900">
               {isZone ? 'Validar parámetros al momento de entrar a la zona' : 'Parámetros a evaluar'}
             </h3>
-            <p className="text-[14px] text-gray-600 flex items-start gap-1">
-              {!isZone && <span className="text-red-500 leading-5">*</span>}
-              <span>
-                {isZone
-                  ? 'El evento sólo será generado si las condiciones se cumplen al momento de entrar a la zona'
-                  : '¿Qué condiciones evalúa esta regla?'}
-              </span>
+            <p className="text-[14px] text-gray-600">
+              {isZone
+                ? 'El evento sólo será generado si las condiciones se cumplen al momento de entrar a la zona'
+                : '¿Qué condiciones evalúa esta regla?'}
             </p>
           </div>
           {isZone && (
