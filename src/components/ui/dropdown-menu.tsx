@@ -191,12 +191,15 @@ export function DropdownMenuItem({
 }: DropdownMenuItemProps) {
   const ctx = useDropdownMenuContext("DropdownMenuItem");
   const id = useId();
+  const label = useMemo(
+    () => (
+      <div className={cn("flex items-center gap-2", inset && "pl-6", className)}>{children}</div>
+    ),
+    [children, className, inset],
+  );
 
   useEffect(() => {
     const key = id;
-    const label = (
-      <div className={cn("flex items-center gap-2", inset && "pl-6", className)}>{children}</div>
-    );
 
     const item: MenuItemType = {
       key,
@@ -214,7 +217,7 @@ export function DropdownMenuItem({
     ctx.registerItem(item, handler);
 
     return () => ctx.unregisterItem(key);
-  }, [ctx, id, children, className, inset, variant, disabled, onClick]);
+  }, [ctx, id, label, variant, disabled, onClick]);
 
   return null;
 }

@@ -2947,6 +2947,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Tab states
   const tabs = ['parameters', 'actions', 'notifications']
   const currentTabIndex = tabs.indexOf(activeTab)
+  const notificationsTabDisabled =
+    (currentTabIndex === 0 && !canProceedToConfig) ||
+    (currentTabIndex === 1 && !hasValidActions)
   const handleTabChange = (nextTab: string) => {
     if (nextTab === activeTab) return
     if (currentTabIndex === 0) {
@@ -3756,9 +3759,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </TabsTrigger>
                 <TabsTrigger 
                   value="notifications"
+                  aria-disabled={notificationsTabDisabled}
                   className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 ${
                     currentTabIndex >= 2 ? 'text-blue-600' : 'text-gray-500'
-                  } cursor-pointer`}
+                  } ${notificationsTabDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                 >
                   <div className="flex items-center gap-2">
                     <div className={`w-5 h-5 rounded-full text-white text-[12px] font-medium flex items-center justify-center ${
