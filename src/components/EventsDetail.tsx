@@ -247,79 +247,89 @@ export function EventsDetail({ event, onClose, rules, onStatusChange }: EventsDe
   ]
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-white">
-      {/* Header */}
-      <div className="border-b border-border bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onClose}
-              className="p-1"
+    <div className="flex-1 flex flex-col bg-white min-h-0">
+      {/* Header + Tabs */}
+      <div
+        style={{
+          position: "sticky",
+          top: "var(--app-header-height, 0px)",
+          zIndex: 5,
+          background: "#fff",
+          boxShadow: "0 1px 0 rgba(0,0,0,0.05)",
+        }}
+      >
+        <div className="border-b border-border px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onClose}
+                className="p-1"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <h1 className="text-[16px] text-foreground">
+                {event.id} - {relatedRule?.name || 'Regla no encontrada'} - {event.unitName}
+              </h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-white shadow-lg border rounded-lg p-1">
+                  <DropdownMenuItem 
+                    className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer"
+                    onClick={() => handleOpenChangeStatusModal(status === 'open' ? 'close' : 'reopen')}
+                  >
+                    <RefreshCw className="h-4 w-4 text-gray-500" />
+                    <span className="text-[14px] text-gray-900">
+                      {status === 'open' ? 'Cerrar evento' : 'Reabrir evento'}
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+        <div className="border-b border-gray-200 px-6 bg-white">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('evento')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'evento'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <h1 className="text-[16px] text-foreground">
-              {event.id} - {relatedRule?.name || 'Regla no encontrada'} - {event.unitName}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white shadow-lg border rounded-lg p-1">
-                <DropdownMenuItem 
-                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer"
-                  onClick={() => handleOpenChangeStatusModal(status === 'open' ? 'close' : 'reopen')}
-                >
-                  <RefreshCw className="h-4 w-4 text-gray-500" />
-                  <span className="text-[14px] text-gray-900">
-                    {status === 'open' ? 'Cerrar evento' : 'Reabrir evento'}
-                  </span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              Evento
+            </button>
+            <button
+              onClick={() => setActiveTab('historial')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'historial'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Historial del registro
+            </button>
+          </nav>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto min-h-0">
           <div className="p-6">
-            {/* Tabs */}
-            <div className="border-b border-gray-200 mb-6">
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('evento')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'evento'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Evento
-                </button>
-                <button
-                  onClick={() => setActiveTab('historial')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'historial'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Historial del registro
-                </button>
-              </nav>
-            </div>
+            {/* Content */}
 
             {activeTab === 'evento' && (
               <div>

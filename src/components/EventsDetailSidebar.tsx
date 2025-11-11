@@ -14,7 +14,10 @@ const sidebarItems = [
 ];
 
 const containerStyles: CSSProperties = {
-  height: "100%",
+  position: "sticky",
+  top: "var(--app-header-height, 0px)",
+  height: "calc(100vh - var(--app-header-height, 0px))",
+  overflowY: "auto",
   background: "#fafafa",
   padding: `${toPx(spacing.md)} ${toPx(spacing.sm)}`,
   display: "flex",

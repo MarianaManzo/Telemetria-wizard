@@ -563,6 +563,11 @@ export default function App() {
                 paddingInline: 0,
                 display: "flex",
                 flexDirection: "column",
+                position: "sticky",
+                top: "var(--app-header-height, 0px)",
+                height: "calc(100vh - var(--app-header-height, 0px))",
+                overflowY: "auto",
+                alignSelf: "flex-start",
               }}
             >
               {eventSidebar}
