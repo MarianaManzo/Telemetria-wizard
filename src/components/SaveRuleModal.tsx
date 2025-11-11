@@ -22,7 +22,8 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
   const [showNameError, setShowNameError] = useState(false)
 
   const handleSave = async () => {
-    if (!ruleName.trim()) {
+    const trimmedName = ruleName.trim()
+    if (trimmedName.length < 3 || trimmedName.length > 50) {
       setShowNameError(true)
       return
     }
@@ -33,7 +34,7 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
     try {
       const ruleData = {
         ...defaultData,
-        name: ruleName.trim(),
+        name: trimmedName,
         description: ruleDescription.trim()
       }
       
@@ -53,7 +54,8 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
     onClose()
   }
 
-  const nameIsValid = ruleName.trim().length > 0 && ruleName.trim().length <= 50
+  const trimmedName = ruleName.trim()
+  const nameIsValid = trimmedName.length >= 3 && trimmedName.length <= 50
 
   const footer = (
     <div className="flex justify-end gap-4">
@@ -84,7 +86,7 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
             onChange={(e) => {
               const value = e.target.value.slice(0, 50)
               setRuleName(value)
-              if (value.trim().length > 0) {
+              if (value.trim().length >= 3) {
                 setShowNameError(false)
               }
             }}
@@ -98,8 +100,12 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
                 : {})
             }}
           />
-          {showNameError && ruleName.trim().length === 0 && (
-            <p className="text-[12px] text-red-500 mt-1">Este campo es obligatorio.</p>
+          {showNameError && (
+            <p className="text-[12px] text-red-500 mt-1">
+              {trimmedName.length === 0
+                ? 'Este campo es obligatorio.'
+                : 'Debe tener como mínimo 3 caracteres.'}
+            </p>
           )}
         </div>
 
