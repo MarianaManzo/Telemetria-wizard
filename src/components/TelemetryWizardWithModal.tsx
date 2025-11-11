@@ -3424,10 +3424,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
+                      min={1}
+                      onKeyDown={(event) => {
+                        if (event.key === '-' || event.key === 'Minus') {
+                          event.preventDefault()
+                        }
+                      }}
                       value={durationValue}
                       onChange={(e) => {
-                        setDurationValue(e.target.value)
-                        if (Number(e.target.value) > 0) {
+                        const nextValue = e.target.value
+                        if (nextValue === '') {
+                          setDurationValue('')
+                          return
+                        }
+                        if (Number(nextValue) < 0) {
+                          return
+                        }
+                        setDurationValue(nextValue)
+                        if (Number(nextValue) > 0) {
                           setShowDurationError(false)
                         }
                       }}
