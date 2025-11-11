@@ -19,11 +19,15 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
   const [ruleDescription, setRuleDescription] = useState(defaultData?.description || "")
   const [isSaving, setIsSaving] = useState(false)
 
+  const [showNameError, setShowNameError] = useState(false)
+
   const handleSave = async () => {
     if (!ruleName.trim()) {
+      setShowNameError(true)
       return
     }
 
+    setShowNameError(false)
     setIsSaving(true)
     
     try {
@@ -45,6 +49,7 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
   const handleClose = () => {
     setRuleName(defaultData?.name || '')
     setRuleDescription(defaultData?.description || '')
+    setShowNameError(false)
     onClose()
   }
 
@@ -71,7 +76,7 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
       <div className="space-y-4 mb-6">
         <div>
           <Label htmlFor="rule-name" className="text-[14px] font-medium text-gray-700 mb-2 block text-left">
-            Nombre de la regla
+            <span className="text-red-500 mr-1">*</span> Nombre de la regla
           </Label>
           <Input
             id="rule-name"
@@ -79,11 +84,23 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
             onChange={(e) => {
               const value = e.target.value.slice(0, 50)
               setRuleName(value)
+              if (value.trim().length > 0) {
+                setShowNameError(false)
+              }
             }}
             maxLength={50}
             placeholder="Escribe un nombre"
             className="text-[14px] w-full"
+            aria-invalid={showNameError && !nameIsValid}
+            style={{
+              ...(showNameError && !nameIsValid
+                ? { border: '1px solid #F04438', boxShadow: 'none', borderRadius: '8px' }
+                : {})
+            }}
           />
+          {showNameError && ruleName.trim().length === 0 && (
+            <p className="text-[12px] text-red-500 mt-1">Este campo es obligatorio.</p>
+          )}
         </div>
 
         <div>
