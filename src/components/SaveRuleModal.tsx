@@ -67,7 +67,7 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
       >
         Cancelar
       </Button>
-      <Button onClick={handleSave} disabled={!nameIsValid || isSaving} className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal">
+      <Button onClick={handleSave} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal">
         {isSaving ? 'Guardando...' : 'Guardar'}
       </Button>
     </div>
