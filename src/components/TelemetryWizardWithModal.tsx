@@ -2603,7 +2603,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     setShowExitConfirmModal(false)
   }
 
-  const flagParameterErrors = useCallback(() => {
+  const flagParameterErrors = useCallback((options?: { requireZoneScope?: boolean }) => {
+    const requireZoneScope = options?.requireZoneScope ?? true
     const hasValidCondition = conditionGroups.some(group =>
       group.conditions.some(condition => condition.sensor && condition.operator && condition.value)
     )
@@ -2611,9 +2612,20 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     const missingCustomTargets =
       appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
     const missingDuration = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
-    const missingZoneScope = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere' && (selectedZonesData.length === 0 && selectedZoneTags.length === 0)
+    const zoneScopeActive = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
+    const zoneSelectionEmpty = selectedZonesData.length === 0 && selectedZoneTags.length === 0
+    const missingZoneScope = zoneScopeActive && zoneSelectionEmpty
 
-    const hasErrors = !hasAtLeastOneGroup || !hasValidCondition || missingCustomTargets || missingDuration || missingZoneScope
+    if (zoneScopeActive && zoneSelectionEmpty) {
+      setShowZoneScopeErrors(true)
+    }
+
+    const hasErrors =
+      !hasAtLeastOneGroup ||
+      !hasValidCondition ||
+      missingCustomTargets ||
+      missingDuration ||
+      (requireZoneScope && missingZoneScope)
 
     if (!hasAtLeastOneGroup || !hasValidCondition) {
       setShowParametersErrors(true)
@@ -2623,9 +2635,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     }
     if (missingDuration) {
       setShowDurationError(true)
-    }
-    if (missingZoneScope) {
-      setShowZoneScopeErrors(true)
     }
 
     return !hasErrors
@@ -2901,16 +2910,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const needsCustomTargets = appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
   const needsDurationValue = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
   const shouldRestrictByZone = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
-  const needsZoneSelection = shouldRestrictByZone && selectedZonesData.length === 0 && selectedZoneTags.length === 0
+  const zoneSelectionEmpty = selectedZonesData.length === 0 && selectedZoneTags.length === 0
   const showCustomTargetsError = appliesTo === 'custom' && showAppliesErrors && needsCustomTargets
-  const showZoneScopeError = shouldRestrictByZone && showZoneScopeErrors && needsZoneSelection
-  const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue && !needsZoneSelection
+  const showZoneScopeError = shouldRestrictByZone && showZoneScopeErrors && zoneSelectionEmpty
+  const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue
   const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
   const shortNameHasError = showActionsErrors && !eventShortName.trim()
 
+  useEffect(() => {
+    if (!shouldRestrictByZone || !zoneSelectionEmpty) {
+      setShowZoneScopeErrors(false)
+    }
+  }, [shouldRestrictByZone, zoneSelectionEmpty])
+
   const handleNextStep = () => {
+    if (currentTabIndex === 0) {
+      flagParameterErrors({ requireZoneScope: false })
+    }
     if (currentTabIndex === 0 && !canProceedToConfig) {
-      flagParameterErrors()
       return
     }
     if (currentTabIndex === 1 && !hasValidActions) {
@@ -2929,8 +2946,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const currentTabIndex = tabs.indexOf(activeTab)
   const handleTabChange = (nextTab: string) => {
     if (nextTab === activeTab) return
+    if (currentTabIndex === 0) {
+      flagParameterErrors({ requireZoneScope: false })
+    }
     if (currentTabIndex === 0 && nextTab !== 'parameters' && !canProceedToConfig) {
-      flagParameterErrors()
       return
     }
     if (currentTabIndex === 1 && nextTab === 'notifications' && !hasValidActions) {
@@ -3154,9 +3173,19 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         </div>
       </div>
       <div className="p-4 flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-8 items-center">
-          <div>
-            <label className="text-[14px] font-medium text-gray-700">¿A qué unidades aplicará la regla?</label>
+        <div className="grid grid-cols-2 gap-8 items-start">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-start gap-1">
+              <span className="text-red-500 leading-5">*</span>
+              <label className="text-[14px] font-medium text-gray-700 leading-5">
+                ¿A qué unidades aplicará la regla?
+              </label>
+            </div>
+            {appliesTo === 'custom' && (
+              <p className={`text-[12px] pl-4 ${showCustomTargetsError ? 'text-red-500' : 'text-gray-500'}`}>
+                Selecciona al menos una unidad o etiqueta.
+              </p>
+            )}
           </div>
           <div>
             <Select value={appliesTo} onValueChange={(value) => {
@@ -3183,7 +3212,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 <div className="flex items-center gap-2">
                   <Truck className="h-4 w-4 text-gray-600" />
                   <label className="text-[14px] font-medium text-gray-700">
-                    <span className="text-red-500 mr-1">*</span>
                     Unidades
                   </label>
                 </div>
@@ -3195,9 +3223,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   placeholder="Seleccionar unidades"
                   hasError={showCustomTargetsError}
                 />
-                {showCustomTargetsError && (
-                  <p className="mt-1 text-[12px] text-red-500">Selecciona al menos una unidad o etiqueta.</p>
-                )}
               </div>
             </div>
 
@@ -3206,7 +3231,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4 text-gray-600" />
                   <label className="text-[14px] font-medium text-gray-700">
-                    <span className="text-red-500 mr-1">*</span>
                     Etiquetas
                   </label>
                   <Tooltip>
