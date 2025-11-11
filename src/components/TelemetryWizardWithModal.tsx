@@ -2656,16 +2656,17 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const needsUnitTags = unitTagsEnabled && unitTags.length === 0
   const needsUnitUntags = unitUntagsEnabled && unitUntags.length === 0
 
+  const trimmedShortName = eventShortName.trim()
   const hasValidActions = useMemo(
     () =>
       Boolean(
-        eventShortName.trim().length >= 3 &&
+        trimmedShortName.length >= 3 &&
           (!requiresClosureTime || (closureTimeValue && Number(closureTimeValue) > 0)) &&
           !needsUnitTags &&
           !needsUnitUntags
       ),
     [
-      eventShortName,
+      trimmedShortName,
       requiresClosureTime,
       closureTimeValue,
       needsUnitTags,
@@ -2918,7 +2919,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const showZoneScopeError = shouldRestrictByZone && showZoneScopeErrors && zoneSelectionEmpty
   const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue
   const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
-  const shortNameHasError = showActionsErrors && eventShortName.trim().length < 3
+  const shortNameHasError = showActionsErrors && trimmedShortName.length < 3
 
   useEffect(() => {
     if (!shouldRestrictByZone || !zoneSelectionEmpty) {
@@ -3902,7 +3903,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           }}
                         />
                         {shortNameHasError && (
-                          <p className="text-[12px] text-red-500">Ingresa al menos 3 caracteres.</p>
+                          <p className="text-[12px] text-red-500">
+                            {trimmedShortName.length === 0
+                              ? 'Campo obligatorio.'
+                              : 'Debe tener como mínimo 3 caracteres.'}
+                          </p>
                         )}
                       </div>
                       <div className="space-y-2">
