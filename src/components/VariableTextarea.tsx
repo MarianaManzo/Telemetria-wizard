@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from "react"
 import type { DragEvent } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { ChevronDown } from "lucide-react"
+import { ChevronDownIcon } from "lucide-react@0.487.0"
 
 interface VariableTextareaProps {
   value: string
@@ -54,7 +54,7 @@ export function VariableButton({
 }: VariableButtonProps) {
   const triggerClasses =
     triggerClassName ||
-    'px-2 py-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors flex items-center gap-1 text-[12px]'
+    'inline-flex items-center gap-1 rounded px-2 py-1 text-[14px] font-medium text-blue-600 hover:text-blue-700 focus:outline-none transition-colors'
 
   return (
     <Popover>
@@ -65,15 +65,20 @@ export function VariableButton({
           title="Insertar variable"
         >
           <span className="text-[14px]">{label}</span>
-          <ChevronDown className="w-3 h-3" />
+          <ChevronDownIcon className="w-3.5 h-3.5 text-blue-600" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-0 m-2" align="end">
-        <div className="p-2 border-b border-gray-100">
+      <PopoverContent
+        className="variable-button-popover"
+        style={{ width: 300, maxWidth: 300 }}
+        innerClassName="rounded-lg border border-gray-200 shadow-xl overflow-hidden"
+        align="end"
+      >
+        <div className="p-3 border-b border-gray-100 bg-white">
           <div className="text-[12px] font-medium text-gray-700">Variables disponibles</div>
           <div className="text-[11px] text-gray-500">Click para insertar en el cursor</div>
         </div>
-        <div className="max-h-64 overflow-y-auto">
+        <div className="max-h-64 overflow-y-auto bg-white">
           {variables.map((variable) => (
             <button
               key={variable.key}

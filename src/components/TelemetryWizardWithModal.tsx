@@ -4128,7 +4128,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           label="Más variables"
                           variables={EVENT_MESSAGE_VARIABLES}
                           onInsertVariable={handleInsertEventVariable}
-                          triggerClassName="inline-flex items-center gap-1 text-[14px] font-normal text-[#1677FF] hover:text-[#125FCC]"
                         />
                       </div>
                       {!hasConfiguredSensors && (

@@ -4722,6 +4722,16 @@ input[type="radio"]:focus {
   background: transparent !important;
 }
 
+.variable-button-popover .ant-popover-inner {
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.variable-button-popover .ant-popover-inner-content {
+  border-radius: 8px !important;
+  padding: 0 !important;
+}
+
 .custom-select .ant-select-selector,
 .nm-select .ant-select-selector {
   height: 32px !important;
