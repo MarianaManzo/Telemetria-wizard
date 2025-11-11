@@ -1707,6 +1707,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [selectedTags, setSelectedTags] = useState<TagData[]>([])
   const [showAppliesErrors, setShowAppliesErrors] = useState(false)
   const [showDurationError, setShowDurationError] = useState(false)
+  const [showActionsErrors, setShowActionsErrors] = useState(false)
 
   // Advanced configuration
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -1752,7 +1753,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [eventIcon, setEventIcon] = useState(rule?.eventSettings?.icon || 'info')
   const [iconSearch, setIconSearch] = useState('')
   const [eventSeverity, setEventSeverity] = useState(rule?.eventSettings?.severity || 'low')
-  const [eventShortName, setEventShortName] = useState(rule?.eventSettings?.shortName || 'Evento')
+  const [eventShortName, setEventShortName] = useState(rule?.eventSettings?.shortName ?? '')
   const iconPair = eventIcon ? eventIconMap[eventIcon] : undefined
   const EventIconComponent = iconPair?.outline
   const previewSeverityStyles = severityConfig[eventSeverity] || severityConfig.low
@@ -1781,6 +1782,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [requireNoteOnClose, setRequireNoteOnClose] = useState(true)
   const [closureTimeValue, setClosureTimeValue] = useState('120')
   const [closureTimeUnit, setClosureTimeUnit] = useState('minutos')
+  const [showClosureTimeError, setShowClosureTimeError] = useState(false)
+  useEffect(() => {
+    if (closePolicy !== 'automaticamente-tiempo') {
+      setShowClosureTimeError(false)
+    }
+  }, [closePolicy])
   const [webhookEnabled, setWebhookEnabled] = useState(false)
   const [sendDeviceCommand, setSendDeviceCommand] = useState(false)
   const [unitTagsEnabled, setUnitTagsEnabled] = useState(false)
@@ -2154,7 +2161,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         setInstructions(rule.eventSettings.instructions || '')
         setEventSeverity(rule.eventSettings.severity || 'medium')
         setEventIcon(rule.eventSettings.icon || 'info')
-        setEventShortName(rule.eventSettings.shortName || 'Evento')
+        setEventShortName(rule.eventSettings.shortName ?? '')
         const responsibleValue = rule.eventSettings.responsible || defaultResponsible
         setSelectedResponsible(responsibleValue)
         const hasExplicitResponsible = rule.eventSettings.responsible !== undefined
@@ -2649,8 +2656,41 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     durationValue,
   ])
 
+  const requiresClosureTime = closePolicy === 'automaticamente-tiempo'
+
+  const hasValidActions = useMemo(
+    () =>
+      Boolean(
+        eventShortName.trim() &&
+          (!requiresClosureTime || (closureTimeValue && Number(closureTimeValue) > 0))
+      ),
+    [eventShortName, requiresClosureTime, closureTimeValue]
+  )
+
+  const flagActionErrors = useCallback(() => {
+    let isValid = true
+
+    if (!eventShortName.trim()) {
+      setShowActionsErrors(true)
+      isValid = false
+    }
+
+    if (requiresClosureTime) {
+      if (!closureTimeValue || Number(closureTimeValue) <= 0) {
+        setShowClosureTimeError(true)
+        isValid = false
+      }
+    } else {
+      setShowClosureTimeError(false)
+    }
+
+    return isValid
+  }, [eventShortName, requiresClosureTime, closureTimeValue])
+
   const handleSave = async () => {
-    if (!flagParameterErrors()) {
+    const parametersOk = flagParameterErrors()
+    const actionsOk = flagActionErrors()
+    if (!parametersOk || !actionsOk) {
       return
     }
 
@@ -2682,7 +2722,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
 
   const handleSaveRule = (ruleData: Partial<Rule>) => {
-    if (!flagParameterErrors()) {
+    const parametersOk = flagParameterErrors()
+    const actionsOk = flagActionErrors()
+    if (!parametersOk || !actionsOk) {
       return
     }
 
@@ -2812,8 +2854,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   }
 
   // Navigation functions
-  const notifyIncompleteParameters = () => flagParameterErrors()
-
   const handlePreviousStep = () => {
     if (currentTabIndex > 0) {
       setActiveTab(tabs[currentTabIndex - 1])
@@ -2836,16 +2876,16 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const needsDurationValue = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
   const showCustomTargetsError = appliesTo === 'custom' && showAppliesErrors && needsCustomTargets
   const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue
+  const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
+  const shortNameHasError = showActionsErrors && !eventShortName.trim()
 
   const handleNextStep = () => {
     if (currentTabIndex === 0 && !canProceedToConfig) {
-      if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
-        setShowAppliesErrors(true)
-      }
-      if (needsDurationValue) {
-        setShowDurationError(true)
-      }
-      notifyIncompleteParameters()
+      flagParameterErrors()
+      return
+    }
+    if (currentTabIndex === 1 && !hasValidActions) {
+      flagActionErrors()
       return
     }
     if (currentTabIndex < tabs.length - 1) {
@@ -2861,13 +2901,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const handleTabChange = (nextTab: string) => {
     if (nextTab === activeTab) return
     if (currentTabIndex === 0 && nextTab !== 'parameters' && !canProceedToConfig) {
-      if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
-        setShowAppliesErrors(true)
-      }
-      if (needsDurationValue) {
-        setShowDurationError(true)
-      }
-      notifyIncompleteParameters()
+      flagParameterErrors()
+      return
+    }
+    if (currentTabIndex === 1 && nextTab === 'notifications' && !hasValidActions) {
+      flagActionErrors()
       return
     }
     setActiveTab(nextTab)
@@ -3244,38 +3282,38 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={durationValue}
-                    onChange={(e) => {
-                      setDurationValue(e.target.value)
-                      if (Number(e.target.value) > 0) {
-                        setShowDurationError(false)
-                      }
-                    }}
-                    className="w-24"
-                    style={{
-                      height: '32px',
-                      borderRadius: '8px',
-                      ...(showDurationError
-                        ? {
-                            border: '1px solid #F04438',
-                            boxShadow: 'none'
-                          }
-                        : {})
-                    }}
-                    placeholder="Ingresa duración"
-                  />
-                  <Select value={durationUnit} onValueChange={setDurationUnit}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="segundos">segundos</SelectItem>
-                      <SelectItem value="minutos">minutos</SelectItem>
-                      <SelectItem value="horas">horas</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Input
+                      type="number"
+                      value={durationValue}
+                      onChange={(e) => {
+                        setDurationValue(e.target.value)
+                        if (Number(e.target.value) > 0) {
+                          setShowDurationError(false)
+                        }
+                      }}
+                      className="w-24"
+                      style={{
+                        height: '32px',
+                        borderRadius: '8px',
+                        ...(showDurationError
+                          ? {
+                              border: '1px solid #F04438',
+                              boxShadow: 'none'
+                            }
+                          : {})
+                      }}
+                      placeholder="Ingresa duración"
+                    />
+                    <Select value={durationUnit} onValueChange={setDurationUnit}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="segundos">segundos</SelectItem>
+                        <SelectItem value="minutos">minutos</SelectItem>
+                        <SelectItem value="horas">horas</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   {showDurationError && (
                     <p className="text-[12px] text-red-500">Ingresa una duración válida para continuar.</p>
@@ -3679,6 +3717,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           onChange={(event) => {
                             const value = event.target.value.slice(0, 10)
                             setEventShortName(value)
+                            if (showActionsErrors && value.trim().length > 0) {
+                              setShowActionsErrors(false)
+                            }
                           }}
                           maxLength={10}
                           suffix={
@@ -3688,7 +3729,16 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           }
                           placeholder="Ej. Frenado"
                           className="text-[14px]"
+                          aria-invalid={shortNameHasError}
+                          style={{
+                            ...(shortNameHasError
+                              ? { border: '1px solid #F04438', boxShadow: 'none', borderRadius: '8px' }
+                              : {})
+                          }}
                         />
+                        {shortNameHasError && (
+                          <p className="text-[12px] text-red-500">Ingresa un nombre corto.</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <span className="text-[14px] font-medium text-gray-700">Vista previa en mapa</span>
@@ -3847,30 +3897,47 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
                   {/* Row 3: Time configuration - only show when "automaticamente-tiempo" is selected */}
                   {closePolicy === 'automaticamente-tiempo' && (
-                    <div className="grid grid-cols-2 gap-8 items-center">
+                    <div className="grid grid-cols-2 gap-8 items-start">
                       <div>
                         <label className="text-[14px] font-medium text-gray-700">
                           <span className="text-red-500">*</span> Después de cuánto tiempo se debe cerrar
                         </label>
                       </div>
-                      <div className="flex gap-4">
-                        <Input
-                          type="number"
-                          value={closureTimeValue}
-                          onChange={(e) => setClosureTimeValue(e.target.value)}
-                          className="w-20"
-                          min="1"
-                        />
-                        <Select value={closureTimeUnit} onValueChange={setClosureTimeUnit}>
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="minutos">Minutos</SelectItem>
-                            <SelectItem value="horas">Horas</SelectItem>
-                            <SelectItem value="dias">Días</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-4">
+                          <Input
+                            type="number"
+                            value={closureTimeValue}
+                            onChange={(e) => {
+                              setClosureTimeValue(e.target.value)
+                              if (Number(e.target.value) > 0) {
+                                setShowClosureTimeError(false)
+                              }
+                            }}
+                            className="w-20"
+                            aria-invalid={showClosureTimeHelper}
+                            style={{
+                              height: '32px',
+                              borderRadius: '8px',
+                              ...(showClosureTimeHelper
+                                ? { border: '1px solid #F04438', boxShadow: 'none' }
+                                : {})
+                            }}
+                          />
+                          <Select value={closureTimeUnit} onValueChange={setClosureTimeUnit}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="minutos">Minutos</SelectItem>
+                              <SelectItem value="horas">Horas</SelectItem>
+                              <SelectItem value="dias">Días</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {showClosureTimeHelper && (
+                          <p className="text-[12px] text-red-500">Ingresa un tiempo válido para el cierre automático.</p>
+                        )}
                       </div>
                     </div>
                   )}

@@ -107,7 +107,7 @@ export function VehicleSelector({ isOpen, onClose, selectedVehicles, onSelection
     <UnitsTransferModal
       open={isOpen}
       onClose={onClose}
-      onSubmit={totalSelected > 0 ? handleContinue : undefined}
+      onSubmit={handleContinue}
       title="Seleccionar unidades"
       subtitle="Selecciona las unidades con las cuales deseas crear el reporte. Elige todas las unidades o solo algunas del total disponible. Recuerda que debes seleccionar al menos 1 unidad para continuar."
       size="md"
