@@ -11,9 +11,7 @@ import { Checkbox } from "./ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group"
 import { Switch } from "./ui/switch"
 import { VariableTextarea, VariableButton, type VariableTextareaHandle, type MessageVariableDescriptor } from "./VariableTextarea"
-import { NotificationExampleModal } from "./NotificationExampleModal"
 import { EmailTemplateDrawer } from "./EmailTemplateDrawer"
-import { useNotifications } from "../contexts/NotificationContext"
 import { 
   Select,
   SelectContent,
@@ -877,25 +875,21 @@ const severityConfig = {
   },
 } as const
 
-const mapMarkerPalette = {
-  high: { accent: '#DF3F40', fill: '#FECACA' },
-  medium: { accent: '#EA580C', fill: '#FED7AA' },
-  low: { accent: '#0891B2', fill: '#A5F3FC' },
-  informative: { accent: '#0891B2', fill: '#A5F3FC' },
-} as const
-
-type MapMarkerSeverity = keyof typeof mapMarkerPalette
+type MapMarkerSeverity = keyof typeof severityConfig
 
 function WizardMapPreview({ severity, label }: { severity: MapMarkerSeverity; label: string }) {
-  const palette = mapMarkerPalette[severity] ?? mapMarkerPalette.low
+  const paletteSource = severityConfig[severity] ?? severityConfig.low
+  const accent = paletteSource.previewText
+  const fill = paletteSource.previewBg
+
   const tintedBody = markerBody
-    .replace(/#DC2626/g, palette.accent)
-    .replace(/#FECDD2/g, palette.fill)
-    .replace(/#DF3F40/g, palette.accent)
+    .replace(/#DC2626/g, accent)
+    .replace(/#FECDD2/g, fill)
+    .replace(/#DF3F40/g, accent)
 
   const tintedLabel = markerLabel
-    .replace(/#FECDD2/g, palette.fill)
-    .replace(/#DF3F40/g, palette.accent)
+    .replace(/#FECDD2/g, fill)
+    .replace(/#DF3F40/g, accent)
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -904,7 +898,7 @@ function WizardMapPreview({ severity, label }: { severity: MapMarkerSeverity; la
         <div dangerouslySetInnerHTML={{ __html: tintedLabel }} />
         <span
           className="absolute inset-0 flex items-center justify-center text-[11px] font-medium"
-          style={{ color: palette.accent }}
+          style={{ color: accent }}
         >
           {label}
         </span>
@@ -1658,7 +1652,6 @@ interface TelemetryWizardProps {
 
 export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, onRename, wizardType = 'telemetry', forceCreateMode = false }: TelemetryWizardProps) {
   const isEditing = !!rule && !forceCreateMode
-  const { addNotification } = useNotifications()
 
   const resolvedRuleType: 'telemetry' | 'zone' = rule?.ruleType === 'zone' || wizardType === 'zone' ? 'zone' : 'telemetry'
   const wizardLabel = resolvedRuleType === 'zone' ? 'Zonas' : 'Telemetría'
@@ -1822,11 +1815,13 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       setShowClosureTimeError(false)
     }
   }, [closePolicy])
-  const [webhookEnabled, setWebhookEnabled] = useState(false)
+
   const [sendDeviceCommand, setSendDeviceCommand] = useState(false)
   const [unitTagsEnabled, setUnitTagsEnabled] = useState(false)
+  const [showUnitTagsError, setShowUnitTagsError] = useState(false)
   const [unitUntagsEnabled, setUnitUntagsEnabled] = useState(false)
   const [unitUntags, setUnitUntags] = useState<Array<{id: string, name: string, color: string}>>([])
+  const [showUnitUntagsError, setShowUnitUntagsError] = useState(false)
 
   // Notifications tab state
   const defaultEventMessage = rule?.notifications?.eventMessage || 'La unidad {unidad} ha registrado una alerta en {ubicacion_link} a las {fecha_hora}.'
@@ -1851,9 +1846,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   const [mapPreviewStart, setMapPreviewStart] = useState('Inicio del evento')
   const [mapPreviewEnd, setMapPreviewEnd] = useState('Punto de seguimiento')
-  const [pushNotificationEnabled, setPushNotificationEnabled] = useState(rule?.notifications?.push?.enabled || false)
-  const [showNotificationExample, setShowNotificationExample] = useState(false)
-  const [notificationExampleType, setNotificationExampleType] = useState<'web' | 'mobile'>('web')
+  const pushNotificationEnabled = false
   const headerRef = useRef<HTMLDivElement | null>(null)
   const [headerHeight, setHeaderHeight] = useState(0)
 
@@ -1923,67 +1916,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     },
     [setEmailDescription, setDescriptionCharCount, setEventMessageCharCount]
   )
-  
-  // Function to add a web notification example
-  const addWebNotificationExample = () => {
-    // Process the event message with variables
-    const variableReplacements = {
-      '{unidad}': 'Unidad ABC-123',
-      '{velocidad}': '85 km/h',
-      '{ubicacion_link}': 'Av. Corrientes 1234, Buenos Aires',
-      '{fecha_hora}': new Date().toLocaleString('es-AR'),
-      '{chofer}': 'Juan Pérez',
-      '{patente}': 'ABC123',
-      '{temperatura}': '25°C',
-      '{combustible}': '75%',
-      '{ignicion}': 'Encendido',
-      '{fecha}': new Date().toLocaleDateString('es-AR'),
-      '{hora}': new Date().toLocaleTimeString('es-AR'),
-      '{timestamp}': Date.now().toString(),
-      '{direccion}': 'Av. Corrientes 1234',
-      '{ciudad}': 'Buenos Aires',
-      '{coordenadas}': '-34.6037, -58.3816',
-      '{modelo}': 'Ford Transit',
-      '{evento_id}': 'EVT-001',
-      '{regla_nombre}': 'Exceso de velocidad',
-      '{severidad}': 'Alta',
-      '{duracion}': '5 minutos',
-      '{empresa}': 'Mi Empresa',
-      '{usuario}': 'supervisor-flota',
-      '{plataforma}': 'Numaris',
-      '{version}': 'v2.1',
-      '{voltaje}': '12.4V',
-      '{zona}': 'Zona Centro',
-      '{rpm}': '2,450 RPM',
-      '{conductor}': 'Carlos Martínez',
-      '{presion}': '32 PSI',
-      '{nivel_aceite}': '85%',
-      '{odometro}': '125,340 km',
-      '{estado_motor}': 'En funcionamiento',
-      '{bateria}': '89%',
-      '{sensor_puerta}': 'Cerrada',
-      '{sensor_carga}': 'Con carga',
-      '{humedad}': '68%',
-      '{aceleracion}': '2.3 m/s²',
-      '{frenado}': 'Suave',
-      '{giro}': 'Izquierda',
-      '{inclinacion}': '5°',
-      '{peso}': '2,840 kg',
-      '{altura}': '156 m'
-    }
-
-    // Use a simple static message for the notification example
-
-    // Add the notification to the global notification center
-    addNotification({
-      title: 'Exceso de velocidad',
-      message: 'La unidad ABC-123 ha excedido el límite de velocidad. Velocidad actual: 85 km/h en Av. Corrientes 1234, Buenos Aires',
-      severity: 'high',
-      type: 'rule-event'
-    })
-  }
-
-
   const [webhookNotificationEnabled, setWebhookNotificationEnabled] = useState(rule?.notifications?.webhook?.enabled || false)
   const [platformNotificationEnabled, setPlatformNotificationEnabled] = useState(rule?.notifications?.platform?.enabled || false)
 
@@ -2227,7 +2159,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         }
         
         if (rule.notifications.push) {
-          setPushNotificationEnabled(rule.notifications.push.enabled || false)
+          // UI no longer permite editar push; se mantiene desactivado
         }
         
         if (rule.notifications.webhook) {
@@ -2692,13 +2624,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   const requiresClosureTime = closePolicy === 'automaticamente-tiempo'
 
+  const needsUnitTags = unitTagsEnabled && unitTags.length === 0
+  const needsUnitUntags = unitUntagsEnabled && unitUntags.length === 0
+
   const hasValidActions = useMemo(
     () =>
       Boolean(
         eventShortName.trim() &&
-          (!requiresClosureTime || (closureTimeValue && Number(closureTimeValue) > 0))
+          (!requiresClosureTime || (closureTimeValue && Number(closureTimeValue) > 0)) &&
+          !needsUnitTags &&
+          !needsUnitUntags
       ),
-    [eventShortName, requiresClosureTime, closureTimeValue]
+    [
+      eventShortName,
+      requiresClosureTime,
+      closureTimeValue,
+      needsUnitTags,
+      needsUnitUntags,
+    ]
   )
 
   const flagActionErrors = useCallback(() => {
@@ -2718,8 +2661,30 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       setShowClosureTimeError(false)
     }
 
+    if (needsUnitTags) {
+      setShowUnitTagsError(true)
+      isValid = false
+    } else if (unitTags.length > 0) {
+      setShowUnitTagsError(false)
+    }
+
+    if (needsUnitUntags) {
+      setShowUnitUntagsError(true)
+      isValid = false
+    } else if (unitUntags.length > 0) {
+      setShowUnitUntagsError(false)
+    }
+
     return isValid
-  }, [eventShortName, requiresClosureTime, closureTimeValue])
+  }, [
+    eventShortName,
+    requiresClosureTime,
+    closureTimeValue,
+    needsUnitTags,
+    needsUnitUntags,
+    unitTags.length,
+    unitUntags.length,
+  ])
 
   const handleSave = async () => {
     const parametersOk = flagParameterErrors()
@@ -3970,6 +3935,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         setUnitTagsEnabled(checked)
                         if (!checked) {
                           setUnitTags([])
+                          setShowUnitTagsError(false)
                         }
                       }}
                       className="switch-blue"
@@ -3981,7 +3947,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                     <div className="space-y-6">
                       <div className="grid grid-cols-2 gap-8 items-start">
                         <div>
-                          <label className="text-[14px] font-medium text-gray-700">Asignar etiquetas</label>
+                          <label className="text-[14px] font-medium text-gray-700">
+                            <span className="text-red-500 mr-1">*</span>
+                            Asignar etiquetas
+                          </label>
                         </div>
                         <div>
                           <GenericSelectorInput
@@ -3989,6 +3958,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             onSelectionChange={(items) => {
                               if (items.length <= 10) {
                                 setUnitTags(items)
+                                if (items.length > 0) {
+                                  setShowUnitTagsError(false)
+                                }
                               }
                             }}
                             placeholder="Seleccionar etiquetas"
@@ -4009,7 +3981,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             showColorPills={true}
                             showPillsDisplay={true}
                             showFooterCount={true}
+                            hasError={showUnitTagsError}
                           />
+                          {showUnitTagsError && (
+                            <p className="mt-1 text-[12px] text-red-500">Selecciona al menos una etiqueta.</p>
+                          )}
                         </div>
                       </div>
                       <p className="text-[13px] text-[rgba(145,145,145,1)]">
@@ -4032,6 +4008,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         setUnitUntagsEnabled(checked)
                         if (!checked) {
                           setUnitUntags([])
+                          setShowUnitUntagsError(false)
                         }
                       }}
                       className="switch-blue"
@@ -4043,7 +4020,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                     <div className="space-y-6">
                       <div className="grid grid-cols-2 gap-8 items-start">
                         <div>
-                          <label className="text-[14px] font-medium text-gray-700">Desasignar etiquetas</label>
+                          <label className="text-[14px] font-medium text-gray-700">
+                            <span className="text-red-500 mr-1">*</span>
+                            Desasignar etiquetas
+                          </label>
                         </div>
                         <div>
                           <GenericSelectorInput
@@ -4051,6 +4031,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             onSelectionChange={(items) => {
                               if (items.length <= 10) {
                                 setUnitUntags(items)
+                                if (items.length > 0) {
+                                  setShowUnitUntagsError(false)
+                                }
                               }
                             }}
                             placeholder="Seleccionar etiquetas"
@@ -4071,7 +4054,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             showColorPills={true}
                             showPillsDisplay={true}
                             showFooterCount={true}
+                            hasError={showUnitUntagsError}
                           />
+                          {showUnitUntagsError && (
+                            <p className="mt-1 text-[12px] text-red-500">Selecciona al menos una etiqueta.</p>
+                          )}
                         </div>
                       </div>
                       <p className="text-[13px] text-[rgba(145,145,145,1)]">
@@ -4254,68 +4241,31 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 description="Selecciona por qué medios quieres enviar el mensaje cuando ocurra este evento"
                 contentClassName="space-y-4"
               >
-                    {/* Notificación Web (siempre activada) */}
+                    {/* Notificación Web (referencia) */}
                     <div className="border border-gray-200 rounded-lg">
-                      <div className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between p-3">
                         <div className="flex items-center gap-3">
-                          <Monitor className="h-5 w-5 text-gray-600" />
+                          <Monitor className="h-5 w-5 text-gray-500" />
                           <div>
                             <div className="text-[14px] font-medium text-gray-700">Notificación Web</div>
-                            <div className="text-[12px] text-gray-600">Notificación en la plataforma web (siempre activo)</div>
+                            <div className="text-[12px] text-gray-600">Siempre activa desde la plataforma</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              addWebNotificationExample()
-                            }}
-                            className="text-[11px] h-6 px-2"
-                          >
-                            <Monitor className="w-3 h-3 mr-1" />
-                            Ver ejemplo
-                          </Button>
-                          <Switch
-                            checked={true}
-                            disabled={true}
-                            className="switch-blue"
-                          />
-                        </div>
+                        <Switch checked={false} disabled className="switch-blue opacity-50" />
                       </div>
                     </div>
 
-                    {/* Notificación Móvil */}
+                    {/* Notificación Móvil (referencia) */}
                     <div className="border border-gray-200 rounded-lg">
-                      <div className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between p-3">
                         <div className="flex items-center gap-3">
-                          <Smartphone className="h-5 w-5 text-gray-600" />
+                          <Smartphone className="h-5 w-5 text-gray-500" />
                           <div>
                             <div className="text-[14px] font-medium text-gray-700">Notificación Móvil</div>
-                            <div className="text-[12px] text-gray-600">Push notification en la app móvil</div>
+                            <div className="text-[12px] text-gray-600">No configurable en este flujo</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setNotificationExampleType('mobile')
-                              setShowNotificationExample(true)
-                            }}
-                            className="text-[11px] h-6 px-2"
-                          >
-                            <Smartphone className="w-3 h-3 mr-1" />
-                            Ver ejemplo
-                          </Button>
-                          <Switch
-                            checked={pushNotificationEnabled}
-                            onCheckedChange={setPushNotificationEnabled}
-                            className="switch-blue"
-                          />
-                        </div>
+                        <Switch checked={false} disabled className="switch-blue opacity-50" />
                       </div>
                     </div>
 
@@ -4463,127 +4413,20 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                     </div>
               </SectionCard>
 
-              {/* Section 3 - Webhook */}
+              {/* Section 3 - Webhook (referencia) */}
               <SectionCard
                 icon={<Link className="h-4 w-4 text-gray-600" />}
                 title="Webhook"
-                description="Configura un webhook para enviar datos del evento a sistemas externos"
-                contentClassName={webhookEnabled ? 'space-y-4' : 'hidden'}
+                description="Integración externa administrada desde la plataforma web"
                 headerExtra={
-                  <Switch
-                    checked={webhookEnabled}
-                    onCheckedChange={setWebhookEnabled}
-                    className="switch-blue"
-                    disabled
-                  />
+                  <Switch checked={false} disabled className="switch-blue opacity-50" />
                 }
+                contentClassName="hidden"
               >
-                {webhookEnabled && <div className="-mx-4 border-b border-gray-200 mb-4"></div>}
+                <div />
+              </SectionCard>
 
-                {/* Webhook Configuration */}
-                {webhookEnabled && (
-                  <div className="space-y-4">
-                        {/* URL Field */}
-                        <div>
-                          <label className="block text-[12px] font-medium text-gray-700 mb-1">
-                            URL del endpoint
-                          </label>
-                          <input
-                            type="url"
-                            placeholder="https://ejemplo.com/webhook/events"
-                            className="w-full px-3 py-2 text-[14px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
-                        </div>
 
-                        {/* HTTP Method */}
-                        <div>
-                          <label className="block text-[12px] font-medium text-gray-700 mb-1">
-                            Método HTTP
-                          </label>
-                          <Select defaultValue="POST">
-                            <SelectTrigger className="text-[14px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="POST">POST</SelectItem>
-                              <SelectItem value="PUT">PUT</SelectItem>
-                              <SelectItem value="PATCH">PATCH</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Headers */}
-                        <div>
-                          <label className="block text-[12px] font-medium text-gray-700 mb-1">
-                            Headers personalizados
-                          </label>
-                          <div className="space-y-2">
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                placeholder="Nombre del header"
-                                className="flex-1 px-3 py-2 text-[14px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              />
-                              <input
-                                type="text"
-                                placeholder="Valor"
-                                className="flex-1 px-3 py-2 text-[14px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              />
-                              <button className="px-3 py-2 text-[14px] bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                                +
-                              </button>
-                            </div>
-                            <p className="text-[12px] text-gray-500">
-                              Agrega headers de autenticación o personalización según lo requiera tu endpoint
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Retry Configuration */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-[12px] font-medium text-gray-700 mb-1">
-                              Reintentos
-                            </label>
-                            <Select defaultValue="3">
-                              <SelectTrigger className="text-[14px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="0">Sin reintentos</SelectItem>
-                                <SelectItem value="1">1 reintento</SelectItem>
-                                <SelectItem value="3">3 reintentos</SelectItem>
-                                <SelectItem value="5">5 reintentos</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <label className="block text-[12px] font-medium text-gray-700 mb-1">
-                              Timeout (segundos)
-                            </label>
-                            <Select defaultValue="30">
-                              <SelectTrigger className="text-[14px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="10">10 segundos</SelectItem>
-                                <SelectItem value="30">30 segundos</SelectItem>
-                                <SelectItem value="60">60 segundos</SelectItem>
-                                <SelectItem value="120">120 segundos</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        {/* Test Webhook Button */}
-                        <div className="pt-2">
-                          <button className="w-full px-4 py-2 text-[14px] border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                            Probar webhook
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                </SectionCard>
               </TabsContent>
             </Tabs>
           </div>
@@ -4633,13 +4476,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
           onStay={handleStayInEditor}
         />
 
-        {/* Notification Example Modal */}
-        <NotificationExampleModal
-          isOpen={showNotificationExample}
-          onClose={() => setShowNotificationExample(false)}
-          eventMessage=""
-          type={notificationExampleType}
-        />
         <EmailTemplateDrawer
           open={templateDrawerOpen}
           onClose={() => setTemplateDrawerOpen(false)}
