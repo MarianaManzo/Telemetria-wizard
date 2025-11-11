@@ -36,7 +36,6 @@ import {
 import { Switch } from "./ui/switch"
 import { DeleteRuleModal } from "./DeleteRuleModal"
 import { RenameRuleModal } from "./RenameRuleModal"
-import { DuplicateRuleModal } from "./DuplicateRuleModal"
 import { TruncatedText } from "./TruncatedText"
 
 interface RulesListProps {
@@ -49,7 +48,7 @@ interface RulesListProps {
   onStatusChange?: (ruleId: string, newStatus: 'active' | 'inactive') => void
   onRename?: (ruleId: string, newName: string, newDescription?: string) => void
   onDelete?: (ruleId: string) => void
-  onDuplicate?: (ruleData: Partial<Rule>) => void
+  onDuplicate?: (rule: Rule) => void
 }
 
 const severityConfig = {
@@ -93,11 +92,11 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [severityFilter, setSeverityFilter] = useState<string>("all")
+  const hasActiveFilters = searchQuery.trim().length > 0 || statusFilter !== "all" || severityFilter !== "all"
   
   // Modal states
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [renameModalOpen, setRenameModalOpen] = useState(false)
-  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false)
   const [selectedRuleForModal, setSelectedRuleForModal] = useState<Rule | null>(null)
 
   // Pre-calculate open events count for performance optimization
@@ -174,15 +173,9 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
     setRenameModalOpen(true)
   }
 
-  const handleOpenDuplicateModal = (rule: Rule) => {
-    setSelectedRuleForModal(rule)
-    setDuplicateModalOpen(true)
-  }
-
   const handleCloseModals = () => {
     setDeleteModalOpen(false)
     setRenameModalOpen(false)
-    setDuplicateModalOpen(false)
     setSelectedRuleForModal(null)
   }
 
@@ -196,13 +189,6 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
   const handleConfirmRename = (ruleId: string, newName: string, newDescription?: string) => {
     if (onRename) {
       onRename(ruleId, newName, newDescription)
-    }
-    handleCloseModals()
-  }
-
-  const handleConfirmDuplicate = (ruleData: Partial<Rule>) => {
-    if (onDuplicate) {
-      onDuplicate(ruleData)
     }
     handleCloseModals()
   }
@@ -233,7 +219,57 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
         </div>
       </div>
 
-      {/* Filters section removed */}
+      {/* Filters */}
+      <div className="px-6 pt-6 pb-4 border-b border-gray-100 bg-white">
+        <div className="flex flex-col gap-4">
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Buscar por nombre, descripción o propietario"
+            className="w-full max-w-xl text-[14px]"
+          />
+
+          <div className="flex flex-wrap items-center gap-4">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="min-w-[180px] flex-1 md:flex-none">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="active">Activadas</SelectItem>
+                <SelectItem value="inactive">Desactivadas</SelectItem>
+                <SelectItem value="draft">Borradores</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={severityFilter} onValueChange={setSeverityFilter}>
+              <SelectTrigger className="min-w-[200px] flex-1 md:flex-none">
+                <SelectValue placeholder="Severidad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las severidades</SelectItem>
+                <SelectItem value="informative">Informativo</SelectItem>
+                <SelectItem value="low">Baja</SelectItem>
+                <SelectItem value="medium">Media</SelectItem>
+                <SelectItem value="high">Alta</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="link"
+              className="ml-auto h-auto px-0"
+              onClick={() => {
+                setSearchQuery("")
+                setStatusFilter("all")
+                setSeverityFilter("all")
+              }}
+              disabled={!hasActiveFilters}
+            >
+              Limpiar todo
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Rules Table */}
       <div className="px-6 pb-6 mx-[0px] my-[24px]">
@@ -355,7 +391,7 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
                             <DropdownMenuItem 
                               onClick={(e) => { 
                                 e.stopPropagation(); 
-                                handleOpenDuplicateModal(rule);
+                                onDuplicate?.(rule);
                               }}
                               className="flex items-center gap-2"
                             >
@@ -417,12 +453,6 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
         rule={selectedRuleForModal}
       />
 
-      <DuplicateRuleModal
-        isOpen={duplicateModalOpen}
-        onClose={handleCloseModals}
-        onDuplicate={handleConfirmDuplicate}
-        rule={selectedRuleForModal}
-      />
     </div>
   )
 }
