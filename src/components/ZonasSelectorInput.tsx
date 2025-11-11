@@ -15,6 +15,7 @@ interface ZonasSelectorInputProps {
   placeholder?: string
   className?: string
   disabled?: boolean
+  hasError?: boolean
 }
 
 const mockZones: ZoneData[] = [
@@ -35,7 +36,8 @@ export function ZonasSelectorInput({
   onSelectionChange, 
   placeholder = "Seleccionar zonas",
   className = "",
-  disabled = false
+  disabled = false,
+  hasError = false
 }: ZonasSelectorInputProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   
@@ -72,24 +74,28 @@ export function ZonasSelectorInput({
     <div className={`w-full ${className}`}>
       <div className="relative">
         <div
-          className={`w-full px-3 text-[14px] border border-gray-300 rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
-            disabled ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-          style={{ height: 32 }}
+          className={`w-full px-3 text-[14px] border rounded-lg bg-white appearance-none pr-8 cursor-pointer text-gray-900 flex items-center box-border ${
+            hasError ? 'border-red-400' : 'border-gray-300'
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          style={{
+            height: 32,
+            borderColor: hasError ? '#F04438' : undefined,
+            boxShadow: hasError ? '0 0 0 1px rgba(240,68,56,0.35)' : undefined,
+          }}
           onClick={() => !disabled && setIsModalOpen(true)}
         >
           {renderDisplayContent()}
         </div>
         <DownOutlined
-          style={{
-            position: 'absolute',
-            right: 8,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            fontSize: 14,
-            color: '#9ca3af',
-          }}
-        />
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: 14,
+              color: '#9ca3af',
+            }}
+          />
       </div>
 
       <ZoneSelector

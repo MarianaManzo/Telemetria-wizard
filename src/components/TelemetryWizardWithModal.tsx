@@ -1747,6 +1747,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [zoneEventAction, setZoneEventAction] = useState<'entrada' | 'salida'>('entrada')
   const [selectedZonesData, setSelectedZonesData] = useState([])
   const [selectedZoneTags, setSelectedZoneTags] = useState<TagData[]>([])
+  const [geographicScope, setGeographicScope] = useState<'anywhere' | 'inside' | 'outside'>('anywhere')
+  const [showZoneScopeErrors, setShowZoneScopeErrors] = useState(false)
   const [validateZoneEntry, setValidateZoneEntry] = useState(resolvedRuleType !== 'zone')
 
   useEffect(() => {
@@ -1872,13 +1874,19 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   const tabsStickyTop = headerHeight > 0 ? headerHeight : 88
 
-  const zoneContextValue = useMemo(
-    () =>
-      resolvedRuleType === 'zone' && (selectedZonesData.length > 0 || selectedZoneTags.length > 0)
+  const zoneContextValue = useMemo(() => {
+    if (resolvedRuleType === 'zone') {
+      return selectedZonesData.length > 0 || selectedZoneTags.length > 0
         ? 'zonas-especificas'
-        : 'cualquier-lugar',
-    [resolvedRuleType, selectedZonesData, selectedZoneTags]
-  )
+        : 'cualquier-lugar'
+    }
+
+    if (geographicScope === 'inside' || geographicScope === 'outside') {
+      return 'zonas-especificas'
+    }
+
+    return 'cualquier-lugar'
+  }, [resolvedRuleType, selectedZonesData, selectedZoneTags, geographicScope])
 
   const suggestedEventVariables = useMemo(
     () =>
@@ -2211,8 +2219,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       if (rule.zoneScope) {
         if (rule.zoneScope.type === 'inside') {
           setZoneEventAction('entrada')
+          setGeographicScope('inside')
         } else if (rule.zoneScope.type === 'outside') {
           setZoneEventAction('salida')
+          setGeographicScope('outside')
+        } else {
+          setGeographicScope('anywhere')
         }
 
         if (rule.zoneScope.zones && Array.isArray(rule.zoneScope.zones)) {
@@ -2599,8 +2611,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     const missingCustomTargets =
       appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
     const missingDuration = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
+    const missingZoneScope = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere' && (selectedZonesData.length === 0 && selectedZoneTags.length === 0)
 
-    const hasErrors = !hasAtLeastOneGroup || !hasValidCondition || missingCustomTargets || missingDuration
+    const hasErrors = !hasAtLeastOneGroup || !hasValidCondition || missingCustomTargets || missingDuration || missingZoneScope
 
     if (!hasAtLeastOneGroup || !hasValidCondition) {
       setShowParametersErrors(true)
@@ -2611,6 +2624,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     if (missingDuration) {
       setShowDurationError(true)
     }
+    if (missingZoneScope) {
+      setShowZoneScopeErrors(true)
+    }
 
     return !hasErrors
   }, [
@@ -2620,6 +2636,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     selectedTags.length,
     eventTiming,
     durationValue,
+    resolvedRuleType,
+    geographicScope,
+    selectedZonesData.length,
+    selectedZoneTags.length,
   ])
 
   const requiresClosureTime = closePolicy === 'automaticamente-tiempo'
@@ -2752,13 +2772,20 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       }
     }
 
+    const isTelemetryWithZoneScope = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
     const zoneScopeData = resolvedRuleType === 'zone'
       ? {
           type: zoneEventAction === 'entrada' ? 'inside' : 'outside',
           zones: selectedZonesData,
           zoneTags: selectedZoneTags.map(tag => tag.name),
         }
-      : { type: 'all' }
+      : isTelemetryWithZoneScope
+        ? {
+            type: geographicScope === 'inside' ? 'inside' : 'outside',
+            zones: selectedZonesData,
+            zoneTags: selectedZoneTags.map(tag => tag.name),
+          }
+        : { type: 'all' }
 
     // Build schedule object based on current form state
     let scheduleData: any = { type: 'always' }
@@ -2873,8 +2900,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const hasAtLeastOneGroup = conditionGroups.length > 0
   const needsCustomTargets = appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
   const needsDurationValue = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
+  const shouldRestrictByZone = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
+  const needsZoneSelection = shouldRestrictByZone && selectedZonesData.length === 0 && selectedZoneTags.length === 0
   const showCustomTargetsError = appliesTo === 'custom' && showAppliesErrors && needsCustomTargets
-  const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue
+  const showZoneScopeError = shouldRestrictByZone && showZoneScopeErrors && needsZoneSelection
+  const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue && !needsZoneSelection
   const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
   const shortNameHasError = showActionsErrors && !eventShortName.trim()
 
@@ -3251,6 +3281,94 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         </CollapsibleTrigger>
         <CollapsibleContent className="px-4 pb-4 pt-6">
           <div className="space-y-6">
+            {resolvedRuleType !== 'zone' && (
+              <>
+                <div className="grid grid-cols-2 gap-8 items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-gray-600" />
+                      <label className="text-[14px] font-medium text-gray-700">
+                        ¿En qué zona geográfica aplica esta regla?
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <Select
+                      value={geographicScope}
+                      onValueChange={(value) => {
+                        const scope = value as 'anywhere' | 'inside' | 'outside'
+                        setGeographicScope(scope)
+                        if (scope === 'anywhere') {
+                          setShowZoneScopeErrors(false)
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="anywhere">En cualquier lugar</SelectItem>
+                        <SelectItem value="inside">Dentro de una zona o grupo de zonas</SelectItem>
+                        <SelectItem value="outside">Fuera de una zona o grupo de zonas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {shouldRestrictByZone && (
+                  <>
+                    <div className="grid grid-cols-2 gap-8 items-start">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-gray-600" />
+                        <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
+                          <span className="text-red-500">*</span>Zonas
+                        </label>
+                      </div>
+                      <div>
+                        <ZonasSelectorInput
+                          selectedZones={selectedZonesData}
+                          onSelectionChange={setSelectedZonesData}
+                          placeholder="Seleccionar zona"
+                          hasError={showZoneScopeError}
+                        />
+                        {showZoneScopeError && (
+                          <p className="text-[12px] text-red-500 mt-1">Selecciona al menos una zona o etiqueta.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-8 items-start">
+                      <div className="flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-gray-600" />
+                        <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
+                          <span className="text-red-500">*</span>Etiquetas
+                        </label>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-gray-400" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Usa etiquetas para agrupar zonas y simplificar la selección.
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div>
+                        <EtiquetasSelectorInput
+                          selectedTags={selectedZoneTags}
+                          onSelectionChange={setSelectedZoneTags}
+                          placeholder="Seleccionar etiquetas"
+                          hasError={showZoneScopeError}
+                        />
+                        {showZoneScopeError && (
+                          <p className="text-[12px] text-red-500 mt-1">Selecciona al menos una zona o etiqueta.</p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
             <div className="grid grid-cols-2 gap-8 items-center">
               <div>
                 <div className="flex items-center gap-2">
