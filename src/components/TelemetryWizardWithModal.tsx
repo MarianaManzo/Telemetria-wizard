@@ -2618,7 +2618,42 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     setShowExitConfirmModal(false)
   }
 
+  const flagParameterErrors = useCallback(() => {
+    const hasValidCondition = conditionGroups.some(group =>
+      group.conditions.some(condition => condition.sensor && condition.operator && condition.value)
+    )
+    const hasAtLeastOneGroup = conditionGroups.length > 0
+    const missingCustomTargets =
+      appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
+    const missingDuration = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
+
+    const hasErrors = !hasAtLeastOneGroup || !hasValidCondition || missingCustomTargets || missingDuration
+
+    if (!hasAtLeastOneGroup || !hasValidCondition) {
+      setShowParametersErrors(true)
+    }
+    if (missingCustomTargets) {
+      setShowAppliesErrors(true)
+    }
+    if (missingDuration) {
+      setShowDurationError(true)
+    }
+
+    return !hasErrors
+  }, [
+    conditionGroups,
+    appliesTo,
+    selectedUnitsLocal.length,
+    selectedTags.length,
+    eventTiming,
+    durationValue,
+  ])
+
   const handleSave = async () => {
+    if (!flagParameterErrors()) {
+      return
+    }
+
     if (isEditing) {
       // For editing, save the changes directly using handleSaveRule
       setIsSaving(true)
@@ -2647,6 +2682,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
 
   const handleSaveRule = (ruleData: Partial<Rule>) => {
+    if (!flagParameterErrors()) {
+      return
+    }
+
     // Handle creating new rule - prepare group data
     const validConditionGroups = conditionGroups.map(group => ({
       ...group,
@@ -2773,18 +2812,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   }
 
   // Navigation functions
-  const notifyIncompleteParameters = () => {
-    setShowParametersErrors(true)
-    if (appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0) {
-      setShowAppliesErrors(true)
-    }
-    if (eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)) {
-      setShowDurationError(true)
-    }
-    showCustomToast({
-      title: "Completa los campos obligatorios antes de continuar."
-    })
-  }
+  const notifyIncompleteParameters = () => flagParameterErrors()
 
   const handlePreviousStep = () => {
     if (currentTabIndex > 0) {
