@@ -34,7 +34,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Row, Col } from "antd"
 import type { LucideIcon } from "lucide-react"
-import { Rule, Event, RuleConditionGroup } from "../types"
+import { Rule, Event, RuleConditionGroup, RuleSchedule } from "../types"
 import { userEmailTemplates } from "../constants/emailTemplates"
 import { DeleteRuleModal } from "./DeleteRuleModal"
 import { RenameRuleModal } from "./RenameRuleModal"
@@ -152,6 +152,25 @@ const telemetrySensors = [...systemTelemetrySensors, ...customTelemetrySensors]
 
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string')
+
+const WEEKDAY_LABELS: Record<string, string> = {
+  monday: 'Lunes',
+  tuesday: 'Martes',
+  wednesday: 'Miércoles',
+  thursday: 'Jueves',
+  friday: 'Viernes',
+  saturday: 'Sábado',
+  sunday: 'Domingo',
+  lunes: 'Lunes',
+  martes: 'Martes',
+  miercoles: 'Miércoles',
+  miércoles: 'Miércoles',
+  jueves: 'Jueves',
+  viernes: 'Viernes',
+  sabado: 'Sábado',
+  sábado: 'Sábado',
+  domingo: 'Domingo'
+}
 
 const highlightEmailTemplateMessage = (text: string) => {
   if (!text) {
@@ -593,7 +612,94 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
       </div>
     )
   }
-  const [activeSubTab, setActiveSubTab] = useState('parametros')
+
+const getWeekdayLabel = (value: string) => {
+  if (!value) return ''
+  if (WEEKDAY_LABELS[value]) return WEEKDAY_LABELS[value]
+  const normalized = value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  return WEEKDAY_LABELS[normalized] || value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+const formatTimeDisplay = (time?: string) => {
+  if (!time) return '--'
+  const [hourStr = '00', minuteStr = '00'] = time.split(':')
+  const hour = parseInt(hourStr, 10)
+  if (Number.isNaN(hour)) {
+    return time
+  }
+  const suffix = hour >= 12 ? 'pm' : 'am'
+  const normalizedHour = hour % 12 || 12
+  return `${normalizedHour.toString().padStart(2, '0')}:${minuteStr.padEnd(2, '0')} ${suffix}`
+}
+
+const renderCustomScheduleDetails = (schedule: RuleSchedule) => {
+  const days = schedule.days || []
+  const timeRanges = schedule.timeRanges || []
+
+  if (!days.length) {
+    return <p className="text-[14px] text-muted-foreground">Sin días configurados</p>
+  }
+
+  return (
+    <div className="w-full rounded-lg border border-[#E4E7EC] bg-white divide-y divide-[#E4E7EC]">
+      {days.map((day, index) => {
+        const range = timeRanges[index] || timeRanges[0]
+        return (
+          <div key={`${day}-${index}`} className="grid grid-cols-4 px-4 py-3 text-[14px] text-foreground items-center gap-2">
+            <div className="flex items-center gap-2 col-span-1">
+              <input
+                type="checkbox"
+                checked
+                disabled
+                className="h-4 w-4 rounded border-blue-500 text-blue-600 focus:ring-blue-500"
+              />
+              <span>{getWeekdayLabel(day)}</span>
+            </div>
+            <span>{formatTimeDisplay(range?.start)}</span>
+            <span>{formatTimeDisplay(range?.end)}</span>
+            <span>{schedule.ruleContext === 'outside' ? 'Fuera' : 'Dentro'}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+const getScheduleSummary = (rule: Rule) => {
+  if (rule.schedule?.type === 'custom') {
+    const days = (rule.schedule.days || []).map((day: any) => getWeekdayLabel(day))
+    const timeRanges = rule.schedule.timeRanges?.map((range: any) => `${range.start} - ${range.end}`) || []
+    const dayText = days.length ? days.join(', ') : 'Sin días configurados'
+    const timeText = timeRanges.length ? timeRanges.join(', ') : 'Todo el día'
+    return `${dayText} · ${timeText}`
+  }
+  return 'En todo momento'
+}
+
+const getEventTimingDescription = (rule: Rule) => {
+  if (rule.eventSettings?.eventTiming === 'despues-tiempo') {
+    return `Después de ${rule.eventSettings.durationValue} ${rule.eventSettings.durationUnit}`
+  }
+  return 'Cuando se cumplan las condiciones'
+}
+
+const getClosureDescription = (rule: Rule) => {
+  if (rule.closePolicy?.type === 'auto-time') {
+    return `Automáticamente después de ${rule.closePolicy.duration} minutos`
+  }
+  return 'Cuando deje de cumplirse la condición'
+}
+
+const getZoneScopeDescription = (rule: Rule) => {
+  if (rule.zoneScope?.type === 'inside') return 'Dentro de una zona o grupo de zonas'
+  if (rule.zoneScope?.type === 'outside') return 'Fuera de una zona o grupo de zonas'
+  return 'En cualquier lugar'
+}
+
+const [activeSubTab, setActiveSubTab] = useState('parametros')
   const [configAvanzadaOpen, setConfigAvanzadaOpen] = useState(true)
   const [newNote, setNewNote] = useState("")
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -645,6 +751,28 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
       description: 'Push notification en la app móvil (no configurada)',
       enabled: false,
       icon: Smartphone
+    }
+  ]
+
+  const scheduleContent =
+    rule.schedule?.type === 'custom'
+      ? renderCustomScheduleDetails(rule.schedule)
+      : (
+        <p className="text-[14px] text-muted-foreground">{getScheduleSummary(rule)}</p>
+      )
+
+  const advancedConfigItems = [
+    {
+      title: "Zona geográfica",
+      content: <p className="text-[14px] text-muted-foreground">{getZoneScopeDescription(rule)}</p>
+    },
+    {
+      title: "Generación de evento",
+      content: <p className="text-[14px] text-muted-foreground">{getEventTimingDescription(rule)}</p>
+    },
+    {
+      title: "Cierre del evento",
+      content: <p className="text-[14px] text-muted-foreground">{getClosureDescription(rule)}</p>
     }
   ]
 
@@ -897,22 +1025,36 @@ const renderTagsList = (tagIds: string[], bgColor = "bg-purple-100", textColor =
                         contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
                       >
                         {configAvanzadaOpen && (
-                          <div className="pb-4">
+                          <div className="pb-4 space-y-6">
                             <Row gutter={[24, 24]}>
-                              {[
-                                { title: "Zona geográfica", value: "En cualquier lugar" },
-                                { title: "Activación de la regla", value: "En todo momento" },
-                                { title: "Generación de evento", value: "Cuando se cumplan las condiciones" },
-                                { title: "Cierre del evento", value: "Cuando deje de cumplirse la condición" },
-                              ].map((item) => (
+                              {advancedConfigItems.map((item) => (
                                 <Col key={item.title} xs={24} md={12}>
-                                  <div className="flex flex-col gap-1">
+                                  <div className="flex flex-col gap-2">
                                     <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
-                                    <p className="text-[14px] text-muted-foreground">{item.value}</p>
+                                    {typeof item.content === 'string' ? (
+                                      <p className="text-[14px] text-muted-foreground">{item.content}</p>
+                                    ) : (
+                                      item.content
+                                    )}
                                   </div>
                                 </Col>
                               ))}
+                              <Col xs={24} md={12}>
+                                <div className="flex flex-col gap-2">
+                                  <span className="text-[14px] font-semibold text-foreground">Activación de la regla</span>
+                                  <div className="text-[14px] text-muted-foreground">
+                                    {rule.schedule?.type === 'custom' ? 'Personalizada' : getScheduleSummary(rule)}
+                                  </div>
+                                </div>
+                              </Col>
                             </Row>
+
+                            {rule.schedule?.type === 'custom' && (
+                              <div className="space-y-2">
+                                <span className="text-[14px] font-semibold text-foreground">Horario personalizado</span>
+                                {scheduleContent}
+                              </div>
+                            )}
                           </div>
                         )}
                       </SectionCard>

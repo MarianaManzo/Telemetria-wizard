@@ -572,6 +572,7 @@ export const initialRules: Rule[] = [
     },
     schedule: {
       type: 'custom',
+      ruleContext: 'inside',
       days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
       timeRanges: [{ start: '06:00', end: '18:00' }]
     },
@@ -728,7 +729,18 @@ export const initialRules: Rule[] = [
       type: 'all'
     },
     schedule: {
-      type: 'always'
+      type: 'custom',
+      ruleContext: 'inside',
+      days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+      timeRanges: [
+        { start: '06:00', end: '18:00' },
+        { start: '06:00', end: '18:00' },
+        { start: '06:00', end: '18:00' },
+        { start: '06:00', end: '18:00' },
+        { start: '06:00', end: '18:00' },
+        { start: '06:00', end: '18:00' },
+        { start: '06:00', end: '18:00' }
+      ]
     },
     closePolicy: {
       type: 'manual'
