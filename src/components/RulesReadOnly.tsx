@@ -172,6 +172,27 @@ const WEEKDAY_LABELS: Record<string, string> = {
   domingo: 'Domingo'
 }
 
+const normalizeEmailMessage = (text: string) => {
+  if (!text) return ''
+  let normalized = text
+    .replace(/\\r/g, '')
+    .replace(/\\n/g, '\n')
+    .replace(/\r/g, '')
+
+  if (!normalized.includes('\n')) {
+    normalized = normalized
+      .replace(/Resumen Ejecutivo de Evento\s*-/, 'Resumen Ejecutivo de Evento\n-')
+      .replace(/\s*-\s+/g, '\n- ')
+      .replace(/\s+El evento/, '\n\nEl evento')
+      .replace(/\s+Para detalles/, '\nPara detalles')
+      .replace(/\s+Saludos cordiales,/, '\n\nSaludos cordiales,')
+      .replace(/Sistema de Gestión Numaris/, '\nSistema de Gestión Numaris')
+      .trim()
+  }
+
+  return normalized
+}
+
 const highlightEmailTemplateMessage = (text: string) => {
   if (!text) {
     return (
@@ -181,29 +202,33 @@ const highlightEmailTemplateMessage = (text: string) => {
     )
   }
 
+  const formattedText = normalizeEmailMessage(text)
   const tokenRegex = /(\{\{[^}]+\}\}|\{[^}]+\})/g
-  const parts = text.split(tokenRegex)
-  const tokens = text.match(tokenRegex) || []
-  let tokenIndex = 0
   const nodes: React.ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  let key = 0
 
-  parts.forEach((part, index) => {
-    if (part) {
-      nodes.push(<React.Fragment key={`text-${index}`}>{part}</React.Fragment>)
+  while ((match = tokenRegex.exec(formattedText)) !== null) {
+    const preceding = formattedText.slice(lastIndex, match.index)
+    if (preceding) {
+      nodes.push(<React.Fragment key={`text-${key++}`}>{preceding}</React.Fragment>)
     }
+    nodes.push(
+      <span
+        key={`token-${key++}`}
+        className="inline-flex items-center rounded-sm bg-purple-100 px-1 py-0.5 text-[12px] font-semibold text-purple-700"
+      >
+        {match[0]}
+      </span>
+    )
+    lastIndex = match.index + match[0].length
+  }
 
-    if (tokenIndex < tokens.length) {
-      const token = tokens[tokenIndex++]
-      nodes.push(
-        <span
-          key={`token-${index}`}
-          className="inline-flex items-center rounded-sm bg-purple-100 px-1 py-0.5 text-[12px] font-semibold text-purple-700"
-        >
-          {token}
-        </span>
-      )
-    }
-  })
+  const trailing = formattedText.slice(lastIndex)
+  if (trailing) {
+    nodes.push(<React.Fragment key={`text-${key++}`}>{trailing}</React.Fragment>)
+  }
 
   return (
     <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#313655]">
@@ -737,23 +762,6 @@ const [activeSubTab, setActiveSubTab] = useState('parametros')
       ? emailTemplate.sender
       : []
 
-  const notificationChannels = [
-    {
-      id: 'web',
-      label: 'Notificación web',
-      description: 'Visible en la plataforma de monitorización',
-      enabled: false,
-      icon: Monitor
-    },
-    {
-      id: 'mobile',
-      label: 'Notificación móvil',
-      description: 'Push notification en la app móvil (no configurada)',
-      enabled: false,
-      icon: Smartphone
-    }
-  ]
-
   const scheduleContent =
     rule.schedule?.type === 'custom'
       ? renderCustomScheduleDetails(rule.schedule)
@@ -980,8 +988,7 @@ const [activeSubTab, setActiveSubTab] = useState('parametros')
                         <SectionCard
                           icon={<Settings className="w-4 h-4 text-muted-foreground" />}
                           title="Parámetros a evaluar"
-                        description={<span className="text-[14px] font-medium text-foreground">Condiciones de activación</span>}
-                      >
+                        >
                         {renderConditionGroups(rule)}
                       </SectionCard>
 
@@ -1160,7 +1167,6 @@ const [activeSubTab, setActiveSubTab] = useState('parametros')
                       <SectionCard
                         icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
                         title="Mensaje del evento"
-                        description={<span className="text-[14px] font-medium text-foreground">Vista previa con variables dinámicas</span>}
                       >
                         {emailMessageContent ? (
                           <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-4">
@@ -1172,107 +1178,6 @@ const [activeSubTab, setActiveSubTab] = useState('parametros')
                           </p>
                         )}
                       </SectionCard>
-
-                      <SectionCard
-                        icon={<Monitor className="w-4 h-4 text-muted-foreground" />}
-                        title="Canales de notificación"
-                        description={<span className="text-[14px] font-medium text-foreground">Medios disponibles para este evento</span>}
-                      >
-                        <div className="space-y-6">
-                          <div className="space-y-3">
-                            {notificationChannels.map((channel) => (
-                              <div key={channel.id} className="flex items-start justify-between rounded-md border border-border px-3 py-2">
-                                <div className="flex items-center gap-3">
-                                  <channel.icon className="w-4 h-4 text-muted-foreground" />
-                                  <div>
-                                    <span className="block text-[14px] font-semibold text-foreground">{channel.label}</span>
-                                    <span className="text-[12px] text-muted-foreground">{channel.description}</span>
-                                  </div>
-                                </div>
-                                <Switch
-                                  checked={channel.enabled}
-                                  disabled
-                                  className="switch-blue pointer-events-none scale-90"
-                                />
-                              </div>
-                            ))}
-                          </div>
-
-                          {emailSettings && (
-                            <div className="rounded-lg border border-[#E5E9FF] bg-white">
-                              <div className="flex items-center justify-between gap-3 border-b border-[#E5E9FF] bg-[#F8F9FF] px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <Mail className="w-4 h-4 text-muted-foreground" />
-                                  <span className="text-[14px] font-semibold text-foreground">Correo electrónico</span>
-                                </div>
-                                <Switch
-                                  checked={!!emailSettings.enabled}
-                                  disabled
-                                  className="switch-blue pointer-events-none scale-90"
-                                />
-                              </div>
-
-                              <div className="space-y-6 p-4">
-                                {emailSettings.enabled ? (
-                                  <>
-                                    <Row gutter={[24, 24]}>
-                                      <Col xs={24} md={12}>
-                                        <div>
-                                          <span className="text-[14px] font-semibold text-foreground block mb-2">Asunto</span>
-                                          <p className="text-[14px] text-[rgba(113,113,130,1)]">{emailSubjectDisplay}</p>
-                                        </div>
-                                      </Col>
-                                      <Col xs={24} md={12}>
-                                        <div>
-                                          <span className="text-[14px] font-semibold text-foreground block mb-2">Destinatarios</span>
-                                          {emailRecipients.length > 0 ? (
-                                            renderEmailRecipients(emailRecipients)
-                                          ) : (
-                                            <span className="text-[12px] text-muted-foreground">No hay destinatarios configurados.</span>
-                                          )}
-                                        </div>
-                                      </Col>
-                                      <Col xs={24} md={12}>
-                                        <div>
-                                          <span className="text-[14px] font-semibold text-foreground block mb-2">Remitentes</span>
-                                          {renderEmailSenders(emailSenders)}
-                                        </div>
-                                      </Col>
-                                      <Col xs={24} md={12}>
-                                        <div>
-                                          <span className="text-[14px] font-semibold text-foreground block mb-2">Plantilla seleccionada</span>
-                                          <p className="text-[14px] text-[rgba(113,113,130,1)]">
-                                            {emailTemplate ? emailTemplate.name : 'Sin plantilla asociada'}
-                                          </p>
-                                          {emailTemplate?.description && (
-                                            <p className="text-[12px] text-muted-foreground mt-1">
-                                              {emailTemplate.description}
-                                            </p>
-                                          )}
-                                        </div>
-                                      </Col>
-                                    </Row>
-
-                                    <div className="space-y-2 rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-4">
-                                      <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
-                                        Contenido del mensaje
-                                      </span>
-                                      <div className="rounded-md border border-[#D6DDFF] bg-white p-3">
-                                        {highlightEmailTemplateMessage(emailMessageContent)}
-                                      </div>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <p className="text-[14px] text-muted-foreground">
-                                    El envío por correo electrónico está desactivado para esta regla.
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </SectionCard>
-
                     </div>
                   )}
                   </div>
