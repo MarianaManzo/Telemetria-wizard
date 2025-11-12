@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Textarea } from "./ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "./ui/dropdown-menu"
@@ -32,7 +31,7 @@ import {
   AlertOctagon
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
-import { Row, Col } from "antd"
+import { Row, Col, Collapse } from "antd"
 import type { LucideIcon } from "lucide-react"
 import { Rule, Event, RuleConditionGroup, RuleSchedule } from "../types"
 import { userEmailTemplates } from "../constants/emailTemplates"
@@ -42,6 +41,8 @@ import exampleImage from 'figma:asset/25905393c492af8c8e0b3cf142e20c9dc3cbe9e4.p
 import markerBody from "../assets/event.svg?raw"
 import markerLabel from "../assets/Label event.svg?raw"
 import SectionCard from "./SectionCard"
+
+const { Panel } = Collapse
 
 // System sensors for telemetry (updated to match TelemetryWizardWithModal)
 const systemTelemetrySensors = [
@@ -246,6 +247,15 @@ const operatorOptions = [
   { value: 'contains', label: 'contiene', symbol: '∋' },
   { value: 'not_contains', label: 'no contiene', symbol: '∌' }
 ]
+
+type CollapseSectionKey = 'parametros' | 'configuracion' | 'acciones'
+type SectionKey = CollapseSectionKey | 'notas' | 'adjuntos'
+const COLLAPSE_SECTION_KEYS: CollapseSectionKey[] = ['parametros', 'configuracion', 'acciones']
+const SECTION_KEYS: SectionKey[] = [...COLLAPSE_SECTION_KEYS, 'notas', 'adjuntos']
+const isCollapseSection = (value: string): value is CollapseSectionKey =>
+  COLLAPSE_SECTION_KEYS.includes(value as CollapseSectionKey)
+const isSectionKey = (value: string): value is SectionKey =>
+  SECTION_KEYS.includes(value as SectionKey)
 
 // Helper function to render condition value
 const formatConditionValue = (condition: any) => {
@@ -724,16 +734,161 @@ const getZoneScopeDescription = (rule: Rule) => {
   return 'En cualquier lugar'
 }
 
-const [activeSubTab, setActiveSubTab] = useState('parametros')
+  const [openPanelKey, setOpenPanelKey] = useState<CollapseSectionKey | null>(null)
+  const [expandAll, setExpandAll] = useState(false)
+  const [infoHeaderHeight, setInfoHeaderHeight] = useState(0)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const generalInfoHeaderRef = useRef<HTMLDivElement | null>(null)
+  const parametrosHeaderRef = useRef<HTMLButtonElement>(null)
+  const configuracionHeaderRef = useRef<HTMLButtonElement>(null)
+  const accionesHeaderRef = useRef<HTMLButtonElement>(null)
+  const notasHeaderRef = useRef<HTMLDivElement>(null)
+  const adjuntosHeaderRef = useRef<HTMLDivElement>(null)
+  const stickySectionRef = useRef<SectionKey>('parametros')
+  const sectionHeaderRefs: Record<SectionKey, React.RefObject<HTMLElement>> = {
+    parametros: parametrosHeaderRef,
+    configuracion: configuracionHeaderRef,
+    acciones: accionesHeaderRef,
+    notas: notasHeaderRef,
+    adjuntos: adjuntosHeaderRef
+  }
+  const sectionStickyTop = (infoHeaderHeight || 64) + 12
+  const collapseStyle = {
+    '--section-sticky-top': `${sectionStickyTop}px`
+  } as React.CSSProperties & { '--section-sticky-top': string }
+
+  const renderPanelHeader = (
+    key: CollapseSectionKey,
+    label: string,
+    ref: React.RefObject<HTMLButtonElement>
+  ) => {
+    const isActive = expandAll || openPanelKey === key
+    return (
+      <button
+        type="button"
+        ref={ref}
+        className={`collapse-pill ${isActive ? 'collapse-pill--active' : ''}`}
+        style={{ scrollMarginTop: sectionStickyTop + 16 }}
+      >
+        <span>{label}</span>
+        <ChevronDown className={`collapse-pill__icon ${isActive ? 'rotate-180' : ''}`} />
+      </button>
+    )
+  }
+
   const [configAvanzadaOpen, setConfigAvanzadaOpen] = useState(true)
   const [newNote, setNewNote] = useState("")
+  const [notesSort, setNotesSort] = useState('recent')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
+
+  const handleToggleExpandAll = () => {
+    setExpandAll((prev) => {
+      const next = !prev
+      if (next) {
+        return true
+      }
+      setOpenPanelKey(null)
+      stickySectionRef.current = 'parametros'
+      return false
+    })
+  }
+
+  const handleSectionChange = (key: string | string[]) => {
+    if (expandAll) {
+      return
+    }
+    const normalizedKey = Array.isArray(key) ? key[0] : key
+    if (!normalizedKey) {
+      setOpenPanelKey(null)
+      return
+    }
+
+    if (!isCollapseSection(normalizedKey)) {
+      return
+    }
+
+    stickySectionRef.current = normalizedKey
+    setOpenPanelKey(normalizedKey)
+    const headerElement = sectionHeaderRefs[normalizedKey]?.current
+    headerElement?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' })
+  }
 
   // Debug effect to track rule changes
   useEffect(() => {
     console.log('RulesReadOnly received rule update:', rule.id, rule.updatedAt, rule)
   }, [rule])
+
+  useEffect(() => {
+    const headerElement = generalInfoHeaderRef.current
+    if (!headerElement || typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+      return
+    }
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (entry) {
+        setInfoHeaderHeight(entry.contentRect.height)
+      }
+    })
+    setInfoHeaderHeight(headerElement.getBoundingClientRect().height)
+    observer.observe(headerElement)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) {
+      return
+    }
+
+    let frame = 0
+    let hasScrolled = false
+
+    const handleScroll = () => {
+      hasScrolled = true
+      if (frame) {
+        cancelAnimationFrame(frame)
+      }
+      frame = requestAnimationFrame(() => {
+        const containerRect = container.getBoundingClientRect()
+        const stickyBoundary = containerRect.top + sectionStickyTop
+        let detected: SectionKey | null = null
+
+        SECTION_KEYS.forEach((key) => {
+          const headerEl = sectionHeaderRefs[key].current
+          if (!headerEl) {
+            return
+          }
+          const headerRect = headerEl.getBoundingClientRect()
+          if (headerRect.top <= stickyBoundary + 1) {
+            detected = key
+          }
+        })
+
+        if (!detected) {
+          detected = SECTION_KEYS[0]
+        }
+
+        if (!expandAll && hasScrolled && detected && detected !== stickySectionRef.current) {
+          stickySectionRef.current = detected
+          if (isCollapseSection(detected)) {
+            setOpenPanelKey(detected)
+          } else {
+            setOpenPanelKey(null)
+          }
+        }
+      })
+    }
+
+    container.addEventListener('scroll', handleScroll)
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+      if (frame) {
+        cancelAnimationFrame(frame)
+      }
+    }
+  }, [sectionStickyTop, expandAll])
 
   const severityInfo = severityConfig[rule.eventSettings.severity]
   const severityPaletteColors = severityInfo?.palette ?? severityPalette.low
@@ -1114,252 +1269,318 @@ const advancedConfigItems = [
       <div className="flex flex-1 min-h-0">
         {/* Main Content */}
         <div className="flex flex-1 min-h-0 flex-col">
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto" ref={scrollContainerRef}>
             <div className="p-6">
               {activeMainTab === 'informacion-general' && (
-                <div className="rounded-lg border border-gray-200 bg-white">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-[18px] text-foreground">Información general</h2>
-                  </div>
-
-                  {/* Sub Tabs */}
-                  <div className="border-b border-gray-200 bg-white px-6">
-                    <nav className="-mb-px flex space-x-8">
-                        <button
-                          onClick={() => setActiveSubTab('parametros')}
-                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                            activeSubTab === 'parametros'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                          }`}
-                        >
-                          Parámetros
-                        </button>
-                        <button
-                          onClick={() => setActiveSubTab('configuracion')}
-                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                            activeSubTab === 'configuracion'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                          }`}
-                        >
-                          Configuración
-                        </button>
-                        <button
-                          onClick={() => setActiveSubTab('acciones')}
-                          className={`py-2 px-1 border-b-2 font-medium text-[14px] ${
-                            activeSubTab === 'acciones'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                          }`}
-                        >
-                          Acciones a realizar
-                        </button>
-                    </nav>
-                  </div>
-
-                  <div className="p-6">
-                    {activeSubTab === 'parametros' && (
-                      <div className="space-y-4">
-                        <SectionCard
-                          icon={<Settings className="w-4 h-4 text-muted-foreground" />}
-                          title="Parámetros a evaluar"
-                        >
-                        {renderConditionGroups(rule)}
-                      </SectionCard>
-
-                      <SectionCard
-                        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                        title="Aplica esta regla a"
+                <div className="space-y-6">
+                  <div
+                    className="rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden"
+                    style={collapseStyle}
+                  >
+                    <div
+                      ref={generalInfoHeaderRef}
+                      className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E4E7EC] bg-white px-6 py-4"
+                      style={{ borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+                    >
+                      <h2 className="text-[18px] font-semibold text-foreground">Información general</h2>
+                      <button
+                        type="button"
+                        onClick={handleToggleExpandAll}
+                        className="flex items-center gap-2 rounded-full px-4 py-2 text-[14px] font-semibold text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
                       >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <span className="text-[14px] font-semibold text-foreground block mb-2">Unidades</span>
-                            {rule.appliesTo.type === 'units' ? (
-                              renderUnits(rule.appliesTo.units || [])
-                            ) : (
-                              <span className="text-[12px] text-muted-foreground">Sin unidades específicas</span>
-                            )}
-                          </div>
-                          <div>
-                            <span className="text-[14px] font-semibold text-foreground block mb-2">Etiquetas</span>
-                            {rule.appliesTo.type === 'tags' ? (
-                              renderTagsList(rule.appliesTo.tags || [])
-                            ) : (
-                              <span className="text-[12px] text-muted-foreground">Sin etiquetas específicas</span>
-                            )}
-                          </div>
-                        </div>
-                      </SectionCard>
-
-                      <SectionCard
-                        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
-                        title="Configuración avanzada"
-                        headerExtra={
-                          <button
-                            type="button"
-                            onClick={() => setConfigAvanzadaOpen((prev) => !prev)}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {configAvanzadaOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                          </button>
-                        }
-                        className="overflow-hidden"
-                        contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
-                      >
-                        {configAvanzadaOpen && (
-                          <div className="pb-4 space-y-6">
-                            <Row gutter={[24, 24]}>
-                              {advancedConfigItems.map((item) => (
-                                <Col key={item.title} xs={24} md={12}>
-                                  <div className="flex flex-col gap-2">
-                                    <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
-                                    {typeof item.content === 'string' ? (
-                                      <p className="text-[14px] text-muted-foreground">{item.content}</p>
-                                    ) : (
-                                      item.content
-                                    )}
-                                  </div>
-                                </Col>
-                              ))}
-                              <Col xs={24} md={12}>
-                                <div className="flex flex-col gap-2">
-                                  <span className="text-[14px] font-semibold text-foreground">Activación de la regla</span>
-                                  <div className="text-[14px] text-muted-foreground">
-                                    {rule.schedule?.type === 'custom' ? 'Personalizada' : getScheduleSummary(rule)}
-                                  </div>
-                                </div>
-                              </Col>
-                            </Row>
-
-                            {rule.schedule?.type === 'custom' && (
-                              <div className="space-y-2">
-                                <span className="text-[14px] font-semibold text-foreground">Horario personalizado</span>
-                                {scheduleContent}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </SectionCard>
+                        {expandAll ? 'Cerrar todo' : 'Abrir todo'}
+                        <ChevronDown className={`h-4 w-4 transition-transform ${expandAll ? 'rotate-180' : ''}`} />
+                      </button>
                     </div>
-                  )}
 
-                {activeSubTab === 'configuracion' && (
-                    <div className="space-y-4">
-                        <SectionCard
-                          icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
-                          title="Clasificación del evento"
-                        >
-                          <div className="space-y-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                              <div>
-                                <span className="text-[14px] font-semibold text-foreground block mb-1">Nombre corto</span>
-                                <span className="text-[14px] text-foreground" title={shortNameValue}>{shortNameDisplay}</span>
-                              </div>
+                    <div className="info-collapse">
+                      <Collapse
+                        accordion={!expandAll}
+                        bordered={false}
+                        activeKey={expandAll ? COLLAPSE_SECTION_KEYS : openPanelKey ?? undefined}
+                        onChange={handleSectionChange}
+                        expandIcon={() => null}
+                      >
+                      <Panel
+                        key="parametros"
+                        header={renderPanelHeader('parametros', 'Parámetros', parametrosHeaderRef)}
+                      >
+                        <div className="space-y-4 px-6 pb-6 pt-4">
+                          <SectionCard
+                            icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                            title="Parámetros a evaluar"
+                          >
+                            {renderConditionGroups(rule)}
+                          </SectionCard>
 
-                              <div>
-                                <span className="text-[14px] font-semibold text-foreground block mb-2">Vista previa en mapa</span>
-                                <div className="flex flex-col items-start lg:items-center gap-4">
-                                  <MapPreviewIcon
-                                    severity={rule.eventSettings.severity || 'low'}
-                                    label={shortNameDisplay}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                              <div>
-                                <span className="text-[14px] font-semibold text-foreground block mb-3">Severidad del evento:</span>
-                                <div className="flex items-center gap-3">
-                                  <div
-                                    className="flex items-center gap-2 px-3 py-1 border"
-                                    style={{
-                                      backgroundColor: severityPaletteColors.fill,
-                                      color: severityPaletteColors.accent,
-                                      borderColor: severityPaletteColors.accent,
-                                      borderRadius: 4
-                                    }}
-                                  >
-                                    <SeverityIcon className="w-4 h-4" color={severityPaletteColors.accent} />
-                                    <span className="text-[14px]">
-                                      {severityInfo.label}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div>
-                                <span className="text-[14px] font-semibold text-foreground block mb-3">Etiquetas del evento:</span>
-                                {renderTagsList(rule.eventSettings.tags || [], "bg-green-100", "text-green-700", "hover:bg-green-200")}
-                              </div>
-                            </div>
-                          </div>
-                        </SectionCard>
-
-                        <SectionCard
-                          icon={<Clock className="w-4 h-4 text-muted-foreground" />}
-                          title="Cierre del evento"
-                        >
-                          <div className="space-y-3">
-                            <span className="text-[14px] font-semibold text-foreground block">Cierre del evento:</span>
-                            <div className="text-[14px] text-[rgba(113,113,130,1)]">
-                              {rule.closePolicy.type === 'manual' ? 'Manualmente' : 
-                               rule.closePolicy.type === 'auto-time' ? 'Automáticamente por tiempo' : 
-                               'Automáticamente por condición'}
-                              {rule.closePolicy.type === 'manual' && (
-                                <span className="text-[12px] text-muted-foreground"> / Requiere nota al cerrar evento</span>
-                              )}
-                            </div>
-                          </div>
-                        </SectionCard>
-
-                        <SectionCard
-                          icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                          title="Asignar etiqueta a la unidad"
-                        >
-                          <div className="space-y-3">
-                            <span className="text-[14px] font-semibold text-foreground block">Etiquetas asignadas:</span>
-                            {renderTagsList(rule.eventSettings.unitTags || [], "bg-orange-100", "text-orange-700", "hover:bg-orange-200")}
-                          </div>
-                        </SectionCard>
-
-                        {rule.eventSettings.unitUntagsEnabled && (
                           <SectionCard
                             icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                            title="Desasignar etiqueta a la unidad"
+                            title="Aplica esta regla a"
                           >
-                            <div className="space-y-3">
-                              <span className="text-[14px] font-semibold text-foreground block">Etiquetas a desasignar:</span>
-                              {renderTagsList(rule.eventSettings.unitUntags || [], "bg-red-100", "text-red-700", "hover:bg-red-200")}
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                              <div>
+                                <span className="mb-2 block text-[14px] font-semibold text-foreground">Unidades</span>
+                                {rule.appliesTo.type === 'units' ? (
+                                  renderUnits(rule.appliesTo.units || [])
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground">Sin unidades específicas</span>
+                                )}
+                              </div>
+                              <div>
+                                <span className="mb-2 block text-[14px] font-semibold text-foreground">Etiquetas</span>
+                                {rule.appliesTo.type === 'tags' ? (
+                                  renderTagsList(rule.appliesTo.tags || [])
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground">Sin etiquetas específicas</span>
+                                )}
+                              </div>
                             </div>
                           </SectionCard>
-                        )}
-                      </div>
-                  )}
 
-                {activeSubTab === 'acciones' && (
-                    <div className="space-y-4">
-                      <SectionCard
-                        icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
-                        title="Mensaje del evento"
+                          <SectionCard
+                            icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                            title="Configuración avanzada"
+                            headerExtra={
+                              <button
+                                type="button"
+                                onClick={() => setConfigAvanzadaOpen((prev) => !prev)}
+                                className="text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                {configAvanzadaOpen ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </button>
+                            }
+                            className="overflow-hidden"
+                            contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
+                          >
+                            {configAvanzadaOpen && (
+                              <div className="pb-4 space-y-6">
+                                <Row gutter={[24, 24]}>
+                                  {advancedConfigItems.map((item) => (
+                                    <Col key={item.title} xs={24} md={12}>
+                                      <div className="flex flex-col gap-2">
+                                        <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
+                                        {typeof item.content === 'string' ? (
+                                          <p className="text-[14px] text-muted-foreground">{item.content}</p>
+                                        ) : (
+                                          item.content
+                                        )}
+                                      </div>
+                                    </Col>
+                                  ))}
+                                  <Col xs={24} md={12}>
+                                    <div className="flex flex-col gap-2">
+                                      <span className="text-[14px] font-semibold text-foreground">Activación de la regla</span>
+                                      <div className="text-[14px] text-muted-foreground">
+                                        {rule.schedule?.type === 'custom' ? 'Personalizada' : getScheduleSummary(rule)}
+                                      </div>
+                                    </div>
+                                  </Col>
+                                </Row>
+
+                                {rule.schedule?.type === 'custom' && (
+                                  <div className="space-y-2">
+                                    <span className="text-[14px] font-semibold text-foreground">Horario personalizado</span>
+                                    {scheduleContent}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </SectionCard>
+                        </div>
+                      </Panel>
+
+                      <Panel
+                        key="configuracion"
+                        header={renderPanelHeader('configuracion', 'Configuración', configuracionHeaderRef)}
                       >
-                        {emailMessageContent ? (
-                          <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-4">
-                            {highlightEmailTemplateMessage(emailMessageContent)}
-                          </div>
-                        ) : (
-                          <p className="text-[14px] text-muted-foreground">
-                            No hay mensaje configurado para este canal.
-                          </p>
-                        )}
-                      </SectionCard>
-                    </div>
-                  )}
-                  </div>
-              </div>
-              )}
+                        <div className="space-y-4 px-6 pb-6 pt-4">
+                          <SectionCard
+                            icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
+                            title="Clasificación del evento"
+                          >
+                            <div className="space-y-6">
+                              <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
+                                <div>
+                                  <span className="mb-1 block text-[14px] font-semibold text-foreground">Nombre corto</span>
+                                  <span className="text-[14px] text-foreground" title={shortNameValue}>
+                                    {shortNameDisplay}
+                                  </span>
+                                </div>
 
+                                <div>
+                                  <span className="mb-2 block text-[14px] font-semibold text-foreground">Vista previa en mapa</span>
+                                  <div className="flex flex-col items-start gap-4 lg:items-center">
+                                    <MapPreviewIcon
+                                      severity={rule.eventSettings.severity || 'low'}
+                                      label={shortNameDisplay}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                                <div>
+                                  <span className="mb-3 block text-[14px] font-semibold text-foreground">Severidad del evento:</span>
+                                  <div className="flex items-center gap-3">
+                                    <div
+                                      className="flex items-center gap-2 border px-3 py-1"
+                                      style={{
+                                        backgroundColor: severityPaletteColors.fill,
+                                        color: severityPaletteColors.accent,
+                                        borderColor: severityPaletteColors.accent,
+                                        borderRadius: 4
+                                      }}
+                                    >
+                                      <SeverityIcon className="h-4 w-4" color={severityPaletteColors.accent} />
+                                      <span className="text-[14px]">{severityInfo.label}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <span className="mb-3 block text-[14px] font-semibold text-foreground">Etiquetas del evento:</span>
+                                  {renderTagsList(
+                                    rule.eventSettings.tags || [],
+                                    "bg-green-100",
+                                    "text-green-700",
+                                    "hover:bg-green-200"
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </SectionCard>
+
+                          <SectionCard
+                            icon={<Clock className="w-4 h-4 text-muted-foreground" />}
+                            title="Cierre del evento"
+                          >
+                            <div className="space-y-3">
+                              <span className="block text-[14px] font-semibold text-foreground">Cierre del evento:</span>
+                              <div className="text-[14px] text-[rgba(113,113,130,1)]">
+                                {rule.closePolicy.type === 'manual'
+                                  ? 'Manualmente'
+                                  : rule.closePolicy.type === 'auto-time'
+                                    ? 'Automáticamente por tiempo'
+                                    : 'Automáticamente por condición'}
+                                {rule.closePolicy.type === 'manual' && (
+                                  <span className="text-[12px] text-muted-foreground"> / Requiere nota al cerrar evento</span>
+                                )}
+                              </div>
+                            </div>
+                          </SectionCard>
+
+                          <SectionCard
+                            icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                            title="Asignar etiqueta a la unidad"
+                          >
+                            <div className="space-y-3">
+                              <span className="block text-[14px] font-semibold text-foreground">Etiquetas asignadas:</span>
+                              {renderTagsList(
+                                rule.eventSettings.unitTags || [],
+                                "bg-orange-100",
+                                "text-orange-700",
+                                "hover:bg-orange-200"
+                              )}
+                            </div>
+                          </SectionCard>
+
+                          {rule.eventSettings.unitUntagsEnabled && (
+                            <SectionCard
+                              icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                              title="Desasignar etiqueta a la unidad"
+                            >
+                              <div className="space-y-3">
+                                <span className="block text-[14px] font-semibold text-foreground">Etiquetas a desasignar:</span>
+                                {renderTagsList(
+                                  rule.eventSettings.unitUntags || [],
+                                  "bg-red-100",
+                                  "text-red-700",
+                                  "hover:bg-red-200"
+                                )}
+                              </div>
+                            </SectionCard>
+                          )}
+                        </div>
+                      </Panel>
+
+                      <Panel
+                        key="acciones"
+                        header={renderPanelHeader('acciones', 'Acciones a realizar', accionesHeaderRef)}
+                      >
+                        <div className="space-y-4 px-6 pb-6 pt-4">
+                          <SectionCard
+                            icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
+                            title="Mensaje del evento"
+                          >
+                            {emailMessageContent ? (
+                              <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-4">
+                                {highlightEmailTemplateMessage(emailMessageContent)}
+                              </div>
+                            ) : (
+                              <p className="text-[14px] text-muted-foreground">No hay mensaje configurado para este canal.</p>
+                            )}
+                          </SectionCard>
+                        </div>
+                      </Panel>
+                    </Collapse>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden">
+                    <div className="px-6 py-6">
+                      <div
+                        ref={notasHeaderRef}
+                        className="mb-5 flex items-center justify-between text-[15px] font-semibold text-foreground"
+                        style={{ scrollMarginTop: sectionStickyTop + 16 }}
+                      >
+                        <span>Notas</span>
+                        <Select value={notesSort} onValueChange={setNotesSort}>
+                          <SelectTrigger className="w-[190px] rounded-full border border-[#E4E7EC] bg-white text-[14px] font-medium text-foreground focus:ring-0 focus:ring-offset-0">
+                            <SelectValue placeholder="Recientes al principio" />
+                          </SelectTrigger>
+                          <SelectContent className="text-[14px]">
+                            <SelectItem value="recent">Recientes al principio</SelectItem>
+                            <SelectItem value="oldest">Antiguas al principio</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Textarea
+                        value={newNote}
+                        onChange={(event) => setNewNote(event.target.value)}
+                        placeholder="Agregar nota..."
+                        className="min-h-[96px] rounded-2xl border border-[#E4E7EC] bg-[#FBFBFD] text-[14px] text-foreground placeholder:text-[#C0C5D0] focus-visible:border-[#2563EB] focus-visible:ring-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden">
+                    <div className="flex flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between">
+                      <span
+                        ref={adjuntosHeaderRef}
+                        className="text-[15px] font-semibold text-foreground"
+                        style={{ scrollMarginTop: sectionStickyTop + 16 }}
+                      >
+                        Archivos adjuntos
+                      </span>
+                      <div className="flex flex-1 items-center justify-between gap-4 md:justify-end">
+                        <p className="mb-0 text-[14px] text-muted-foreground">No tienes archivos adjuntos</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex items-center gap-2 rounded-full border border-[#2563EB] bg-white px-4 py-2 text-[14px] font-semibold text-[#2563EB] hover:bg-[#2563EB]/5"
+                        >
+                          <span className="text-[18px] leading-none">+</span>
+                          Adjuntar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             {activeMainTab === 'historial-registro' && (
               <div className="bg-white rounded-lg border p-6">
                 <h2 className="text-[16px] text-foreground mb-6">Historial del registro</h2>
