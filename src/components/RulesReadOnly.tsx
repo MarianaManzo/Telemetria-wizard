@@ -769,7 +769,7 @@ const [activeSubTab, setActiveSubTab] = useState('parametros')
         <p className="text-[14px] text-muted-foreground">{getScheduleSummary(rule)}</p>
       )
 
-  const advancedConfigItems = [
+const advancedConfigItems = [
     {
       title: "Zona geográfica",
       content: <p className="text-[14px] text-muted-foreground">{getZoneScopeDescription(rule)}</p>
@@ -784,9 +784,185 @@ const [activeSubTab, setActiveSubTab] = useState('parametros')
     }
   ]
 
+  const renderParametrosTab = () => (
+    <div className="space-y-4">
+      <SectionCard
+        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+        title="Parámetros a evaluar"
+      >
+        {renderConditionGroups(rule)}
+      </SectionCard>
+
+      <SectionCard
+        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+        title="Aplica esta regla a"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <span className="text-[14px] font-semibold text-foreground block mb-2">Unidades</span>
+            {rule.appliesTo.type === 'units' ? (
+              renderUnits(rule.appliesTo.units || [])
+            ) : (
+              <span className="text-[12px] text-muted-foreground">Sin unidades específicas</span>
+            )}
+          </div>
+          <div>
+            <span className="text-[14px] font-semibold text-foreground block mb-2">Etiquetas</span>
+            {rule.appliesTo.type === 'tags' ? (
+              renderTagsList(rule.appliesTo.tags || [])
+            ) : (
+              <span className="text-[12px] text-muted-foreground">Sin etiquetas específicas</span>
+            )}
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+        title="Configuración avanzada"
+        headerExtra={
+          <button
+            type="button"
+            onClick={() => setConfigAvanzadaOpen((prev) => !prev)}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {configAvanzadaOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </button>
+        }
+        className="overflow-hidden"
+        contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
+      >
+        {configAvanzadaOpen && (
+          <div className="pb-4 space-y-6">
+            <Row gutter={[24, 24]}>
+              {advancedConfigItems.map((item) => (
+                <Col key={item.title} xs={24} md={12}>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
+                    {typeof item.content === 'string' ? (
+                      <p className="text-[14px] text-muted-foreground">{item.content}</p>
+                    ) : (
+                      item.content
+                    )}
+                  </div>
+                </Col>
+              ))}
+            </Row>
+
+            {rule.schedule?.type === 'custom' && (
+              <div className="space-y-2">
+                <span className="text-[14px] font-semibold text-foreground">Horario personalizado</span>
+                {scheduleContent}
+              </div>
+            )}
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  )
+
+  const renderConfiguracionTab = () => (
+    <div className="space-y-4">
+      <SectionCard
+        icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
+        title="Clasificación del evento"
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div>
+              <span className="text-[14px] font-semibold text-foreground block mb-1">Nombre corto</span>
+              <span className="text-[14px] text-foreground" title={shortNameValue}>{shortNameDisplay}</span>
+            </div>
+
+            <div>
+              <span className="text-[14px] font-semibold text-foreground block mb-2">Vista previa en mapa</span>
+              <div className="flex flex-col items-start lg:items-center gap-4">
+                <MapPreviewIcon
+                  severity={rule.eventSettings.severity || 'low'}
+                  label={shortNameDisplay}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <span className="text-[14px] font-semibold text-foreground block mb-3">Severidad del evento:</span>
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center gap-2 px-3 py-1 border"
+                  style={{
+                    backgroundColor: severityPaletteColors.fill,
+                    color: severityPaletteColors.accent,
+                    borderColor: severityPaletteColors.accent,
+                    borderRadius: 4
+                  }}
+                >
+                  <SeverityIcon className="w-4 h-4" color={severityPaletteColors.accent} />
+                  <span className="text-[14px]">
+                    {severityInfo.label}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[14px] font-semibold text-foreground block mb-3">Etiquetas del evento:</span>
+              {renderTagsList(rule.eventSettings.tags || [], "bg-green-100", "text-green-700", "hover:bg-green-200")}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+        title="Etiquetas de la unidad"
+      >
+        <div className="space-y-3">
+          <span className="text-[14px] font-semibold text-foreground block">Etiquetas asignadas a la unidad:</span>
+          {renderTagsList(rule.eventSettings.unitTags || [], "bg-orange-100", "text-orange-700", "hover:bg-orange-200")}
+        </div>
+
+        {rule.eventSettings.unitUntagsEnabled && (
+          <div className="space-y-3 mt-4">
+            <span className="text-[14px] font-semibold text-foreground block">Etiquetas a desasignar:</span>
+            {renderTagsList(rule.eventSettings.unitUntags || [], "bg-red-100", "text-red-700", "hover:bg-red-200")}
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  )
+
+  const renderAccionesTab = () => (
+    <SectionCard
+      icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
+      title="Mensaje del evento"
+    >
+      {emailMessageContent ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-1 text-[14px] font-semibold text-foreground">
+            <span className="text-red-500">*</span>
+            <span>Mensaje del evento</span>
+          </div>
+          <div className="rounded-2xl border border-[#E5E9FF] bg-white p-4">
+            <div className="rounded-lg border border-[#D6DDFF] bg-[#F8F9FF] p-4 text-[14px] leading-relaxed text-[#313655] whitespace-pre-wrap">
+              {highlightEmailTemplateMessage(emailMessageContent)}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="text-[14px] text-muted-foreground">
+          No hay mensaje configurado para este canal.
+        </p>
+      )}
+    </SectionCard>
+  )
+
+  const isSpecialRuleLayout = rule.name === 'Desconexión prolongada del GPS'
+
   const sidebarItems = [
     { id: 'contenido', label: 'Contenido', icon: FileText },
-    { id: 'regla', label: 'Regla', icon: Settings },
+    { id: 'regla', label: 'Información general', icon: Settings },
     { id: 'notas', label: 'Notas', icon: MessageSquare },
     { id: 'eventos', label: 'Eventos', icon: FileText },
     { id: 'etiquetas', label: 'Etiquetas', icon: Tag }

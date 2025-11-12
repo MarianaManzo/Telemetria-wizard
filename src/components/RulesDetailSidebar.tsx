@@ -6,7 +6,7 @@ interface RulesDetailSidebarProps {
 }
 
 const sidebarItems = [
-  { id: "regla", label: "Regla" },
+  { id: "regla", label: "Información general" },
   { id: "notas", label: "Notas" },
   { id: "eventos", label: "Eventos" },
   { id: "etiquetas", label: "Etiquetas" },
