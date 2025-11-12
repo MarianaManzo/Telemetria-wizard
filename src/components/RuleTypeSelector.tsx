@@ -17,15 +17,13 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
       id: 'telemetry' as const,
       title: 'Telemetría',
       description: 'Configura reglas y acciones basadas en información proporcionada por tu dispositivo (velocidad, temperatura...)',
-      icon: Gauge,
-      primary: true
+      icon: Gauge
     },
     {
       id: 'zone' as const,
       title: 'Zona',
       description: 'Define acciones automáticas al entrar o salir de una zona delimitada.',
-      icon: MapPin,
-      primary: false
+      icon: MapPin
     }
   ]
 
@@ -95,22 +93,14 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
                     <Card
                       className={`relative p-6 cursor-pointer transition-all hover:shadow-md h-full ${
                         isSelected ? 'ring-2 ring-blue-500 border-blue-200' : ''
-                      } ${type.primary ? 'border-blue-200 bg-blue-50/30' : ''}`}
+                      }`}
                       onClick={() => setSelectedType(type.id)}
                       style={{ height: '100%' }}
                     >
                       <div className="flex flex-col items-center text-center space-y-4 h-full">
                         {/* Icon */}
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
-                          type.primary
-                            ? 'border-blue-500 bg-blue-500'
-                            : 'border-gray-300 bg-gray-100'
-                        }`}>
-                          <Icon
-                            className={`w-6 h-6 ${
-                              type.primary ? 'text-white' : 'text-gray-600'
-                            }`}
-                          />
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-100">
+                          <Icon className="w-6 h-6 text-gray-600" />
                         </div>
 
                         {/* Title */}
@@ -125,13 +115,9 @@ export function RuleTypeSelector({ onTypeSelect, onCancel }: RuleTypeSelectorPro
 
                         {/* Select Button */}
                         <Button
-                          variant={type.primary ? 'default' : 'outline'}
+                          variant="outline"
                           size="sm"
-                          className={`w-full mt-4 ${
-                            type.primary
-                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                              : ''
-                          }`}
+                          className="w-full mt-4"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleSelect(type.id)
