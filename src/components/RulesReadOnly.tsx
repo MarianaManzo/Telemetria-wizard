@@ -764,15 +764,14 @@ const getZoneScopeDescription = (rule: Rule) => {
   ) => {
     const isActive = expandAll || openPanelKey === key
     return (
-      <button
-        type="button"
+      <div
         ref={ref}
         className={`collapse-pill ${isActive ? 'collapse-pill--active' : ''}`}
         style={{ scrollMarginTop: sectionStickyTop + 16 }}
       >
         <span>{label}</span>
         <ChevronDown className={`collapse-pill__icon ${isActive ? 'rotate-180' : ''}`} />
-      </button>
+      </div>
     )
   }
 
@@ -941,17 +940,18 @@ const advancedConfigItems = [
 
   const renderParametrosTab = () => (
     <div className="space-y-4">
-      <SectionCard
-        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
-        title="Parámetros a evaluar"
-      >
+                        <SectionCard
+                          icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                          title="Parámetros a evaluar"
+                        >
         {renderConditionGroups(rule)}
       </SectionCard>
 
-      <SectionCard
-        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-        title="Aplica esta regla a"
-      >
+                        <SectionCard
+                          icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                          title="Aplica esta regla a"
+                          showTopDivider
+                        >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <span className="text-[14px] font-semibold text-foreground block mb-2">Unidades</span>
@@ -1286,10 +1286,11 @@ const advancedConfigItems = [
                       <button
                         type="button"
                         onClick={handleToggleExpandAll}
-                        className="flex items-center gap-2 rounded-full px-4 py-2 text-[14px] font-semibold text-[#2563EB] transition-colors hover:text-[#1D4ED8]"
+                        className="flex items-center gap-2 rounded-full px-4 py-2 text-[14px] font-semibold transition-colors"
+                        style={{ color: '#2563EB' }}
                       >
                         {expandAll ? 'Cerrar todo' : 'Abrir todo'}
-                        <ChevronDown className={`h-4 w-4 transition-transform ${expandAll ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`h-4 w-4 transition-transform ${expandAll ? 'rotate-180' : ''}`} color='#2563EB' strokeWidth={3} />
                       </button>
                     </div>
 
@@ -1305,7 +1306,7 @@ const advancedConfigItems = [
                         key="parametros"
                         header={renderPanelHeader('parametros', 'Parámetros', parametrosHeaderRef)}
                       >
-                        <div className="space-y-4 px-6 pb-6 pt-4">
+                        <div className="space-y-4 py-4">
                           <SectionCard
                             icon={<Settings className="w-4 h-4 text-muted-foreground" />}
                             title="Parámetros a evaluar"
@@ -1316,6 +1317,7 @@ const advancedConfigItems = [
                           <SectionCard
                             icon={<Tag className="w-4 h-4 text-muted-foreground" />}
                             title="Aplica esta regla a"
+                            showTopDivider
                           >
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                               <div>
@@ -1337,59 +1339,43 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                          <SectionCard
-                            icon={<Settings className="w-4 h-4 text-muted-foreground" />}
-                            title="Configuración avanzada"
-                            headerExtra={
-                              <button
-                                type="button"
-                                onClick={() => setConfigAvanzadaOpen((prev) => !prev)}
-                                className="text-muted-foreground transition-colors hover:text-foreground"
-                              >
-                                {configAvanzadaOpen ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                              </button>
-                            }
-                            className="overflow-hidden"
-                            contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
-                          >
-                            {configAvanzadaOpen && (
-                              <div className="pb-4 space-y-6">
-                                <Row gutter={[24, 24]}>
-                                  {advancedConfigItems.map((item) => (
-                                    <Col key={item.title} xs={24} md={12}>
-                                      <div className="flex flex-col gap-2">
-                                        <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
-                                        {typeof item.content === 'string' ? (
-                                          <p className="text-[14px] text-muted-foreground">{item.content}</p>
-                                        ) : (
-                                          item.content
-                                        )}
-                                      </div>
-                                    </Col>
-                                  ))}
-                                  <Col xs={24} md={12}>
-                                    <div className="flex flex-col gap-2">
-                                      <span className="text-[14px] font-semibold text-foreground">Activación de la regla</span>
-                                      <div className="text-[14px] text-muted-foreground">
-                                        {rule.schedule?.type === 'custom' ? 'Personalizada' : getScheduleSummary(rule)}
-                                      </div>
-                                    </div>
-                                  </Col>
-                                </Row>
-
-                                {rule.schedule?.type === 'custom' && (
-                                  <div className="space-y-2">
-                                    <span className="text-[14px] font-semibold text-foreground">Horario personalizado</span>
-                                    {scheduleContent}
+                        <SectionCard
+                          icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                          title="Configuración avanzada"
+                          showTopDivider
+                        >
+                          <div className="space-y-6">
+                            <Row gutter={[24, 24]}>
+                              {advancedConfigItems.map((item) => (
+                                <Col key={item.title} xs={24} md={12}>
+                                  <div className="flex flex-col gap-2">
+                                    <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
+                                    {typeof item.content === 'string' ? (
+                                      <p className="text-[14px] text-muted-foreground">{item.content}</p>
+                                    ) : (
+                                      item.content
+                                    )}
                                   </div>
-                                )}
+                                </Col>
+                              ))}
+                              <Col xs={24} md={12}>
+                                <div className="flex flex-col gap-2">
+                                  <span className="text-[14px] font-semibold text-foreground">Activación de la regla</span>
+                                  <div className="text-[14px] text-muted-foreground">
+                                    {rule.schedule?.type === 'custom' ? 'Personalizada' : getScheduleSummary(rule)}
+                                  </div>
+                                </div>
+                              </Col>
+                            </Row>
+
+                            {rule.schedule?.type === 'custom' && (
+                              <div className="space-y-2">
+                                <span className="text-[14px] font-semibold text-foreground">Horario personalizado</span>
+                                {scheduleContent}
                               </div>
                             )}
-                          </SectionCard>
+                          </div>
+                        </SectionCard>
                         </div>
                       </Panel>
 
@@ -1397,11 +1383,11 @@ const advancedConfigItems = [
                         key="configuracion"
                         header={renderPanelHeader('configuracion', 'Configuración', configuracionHeaderRef)}
                       >
-                        <div className="space-y-4 px-6 pb-6 pt-4">
-                          <SectionCard
-                            icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
-                            title="Clasificación del evento"
-                          >
+                        <div className="space-y-4 py-4">
+                        <SectionCard
+                          icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
+                          title="Clasificación del evento"
+                        >
                             <div className="space-y-6">
                               <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
                                 <div>
@@ -1454,10 +1440,11 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                          <SectionCard
-                            icon={<Clock className="w-4 h-4 text-muted-foreground" />}
-                            title="Cierre del evento"
-                          >
+                        <SectionCard
+                          icon={<Clock className="w-4 h-4 text-muted-foreground" />}
+                          title="Cierre del evento"
+                          showTopDivider
+                        >
                             <div className="space-y-3">
                               <span className="block text-[14px] font-semibold text-foreground">Cierre del evento:</span>
                               <div className="text-[14px] text-[rgba(113,113,130,1)]">
@@ -1473,10 +1460,11 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                          <SectionCard
-                            icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                            title="Asignar etiqueta a la unidad"
-                          >
+                        <SectionCard
+                          icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                          title="Asignar etiqueta a la unidad"
+                          showTopDivider
+                        >
                             <div className="space-y-3">
                               <span className="block text-[14px] font-semibold text-foreground">Etiquetas asignadas:</span>
                               {renderTagsList(
@@ -1489,10 +1477,11 @@ const advancedConfigItems = [
                           </SectionCard>
 
                           {rule.eventSettings.unitUntagsEnabled && (
-                            <SectionCard
-                              icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                              title="Desasignar etiqueta a la unidad"
-                            >
+                          <SectionCard
+                            icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                            title="Desasignar etiqueta a la unidad"
+                            showTopDivider
+                          >
                               <div className="space-y-3">
                                 <span className="block text-[14px] font-semibold text-foreground">Etiquetas a desasignar:</span>
                                 {renderTagsList(
@@ -1511,7 +1500,7 @@ const advancedConfigItems = [
                         key="acciones"
                         header={renderPanelHeader('acciones', 'Acciones a realizar', accionesHeaderRef)}
                       >
-                        <div className="space-y-4 px-6 pb-6 pt-4">
+                        <div className="space-y-4 py-4">
                           <SectionCard
                             icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
                             title="Mensaje del evento"
