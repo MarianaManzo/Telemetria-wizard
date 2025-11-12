@@ -1076,10 +1076,12 @@ const [activeSubTab, setActiveSubTab] = useState('parametros')
 
                               <div>
                                 <span className="text-[14px] font-semibold text-foreground block mb-2">Vista previa en mapa</span>
-                                <MapPreviewIcon
-                                  severity={rule.eventSettings.severity || 'low'}
-                                  label={shortNameDisplay}
-                                />
+                                <div className="flex flex-col items-start lg:items-center gap-4">
+                                  <MapPreviewIcon
+                                    severity={rule.eventSettings.severity || 'low'}
+                                    label={shortNameDisplay}
+                                  />
+                                </div>
                               </div>
                             </div>
 
