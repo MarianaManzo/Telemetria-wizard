@@ -10,6 +10,7 @@ interface SectionCardProps {
   className?: string
   contentClassName?: string
   showTopDivider?: boolean
+  variant?: 'default' | 'plain'
 }
 
 export default function SectionCard({
@@ -20,11 +21,35 @@ export default function SectionCard({
   children,
   className,
   contentClassName,
-  showTopDivider = false
+  showTopDivider = false,
+  variant = 'default'
 }: SectionCardProps) {
+  const isDefaultVariant = variant === 'default'
+
+  const headerStyle = isDefaultVariant
+    ? {
+        backgroundColor: '#FAFAFA',
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16
+      }
+    : undefined
+
   return (
-    <div className={cn('bg-white', showTopDivider && 'mt-6 pt-6 border-t border-[#C0C5CE]', className)}>
-      <div className="flex items-start gap-3 bg-white px-6 pt-6 pb-4">
+    <div
+      className={cn(
+        'bg-white',
+        isDefaultVariant && 'rounded-[16px] border border-[#E4E7EC] overflow-hidden',
+        showTopDivider && 'mt-6 pt-6 border-t border-[#C0C5CE]',
+        className
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-start gap-3 px-6 py-4',
+          isDefaultVariant && 'border-b border-[#E4E7EC]'
+        )}
+        style={headerStyle}
+      >
         <div className="flex items-center justify-center text-gray-600">{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-col gap-1">
@@ -36,7 +61,7 @@ export default function SectionCard({
           </div>
         </div>
       </div>
-      <div className={cn('px-6 pb-6', contentClassName)}>{children}</div>
+      <div className={cn('px-6 py-6', contentClassName)}>{children}</div>
     </div>
   )
 }

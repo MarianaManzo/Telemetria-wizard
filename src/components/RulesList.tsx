@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, type ReactNode } from "react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Badge } from "./ui/badge"
@@ -37,6 +37,8 @@ import { Switch } from "./ui/switch"
 import { DeleteRuleModal } from "./DeleteRuleModal"
 import { RenameRuleModal } from "./RenameRuleModal"
 import { TruncatedText } from "./TruncatedText"
+import { ColumnSettingsPopover } from "./ColumnSettingsModal"
+import { useColumnPreferences } from "../hooks/useColumnPreferences"
 
 interface RulesListProps {
   rules: Rule[]
@@ -82,6 +84,14 @@ const severityConfig = {
   }
 }
 
+type RulesTableColumnDefinition = {
+  id: string
+  label: string
+  headerClassName: string
+  cellClassName: string
+  render: (rule: Rule) => React.ReactNode
+}
+
 const statusConfig = {
   active: { label: 'Activado', color: 'text-blue-600' },
   inactive: { label: 'Desactivado', color: 'text-gray-500' },
@@ -120,6 +130,164 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
     })
     return lastEventMap
   }, [events])
+
+  const rulesTableColumns: RulesTableColumnDefinition[] = [
+    {
+      id: 'name',
+      label: 'Nombre',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-40',
+      cellClassName: 'px-6 py-4 text-[14px] font-medium',
+      render: (rule) => (
+        <TruncatedText text={rule.name} className="pr-2">
+          <span className="text-blue-600 hover:text-blue-900 hover:underline">{rule.name}</span>
+        </TruncatedText>
+      )
+    },
+    {
+      id: 'description',
+      label: 'Descripción',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-48',
+      cellClassName: 'px-6 py-4 text-[14px] text-gray-500',
+      render: (rule) => <TruncatedText text={rule.description || '-'} className="pr-2" />
+    },
+    {
+      id: 'status',
+      label: 'Estado',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-24',
+      cellClassName: 'px-6 py-4 text-[14px]',
+      render: (rule) => {
+        const statusInfo = statusConfig[rule.status]
+        return (
+          <div className="truncate pr-2">
+            <span className={`font-medium ${statusInfo.color}`}>{statusInfo.label}</span>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'severity',
+      label: 'Severidad',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28',
+      cellClassName: 'px-6 py-4 text-[14px]',
+      render: (rule) => {
+        const severityInfo = severityConfig[rule.severity]
+        const SeverityIcon = severityInfo.icon
+        return (
+          <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-[8px] ${severityInfo.bgColor}`}>
+            <SeverityIcon className={`w-4 h-4 ${severityInfo.iconColor}`} />
+            <span className={`text-[12px] font-medium ${severityInfo.textColor}`}>{severityInfo.label}</span>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'last-event',
+      label: 'Último evento',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28 whitespace-nowrap',
+      cellClassName: 'px-6 py-4 text-[14px] text-gray-500',
+      render: (rule) => {
+        const lastEvent = lastEventByRuleId[rule.id]
+        return lastEvent ? (
+          <TruncatedText text={formatDate(lastEvent.createdAt)} className="pr-2" />
+        ) : (
+          <TruncatedText text="Sin eventos" className="pr-2" />
+        )
+      }
+    },
+    {
+      id: 'actions',
+      label: 'Acciones',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-24 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10',
+      cellClassName: 'px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10',
+      render: (rule) => (
+        <div className="flex justify-center items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  handleOpenRenameModal(rule);
+                }}
+                className="flex items-center gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                <span className="pt-[0px] pr-[0px] pb-[0px] pl-[8px]">Renombrar</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  onDuplicate?.(rule);
+                }}
+                className="flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                <span className="pt-[0px] pr-[0px] pb-[0px] pl-[8px]">Duplicar</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  handleToggleStatus(rule);
+                }}
+                className="flex items-center gap-2"
+              >
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <Switch
+                    checked={rule.status === 'active'}
+                    onCheckedChange={() => {}}
+                    className="switch-blue scale-75 pointer-events-none"
+                  />
+                </div>
+                <span className="pt-[0px] pr-[0px] pb-[0px] pl-[8px]">{rule.status === 'active' ? 'Desactivar regla' : 'Activar regla'}</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  handleOpenDeleteModal(rule);
+                }}
+                className="flex items-center gap-2 text-destructive"
+              >
+                <Trash2 className="w-4 h-4 text-red-500" />
+                <span className="pt-[0px] pr-[0px] pb-[0px] pl-[8px]">Eliminar regla</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )
+    }
+  ]
+
+  const defaultColumnPreferences = rulesTableColumns.map((column) => ({
+    id: column.id,
+    label: column.label,
+    enabled: true
+  }))
+
+  const {
+    columns: columnPreferences,
+    visibleColumns: visibleColumnPreferences,
+    setColumns: setColumnPreferences
+  } = useColumnPreferences('rules-list-columns', defaultColumnPreferences)
+
+  const columnsById = useMemo(() => {
+    const map = new Map<string, RulesTableColumnDefinition>()
+    rulesTableColumns.forEach((column) => map.set(column.id, column))
+    return map
+  }, [rulesTableColumns])
+
+  const orderedColumns = visibleColumnPreferences
+    .map((pref) => columnsById.get(pref.id))
+    .filter((column): column is RulesTableColumnDefinition => Boolean(column))
 
   const filteredRules = rules.filter(rule => {
     const matchesStatus = statusFilter === "all" || rule.status === statusFilter
@@ -285,138 +453,36 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
           <table className="w-full table-fixed min-w-[1200px]">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-40">Nombre</th>
-                <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-48">Descripción</th>
-                <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-24">Estado</th>
-                <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28">Severidad</th>
-                <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28">Último evento</th>
-                <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-24 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">Acciones</th>
+                {orderedColumns.map((column) => (
+                  <th key={column.id} className={column.headerClassName}>
+                    {column.id === 'actions' ? (
+                      <div className="flex justify-center">
+                        <ColumnSettingsPopover
+                          columns={columnPreferences}
+                          onApply={setColumnPreferences}
+                        />
+                      </div>
+                    ) : (
+                      column.label
+                    )}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredRules.map((rule) => {
-                const statusInfo = statusConfig[rule.status]
-                const severityInfo = severityConfig[rule.severity]
-                const SeverityIcon = severityInfo.icon
-                const openEventsCount = openEventsCountByRuleId[rule.id] || 0
-                const lastEvent = lastEventByRuleId[rule.id]
-
-                return (
-                  <tr 
-                    key={rule.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => onRuleClick(rule)}
-                  >
-                    <td className="px-6 py-4 text-[14px] font-medium">
-                      <TruncatedText 
-                        text={rule.name}
-                        className="pr-2"
-                      >
-                        <span className="text-blue-600 hover:text-blue-900 hover:underline">
-                          {rule.name}
-                        </span>
-                      </TruncatedText>
+              {filteredRules.map((rule) => (
+                <tr
+                  key={rule.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => onRuleClick(rule)}
+                >
+                  {orderedColumns.map((column) => (
+                    <td key={column.id} className={column.cellClassName}>
+                      {column.render(rule)}
                     </td>
-                    <td className="px-6 py-4 text-[14px] text-gray-500">
-                      <TruncatedText 
-                        text={rule.description || '-'}
-                        className="pr-2"
-                      />
-                    </td>
-                    <td className="px-6 py-4 text-[14px]">
-                      <div className="truncate pr-2">
-                        <span className={`font-medium ${statusInfo.color}`}>
-                          {statusInfo.label}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-[14px]">
-                      <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-[8px] ${severityInfo.bgColor}`}>
-                        <SeverityIcon className={`w-4 h-4 ${severityInfo.iconColor}`} />
-                        <span className={`text-[12px] font-medium ${severityInfo.textColor}`}>{severityInfo.label}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-[14px] text-gray-500">
-                      {lastEvent ? (
-                        <TruncatedText 
-                          text={formatDate(lastEvent.createdAt)}
-                          className="pr-2"
-                        />
-                      ) : (
-                        <TruncatedText 
-                          text="Sin eventos"
-                          className="pr-2"
-                        />
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
-                      <div className="flex justify-center items-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                handleOpenRenameModal(rule);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Edit className="w-4 h-4" />
-                              <span className="pt-[0px] pr-[0px] pb-[0px] pl-[8px]">Renombrar</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                onDuplicate?.(rule);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Copy className="w-4 h-4" />
-                              <span className="pt-[0px] pr-[0px] pb-[0px] pl-[8px]">Duplicar</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                handleToggleStatus(rule);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <div className="w-4 h-4 flex items-center justify-center">
-                                <Switch
-                                  checked={rule.status === 'active'}
-                                  onCheckedChange={() => {}} // Empty handler since we handle the click on the parent
-                                  className="switch-blue scale-75 pointer-events-none"
-                                />
-                              </div>
-                              <span className="pt-[0px] pr-[0px] pb-[0px] pl-[8px]">{rule.status === 'active' ? 'Desactivar regla' : 'Activar regla'}</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                handleOpenDeleteModal(rule);
-                              }}
-                              className="flex items-center gap-2 text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                              <span className="pt-[0px] pr-[0px] pb-[0px] pl-[8px]">Eliminar regla</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

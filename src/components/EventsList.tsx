@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { Button } from "./ui/button"
 import {
   Select,
@@ -22,6 +22,9 @@ import { Event, AppView } from "../types"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { ChangeStatusModal } from "./ChangeStatusModal"
 import { TruncatedText } from "./TruncatedText"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
+import { ColumnSettingsPopover } from "./ColumnSettingsModal"
+import { useColumnPreferences } from "../hooks/useColumnPreferences"
 
 interface EventsListProps {
   events: Event[]
@@ -98,6 +101,14 @@ const severityVisuals: Record<Event['severity'], {
 
 const severityOctagonClipPath = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'
 
+type EventsTableColumnDefinition = {
+  id: string
+  label: string
+  headerClassName: string
+  cellClassName: string
+  render: (event: Event) => ReactNode
+}
+
 export function EventsList({ events, onEventClick, onStatusChange, viewType, searchQuery = "" }: EventsListProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [severityFilter, setSeverityFilter] = useState<string>("all")
@@ -131,6 +142,194 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
 
   const [statusModalMode, setStatusModalMode] = useState<'close' | 'reopen'>('close')
   const [isNoteRequired, setIsNoteRequired] = useState(false)
+
+  const eventsTableColumns: EventsTableColumnDefinition[] = [
+    {
+      id: 'identifier',
+      label: 'Identificador',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32',
+      cellClassName: 'px-6 py-4 text-[14px] font-medium',
+      render: (event) => (
+        <span className="text-blue-600 hover:text-blue-900 hover:underline">{event.id}</span>
+      )
+    },
+    {
+      id: 'event',
+      label: 'Evento',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[22rem]',
+      cellClassName: 'px-6 py-4',
+      render: (event) => {
+        const severityInfo = severityConfig[event.severity]
+        const severityVisual = severityVisuals[event.severity]
+        const SeverityIcon = severityInfo.icon
+        return (
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-flex h-9 w-9 items-center justify-center ${severityVisual.shapeBgClass}`}
+              style={{ clipPath: severityOctagonClipPath, paddingInline: '8px' }}
+            >
+              <SeverityIcon className={`h-4 w-4 ${severityVisual.iconColorClass}`} />
+            </span>
+            <TruncatedText text={event.ruleName} className="pr-2 text-[14px] font-medium text-gray-900" />
+          </div>
+        )
+      }
+    },
+    {
+      id: 'start',
+      label: 'Inicio del evento',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-44 whitespace-nowrap',
+      cellClassName: 'px-6 py-4 whitespace-nowrap text-[14px] text-gray-500',
+      render: (event) => <TruncatedText text={formatDate(event.createdAt)} className="pr-2" />
+    },
+    {
+      id: 'unit',
+      label: 'Unidad',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32',
+      cellClassName: 'px-6 py-4 text-[14px] font-medium',
+      render: (event) => (
+        <span className="text-blue-600 hover:text-blue-900 hover:underline">{event.unitId}</span>
+      )
+    },
+    {
+      id: 'location',
+      label: 'Ubicación',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 whitespace-nowrap',
+      cellClassName: 'px-6 py-4 text-[14px] text-gray-500',
+      render: (event) => {
+        const locationText = event.startAddress || event.endAddress || '---'
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="pr-2"
+                  style={{ maxWidth: 150, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                  {locationText}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>{locationText}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+      }
+    },
+    {
+      id: 'status',
+      label: 'Estatus',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36',
+      cellClassName: 'px-6 py-4 whitespace-nowrap',
+      render: (event) => {
+        const statusInfo = statusConfig[event.status]
+        return (
+          <div className="flex items-center gap-2">
+            {event.status === 'open' ? (
+              <>
+                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                  <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
+                </div>
+                <span className="text-[14px] text-gray-900">{statusInfo.label}</span>
+              </>
+            ) : (
+              <>
+                <div className="w-4 h-4 flex-shrink-0">
+                  <IconCheckCircleOutlined />
+                </div>
+                <span className="text-[14px] text-gray-900">{statusInfo.label}</span>
+              </>
+            )}
+          </div>
+        )
+      }
+    },
+    {
+      id: 'severity',
+      label: 'Severidad',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36',
+      cellClassName: 'px-6 py-4 text-[14px] text-gray-500',
+      render: (event) => {
+        const severityInfo = severityConfig[event.severity]
+        const severityVisual = severityVisuals[event.severity]
+        return (
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] border ${severityVisual.badgeClass}`}>
+            <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${severityVisual.dotBorderClass}`}>
+              <span className={`text-[10px] font-bold ${severityVisual.dotTextClass}`}>!</span>
+            </div>
+            <span className="text-[12px] font-medium">{severityInfo.label}</span>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'actions',
+      label: 'Acciones',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20',
+      cellClassName: 'px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10',
+      render: (event) => (
+        <div className="flex justify-center items-center">
+          {event.status === 'open' ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleChangeStatus(event)
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Cerrar evento</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="p-2 text-gray-400 cursor-not-allowed opacity-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      )
+    }
+  ]
+
+  const defaultColumnPreferences = eventsTableColumns.map((column) => ({
+    id: column.id,
+    label: column.label,
+    enabled: true
+  }))
+
+  const {
+    columns: columnPreferences,
+    visibleColumns: visibleColumnPreferences,
+    setColumns: setColumnPreferences
+  } = useColumnPreferences('events-list-columns', defaultColumnPreferences)
+
+  const columnsById = useMemo(() => {
+    const map = new Map<string, EventsTableColumnDefinition>()
+    eventsTableColumns.forEach((column) => map.set(column.id, column))
+    return map
+  }, [eventsTableColumns])
+
+  const orderedColumns = visibleColumnPreferences
+    .map((pref) => columnsById.get(pref.id))
+    .filter((column): column is EventsTableColumnDefinition => Boolean(column))
 
   const handleChangeStatus = (event: Event) => {
     setSelectedEventForModal(event)
@@ -238,136 +437,33 @@ export function EventsList({ events, onEventClick, onStatusChange, viewType, sea
             <table className="w-full min-w-[1200px] table-auto border-collapse">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Identificador</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[22rem]">Evento</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-44">Inicio del evento</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Unidad</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[18rem]">Ubicación</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Estatus</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Severidad</th>
-                  <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20">Acciones</th>
+                  {orderedColumns.map((column) => (
+                    <th key={column.id} className={column.headerClassName}>
+                      {column.id === 'actions' ? (
+                        <div className="flex justify-center">
+                          <ColumnSettingsPopover columns={columnPreferences} onApply={setColumnPreferences} />
+                        </div>
+                      ) : (
+                        column.label
+                      )}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredEvents.map((event) => {
-                  const statusInfo = statusConfig[event.status]
-                  const severityInfo = severityConfig[event.severity]
-                  const severityVisual = severityVisuals[event.severity]
-                  const SeverityIcon = severityInfo.icon
-                  const locationText = event.startAddress || event.endAddress || '---'
-
-                  return (
-                    <tr 
-                      key={event.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => onEventClick(event)}
-                    >
-                      <td className="px-6 py-4 text-[14px] font-medium">
-                        <span className="text-blue-600 hover:text-blue-900 hover:underline">
-                          {event.id}
-                        </span>
+                {filteredEvents.map((event) => (
+                  <tr
+                    key={event.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => onEventClick(event)}
+                  >
+                    {orderedColumns.map((column) => (
+                      <td key={column.id} className={column.cellClassName}>
+                        {column.render(event)}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`inline-flex h-9 w-9 items-center justify-center ${severityVisual.shapeBgClass}`}
-                            style={{ clipPath: severityOctagonClipPath, paddingInline: '8px' }}
-                          >
-                            <SeverityIcon className={`h-4 w-4 ${severityVisual.iconColorClass}`} />
-                          </span>
-                          <TruncatedText 
-                            text={event.ruleName}
-                            className="pr-2 text-[14px] font-medium text-gray-900"
-                          />
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500">
-                        <TruncatedText 
-                          text={formatDate(event.createdAt)}
-                          className="pr-2"
-                        />
-                      </td>
-                      <td className="px-6 py-4 text-[14px] font-medium">
-                        <span className="text-blue-600 hover:text-blue-900 hover:underline">
-                          {event.unitId}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-[14px] text-gray-500">
-                        <TruncatedText 
-                          text={locationText}
-                          className="pr-2"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {event.status === 'open' ? (
-                            <>
-                              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
-                                <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
-                              </div>
-                              <span className="text-[14px] text-gray-900">{statusInfo.label}</span>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-4 h-4 flex-shrink-0">
-                                <IconCheckCircleOutlined />
-                              </div>
-                              <span className="text-[14px] text-gray-900">{statusInfo.label}</span>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-[14px] text-gray-500">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] border ${severityVisual.badgeClass}`}>
-                          <div className={`w-4 h-4 border rounded-full flex items-center justify-center ${severityVisual.dotBorderClass}`}>
-                            <span className={`text-[10px] font-bold ${severityVisual.dotTextClass}`}>!</span>
-                          </div>
-                          <span className="text-[12px] font-medium">{severityInfo.label}</span>
-                        </div>
-                      </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
-                    <div className="flex justify-center items-center">
-                      {event.status === 'open' ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleChangeStatus(event)
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                              <span>Cerrar evento</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          disabled
-                          className="p-2 text-gray-400 cursor-not-allowed opacity-50"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                    </tr>
-                  )
-                })}
+                    ))}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

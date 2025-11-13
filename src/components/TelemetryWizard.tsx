@@ -710,29 +710,22 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
                 {/* Advanced Configuration */}
                 <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                     <CollapsibleTrigger className="w-full">
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                          <Settings className="h-4 w-4 text-gray-600" />
-                          <h3 className="text-[14px] font-medium text-gray-700">Configuración avanzada</h3>
+                      <div className="bg-[#F5F6FA] border-b border-gray-200 px-6 py-4">
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <Settings className="h-4 w-4 text-gray-600" />
+                            <h3 className="text-[14px] font-semibold text-gray-900">Configuración avanzada</h3>
+                          </div>
+                          <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
                         </div>
-                        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
-                      </div>
-                      <p className="text-[14px] text-gray-600 text-left mt-2">
-                        Define las zonas, cuándo debe evaluarse y la duración del evento
-                      </p>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-6">
-                      {/* Header - Left aligned with first column labels */}
-                      <div className="mb-6">
-                        <h3 className="text-[14px] font-medium text-gray-700 mb-1">Configuración avanzada</h3>
-                        <p className="text-[14px] text-gray-600">
+                        <p className="text-[14px] text-gray-600 text-left mt-2">
                           Define las zonas, cuándo debe evaluarse y la duración del evento
                         </p>
                       </div>
-
-                      {/* Main content grid */}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="px-6 py-6">
                       <div className="space-y-6">
                         {/* Section 1 – Geographic zone */}
                         <div className="grid grid-cols-2 gap-8 items-start">
@@ -997,17 +990,12 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
               <TabsContent value="actions" className="mt-6 space-y-6">
                 {/* Section 1 - Clasificación del evento */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Clasificación del evento</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Configura la información básica del evento que genera la regla
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="space-y-6">
+                <SectionCard
+                  icon={<AlertTriangle className="h-4 w-4 text-gray-600" />}
+                  title="Clasificación del evento"
+                  description="Configura la información básica del evento que genera la regla"
+                  contentClassName="space-y-6"
+                >
                     {/* Row 1: Severidad del evento */}
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
@@ -1093,21 +1081,15 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         />
                       </div>
                     </div>
-                  </div>
-                </div>
+                </SectionCard>
 
                 {/* Section 4 - Cierre del evento */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <XCircle className="h-4 w-4 text-gray-600" />
-                    <h3 className="text-[14px] font-medium text-gray-700">Cierre del evento</h3>
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Configura la información básica del evento que genera la regla
-                  </p>
-                  <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  
-                  <div className="space-y-6">
+                <SectionCard
+                  icon={<XCircle className="h-4 w-4 text-gray-600" />}
+                  title="Cierre del evento"
+                  description="Configura la información básica del evento que genera la regla"
+                  contentClassName="space-y-6"
+                >
                     {/* Row 1: Close policy selection */}
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
@@ -1199,29 +1181,22 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
+                </SectionCard>
 
                 {/* Section 6 - Enviar comando al dispositivo */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Enviar comando al dispositivo</h3>
-                    </div>
+                <SectionCard
+                  icon={<Tag className="h-4 w-4 text-gray-600" />}
+                  title="Enviar comando al dispositivo"
+                  description="Selecciona cómo se notificará al dispositivo cuando este evento ocurra. Puedes elegir múltiples opciones."
+                  headerExtra={
                     <Switch
                       checked={sendDeviceCommand}
                       onCheckedChange={setSendDeviceCommand}
                       disabled
                     />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Seleccionar como se notificará a usuarios cuando este evento ocurra. Puedes seleccionar múltiples opciones
-                  </p>
-                  {sendDeviceCommand && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  )}
-                  
+                  }
+                  contentClassName={sendDeviceCommand ? '' : 'py-0'}
+                >
                   {sendDeviceCommand && (
                     <div className="grid grid-cols-2 gap-8 items-center">
                       <div>
@@ -1243,30 +1218,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </div>
                     </div>
                   )}
-                </div>
+                </SectionCard>
               </TabsContent>
 
               <TabsContent value="notifications" className="mt-6 space-y-6">
                 {/* Section 1 - Envío por correo electrónico */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Envío por correo electrónico</h3>
-                    </div>
+                <SectionCard
+                  icon={<Mail className="h-4 w-4 text-gray-600" />}
+                  title="Envío por correo electrónico"
+                  description="Envío de notificación por correo electrónico cuando suceda un evento"
+                  headerExtra={
                     <Switch
                       checked={emailEnabled}
                       onCheckedChange={setEmailEnabled}
                       disabled
                     />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Envío de notificación por correo electrónico cuando suceda un evento
-                  </p>
-                  {emailEnabled && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  )}
-                  
+                  }
+                  contentClassName={emailEnabled ? 'space-y-4' : 'py-0'}
+                >
                   {emailEnabled && (
                     <div className="space-y-4">
                       {/* Row 1: Destinatarios */}
@@ -1323,61 +1292,58 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       </div>
                     </div>
                   )}
-                </div>
+                </SectionCard>
 
                 {/* Section 2 - Notificación Push */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Bell className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Notificación Push</h3>
-                    </div>
+                <SectionCard
+                  icon={<Bell className="h-4 w-4 text-gray-600" />}
+                  title="Notificación Push"
+                  description="Alerta al celular o computadora cuando ocurra un evento"
+                  headerExtra={
                     <Switch
                       checked={pushNotificationEnabled}
                       onCheckedChange={setPushNotificationEnabled}
                       disabled
                     />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Alerta al celular o computadora cuando ocurra un evento
-                  </p>
-                </div>
+                  }
+                  contentClassName="py-0"
+                >
+                  {null}
+                </SectionCard>
 
                 {/* Section 3 - Webhook */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Link className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Webhook</h3>
-                    </div>
+                <SectionCard
+                  icon={<Link className="h-4 w-4 text-gray-600" />}
+                  title="Webhook"
+                  description="Enviar alertas automáticas a otra app o sistema cuando ocurra un evento"
+                  headerExtra={
                     <Switch
                       checked={webhookNotificationEnabled}
                       onCheckedChange={setWebhookNotificationEnabled}
                       disabled
                     />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Enviar alertas automáticas a otra app o sistema cuando ocurra un evento
-                  </p>
-                </div>
+                  }
+                  contentClassName="py-0"
+                >
+                  {null}
+                </SectionCard>
 
                 {/* Section 4 - Notificación en la plataforma */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Bell className="h-4 w-4 text-gray-600" />
-                      <h3 className="text-[14px] font-medium text-gray-700">Notificación en la plataforma</h3>
-                    </div>
+                <SectionCard
+                  icon={<Bell className="h-4 w-4 text-gray-600" />}
+                  title="Notificación en la plataforma"
+                  description="Notificación en el centro de la aplicación para los usuarios asignados"
+                  headerExtra={
                     <Switch
                       checked={platformNotificationEnabled}
                       onCheckedChange={setPlatformNotificationEnabled}
                       disabled
                     />
-                  </div>
-                  <p className="text-[14px] text-gray-600 mb-4">
-                    Notificación en el centro de la aplicación para los usuarios asignados
-                  </p>
-                </div>
+                  }
+                  contentClassName="py-0"
+                >
+                  {null}
+                </SectionCard>
               </TabsContent>
             </Tabs>
           </div>

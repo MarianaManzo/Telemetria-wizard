@@ -45,9 +45,15 @@ import { ChangeStatusModal } from "./ChangeStatusModal"
 import exampleImage from 'figma:asset/25905393c492af8c8e0b3cf142e20c9dc3cbe9e4.png'
 import markerBody from "../assets/event.svg?raw"
 import markerLabel from "../assets/Label event.svg?raw"
-import SectionCard from "./SectionCard"
+import BaseSectionCard from "./SectionCard"
+import { ColumnSettingsPopover } from "./ColumnSettingsModal"
+import { useColumnPreferences } from "../hooks/useColumnPreferences"
 
 const { Panel } = Collapse
+
+const SectionCard = (props: React.ComponentProps<typeof BaseSectionCard>) => (
+  <BaseSectionCard variant="plain" {...props} />
+)
 
 // System sensors for telemetry (updated to match TelemetryWizardWithModal)
 const systemTelemetrySensors = [
@@ -358,6 +364,14 @@ const severityConfig = {
   medium: { label: 'Media', icon: AlertTriangle, palette: severityPalette.medium },
   low: { label: 'Baja', icon: AlertTriangle, palette: severityPalette.low },
   informative: { label: 'Informativo', icon: AlertTriangle, palette: severityPalette.informative }
+}
+
+type RuleDetailEventsColumnDefinition = {
+  id: string
+  label: string
+  headerClassName: string
+  cellClassName: string
+  render: (event: Event) => React.ReactNode
 }
 
 const EVENTS_PAGE_SIZE = 7
@@ -906,6 +920,200 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
       ? []
       : eventsToDisplay.slice((eventsPage - 1) * EVENTS_PAGE_SIZE, eventsPage * EVENTS_PAGE_SIZE)
   const requireCloseNote = rule.closePolicy.type === 'manual'
+
+  const detailEventColumns: RuleDetailEventsColumnDefinition[] = [
+    {
+      id: 'identifier',
+      label: 'Identificador',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32',
+      cellClassName: 'px-6 py-4 text-[14px] font-medium',
+      render: (event) => (
+        <span className="text-blue-600 hover:text-blue-900 hover:underline">{event.id}</span>
+      )
+    },
+    {
+      id: 'event',
+      label: 'Evento',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[22rem]',
+      cellClassName: 'px-6 py-4',
+      render: (event) => {
+        const severityInfo = eventsTableSeverityConfig[event.severity]
+        const severityVisual = eventsTableSeverityVisuals[event.severity]
+        const SeverityIconCompact = severityInfo.icon
+        return (
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-flex h-9 w-9 items-center justify-center ${severityVisual.shapeBgClass}`}
+              style={{ clipPath: severityOctagonClipPath, paddingInline: '8px' }}
+            >
+              <SeverityIconCompact className={`h-4 w-4 ${severityVisual.iconColorClass}`} />
+            </span>
+            <div className="truncate pr-2 text-[14px] font-medium text-gray-900" title={event.ruleName}>
+              {event.ruleName}
+            </div>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'start',
+      label: 'Fecha de evento',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-44 whitespace-nowrap',
+      cellClassName: 'px-6 py-4 whitespace-nowrap text-[14px] text-gray-500',
+      render: (event) => (
+        <div className="truncate pr-2" title={formatEventDateTime(event.createdAt)}>
+          {formatEventDateTime(event.createdAt)}
+        </div>
+      )
+    },
+    {
+      id: 'unit',
+      label: 'Unidad',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32',
+      cellClassName: 'px-6 py-4 text-[14px] font-medium',
+      render: (event) => (
+        <span className="text-blue-600 hover:text-blue-900 hover:underline">
+          {event.unitId || event.unitName || '---'}
+        </span>
+      )
+    },
+    {
+      id: 'location',
+      label: 'Ubicación',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 whitespace-nowrap',
+      cellClassName: 'px-6 py-4 text-[14px] text-gray-500',
+      render: (event) => {
+        const locationText = event.startAddress || event.endAddress || '---'
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="pr-2"
+                  style={{ maxWidth: 150, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                  {locationText}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>{locationText}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+      }
+    },
+    {
+      id: 'status',
+      label: 'Estatus',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36',
+      cellClassName: 'px-6 py-4 text-[14px] text-gray-500',
+      render: (event) => {
+        const statusInfo = eventsTableStatusConfig[event.status]
+        return (
+          <div className="flex items-center gap-2 font-medium whitespace-nowrap">
+            {event.status === 'open' ? (
+              <>
+                <img src={abiertoIcon} alt="Abierto" className="h-4 w-4" />
+                <span className="text-gray-900">{statusInfo.label}</span>
+              </>
+            ) : (
+              <>
+                <img src={cerradoIcon} alt="Cerrado" className="h-4 w-4" />
+                <span className="text-gray-900">{statusInfo.label}</span>
+              </>
+            )}
+          </div>
+        )
+      }
+    },
+    {
+      id: 'severity',
+      label: 'Severidad',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36',
+      cellClassName: 'px-6 py-4 text-[14px] text-gray-500',
+      render: (event) => {
+        const severityInfo = eventsTableSeverityConfig[event.severity]
+        const severityVisual = eventsTableSeverityVisuals[event.severity]
+        return (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[12px] font-medium whitespace-nowrap ${severityVisual.badgeClass}`}
+          >
+            <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${severityVisual.dotBorderClass}`}>
+              <span className={`text-[10px] font-bold ${severityVisual.dotTextClass}`}>!</span>
+            </span>
+            {severityInfo.label}
+          </span>
+        )
+      }
+    },
+    {
+      id: 'actions',
+      label: 'Acciones',
+      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20',
+      cellClassName: 'px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10',
+      render: (event) => (
+        <div className="flex justify-center items-center">
+          {event.status === 'open' ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="flex items-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleOpenChangeStatus(event, 'close')
+                  }}
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Cerrar evento</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="p-2 text-gray-400 cursor-not-allowed opacity-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      )
+    }
+  ]
+
+  const defaultDetailColumnPreferences = detailEventColumns.map((column) => ({
+    id: column.id,
+    label: column.label,
+    enabled: true
+  }))
+
+  const {
+    columns: detailColumnPreferences,
+    visibleColumns: visibleDetailColumnPreferences,
+    setColumns: setDetailColumnPreferences
+  } = useColumnPreferences(`rule-detail-events:${rule.id}`, defaultDetailColumnPreferences)
+
+  const detailColumnsById = useMemo(() => {
+    const map = new Map<string, RuleDetailEventsColumnDefinition>()
+    detailEventColumns.forEach((column) => map.set(column.id, column))
+    return map
+  }, [detailEventColumns])
+
+  const orderedDetailColumns = visibleDetailColumnPreferences
+    .map((pref) => detailColumnsById.get(pref.id))
+    .filter((column): column is RuleDetailEventsColumnDefinition => Boolean(column))
 
   useEffect(() => {
     setEventsPage(1)
@@ -1641,171 +1849,48 @@ const advancedConfigItems = [
                         <span>Eventos</span>
                       </div>
 
-                      <div className="bg-white rounded-lg border overflow-x-auto">
-                        <table className="w-full table-auto border-collapse">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Identificador</th>
-                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[22rem]">Evento</th>
-                                <th
-                                  className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 whitespace-nowrap"
-                                  style={{ width: 176 }}
-                                >
-                                  Inicio del evento
-                                </th>
-                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Unidad</th>
-                              <th
-                                className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 whitespace-nowrap"
-                                style={{ width: 150 }}
-                              >
-                                Ubicación
-                              </th>
-                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Estatus</th>
-                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Severidad</th>
-                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20">
-                                Acciones
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {eventsToDisplay.length === 0 ? (
+                      <div className="bg-white rounded-lg border overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full table-auto border-collapse">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <td colSpan={8} className="px-6 py-8 text-center text-[14px] text-gray-500">
-                                  No se han detonado eventos con esta regla todavía.
-                                </td>
+                                {orderedDetailColumns.map((column) => (
+                                  <th key={column.id} className={column.headerClassName}>
+                                    {column.id === 'actions' ? (
+                                      <div className="flex justify-center">
+                                        <ColumnSettingsPopover
+                                          columns={detailColumnPreferences}
+                                          onApply={setDetailColumnPreferences}
+                                        />
+                                      </div>
+                                    ) : (
+                                      column.label
+                                    )}
+                                  </th>
+                                ))}
                               </tr>
-                            ) : (
-                              paginatedEvents.map((event) => {
-                                const statusInfo = eventsTableStatusConfig[event.status]
-                                const severityInfo = eventsTableSeverityConfig[event.severity]
-                                const severityVisual = eventsTableSeverityVisuals[event.severity]
-                                const SeverityIconCompact = severityInfo.icon
-                                const locationText = event.startAddress || event.endAddress || '---'
-
-                                return (
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {eventsToDisplay.length === 0 ? (
+                                <tr>
+                                  <td colSpan={8} className="px-6 py-8 text-center text-[14px] text-gray-500">
+                                    No se han detonado eventos con esta regla todavía.
+                                  </td>
+                                </tr>
+                              ) : (
+                                paginatedEvents.map((event) => (
                                   <tr key={event.id} className="hover:bg-gray-50 cursor-pointer">
-                                    <td className="px-6 py-4 text-[14px] font-medium">
-                                      <span className="text-blue-600 hover:text-blue-900 hover:underline">
-                                        {event.id}
-                                      </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                      <div className="flex items-center gap-3">
-                                        <span
-                                          className={`inline-flex h-9 w-9 items-center justify-center ${severityVisual.shapeBgClass}`}
-                                          style={{ clipPath: severityOctagonClipPath, paddingInline: '8px' }}
-                                        >
-                                          <SeverityIconCompact className={`h-4 w-4 ${severityVisual.iconColorClass}`} />
-                                        </span>
-                                        <div
-                                          className="truncate pr-2 text-[14px] font-medium text-gray-900"
-                                          title={event.ruleName}
-                                        >
-                                          {event.ruleName}
-                                        </div>
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500">
-                                      <div className="truncate pr-2" title={formatEventDateTime(event.createdAt)}>
-                                        {formatEventDateTime(event.createdAt)}
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-[14px] font-medium">
-                                      <span className="text-blue-600 hover:text-blue-900 hover:underline">
-                                        {event.unitId || event.unitName || '---'}
-                                      </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-[14px] text-gray-500" style={{ width: 150 }}>
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <div
-                                              className="pr-2"
-                                              style={{
-                                                maxWidth: 150,
-                                                whiteSpace: 'nowrap',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis'
-                                              }}
-                                            >
-                                              {locationText}
-                                            </div>
-                                          </TooltipTrigger>
-                                          <TooltipContent>{locationText}</TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </td>
-                                    <td className="px-6 py-4 text-[14px] text-gray-500">
-                                      <div className="flex items-center gap-2 font-medium whitespace-nowrap">
-                                        {event.status === 'open' ? (
-                                          <>
-                                            <img src={abiertoIcon} alt="Abierto" className="h-4 w-4" />
-                                            <span className="text-gray-900">{statusInfo.label}</span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <img src={cerradoIcon} alt="Cerrado" className="h-4 w-4" />
-                                            <span className="text-gray-900">{statusInfo.label}</span>
-                                          </>
-                                        )}
-                                      </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-[14px] text-gray-500">
-                                      <span
-                                        className={`inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[12px] font-medium whitespace-nowrap ${severityVisual.badgeClass}`}
-                                      >
-                                        <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${severityVisual.dotBorderClass}`}>
-                                          <span className={`text-[10px] font-bold ${severityVisual.dotTextClass}`}>!</span>
-                                        </span>
-                                        {severityInfo.label}
-                                      </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
-                                      <div className="flex justify-center items-center">
-                                        {event.status === 'open' ? (
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                                                onClick={(e) => e.stopPropagation()}
-                                              >
-                                                <MoreVertical className="w-4 h-4" />
-                                              </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                              <DropdownMenuItem
-                                                className="flex items-center gap-2"
-                                                onClick={(e) => {
-                                                  e.stopPropagation()
-                                                  handleOpenChangeStatus(event, 'close')
-                                                }}
-                                              >
-                                                <CheckCircle className="w-4 h-4" />
-                                                <span>Cerrar evento</span>
-                                              </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
-                                        ) : (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            disabled
-                                            className="p-2 text-gray-400 cursor-not-allowed opacity-50"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <MoreVertical className="w-4 h-4" />
-                                          </Button>
-                                        )}
-                                      </div>
-                                    </td>
+                                    {orderedDetailColumns.map((column) => (
+                                      <td key={column.id} className={column.cellClassName}>
+                                        {column.render(event)}
+                                      </td>
+                                    ))}
                                   </tr>
-                                )
-                              })
-                            )}
-                          </tbody>
-                        </table>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                       {eventsToDisplay.length > 0 && (
                         <div className="flex flex-wrap items-center justify-center px-6 pt-4">
