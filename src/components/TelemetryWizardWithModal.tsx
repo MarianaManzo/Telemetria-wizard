@@ -1079,8 +1079,11 @@ function DraggableConditionInGroup({
 
   // Filter operators based on sensor dataType
   const getAvailableOperators = (sensorDataType: string) => {
-    if (sensorDataType === 'boolean' || sensorDataType === 'string') {
-      // For boolean and string sensors: only equals and not equals
+    if (sensorDataType === 'boolean') {
+      return operatorOptions.filter(op => op.value === 'eq')
+    }
+    if (sensorDataType === 'string') {
+      // For string sensors: only equals and not equals
       return operatorOptions.filter(op => op.value === 'eq' || op.value === 'neq')
     } else {
       // For numeric sensors: all operators (=, >, <, ≥, ≤, ≠)
@@ -1089,6 +1092,13 @@ function DraggableConditionInGroup({
   }
 
   const availableOperators = sensor ? getAvailableOperators(sensor.dataType) : operatorOptions
+  const isBooleanSensor = sensor?.dataType === 'boolean'
+
+  useEffect(() => {
+    if (isBooleanSensor && condition.operator !== 'eq') {
+      updateConditionInGroup(groupId, condition.id, 'operator', 'eq')
+    }
+  }, [isBooleanSensor, condition.operator, condition.id, groupId, updateConditionInGroup])
   const isValueProvided = condition.value !== '' && condition.value !== null && condition.value !== undefined
   const isOperatorDisabled = !condition.sensor
   const isValueDisabled = !condition.sensor
@@ -1149,7 +1159,7 @@ function DraggableConditionInGroup({
           <Select
             value={condition.operator}
             onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'operator', value)}
-            disabled={!condition.sensor}
+            disabled={!condition.sensor || isBooleanSensor}
             aria-invalid={showOperatorError}
           >
             <SelectTrigger
@@ -1296,8 +1306,10 @@ function DraggableCondition({
 
   // Filter operators based on sensor dataType
   const getAvailableOperators = (sensorDataType: string) => {
-    if (sensorDataType === 'boolean' || sensorDataType === 'string') {
-      // For boolean and string sensors: only equals and not equals
+    if (sensorDataType === 'boolean') {
+      return operatorOptions.filter(op => op.value === 'eq')
+    }
+    if (sensorDataType === 'string') {
       return operatorOptions.filter(op => op.value === 'eq' || op.value === 'neq')
     } else {
       // For numeric sensors: all operators (=, >, <, ≥, ≤, ≠)
@@ -1306,6 +1318,13 @@ function DraggableCondition({
   }
 
   const availableOperators = sensor ? getAvailableOperators(sensor.dataType) : operatorOptions
+  const isBooleanSensor = sensor?.dataType === 'boolean'
+
+  useEffect(() => {
+    if (isBooleanSensor && condition.operator !== 'eq') {
+      updateCondition(condition.id, 'operator', 'eq')
+    }
+  }, [isBooleanSensor, condition.operator, condition.id, updateCondition])
 
   return (
     <TooltipProvider>
@@ -1383,7 +1402,7 @@ function DraggableCondition({
         <Select
           value={condition.operator}
           onValueChange={(value) => updateCondition(condition.id, 'operator', value)}
-          disabled={!condition.sensor}
+          disabled={!condition.sensor || isBooleanSensor}
         >
             <SelectTrigger
               className="w-full"
