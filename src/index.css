@@ -4716,6 +4716,12 @@ input[type="radio"]:focus {
 .text-foreground { color: var(--color-text-base); }
 .text-muted-foreground { color: var(--color-gray-600); }
 
+.nm-popover-base,
+.nm-popover-base.ant-popover {
+  z-index: 9999 !important;
+  position: relative;
+}
+
 .nm-popover-base .ant-popover-inner,
 .nm-popover-base .ant-popover-inner-content {
   padding: 0 !important;
