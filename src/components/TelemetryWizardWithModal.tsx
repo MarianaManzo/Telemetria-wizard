@@ -877,7 +877,15 @@ const severityConfig = {
 
 type MapMarkerSeverity = keyof typeof severityConfig
 
-function WizardMapPreview({ severity, label }: { severity: MapMarkerSeverity; label: string }) {
+function WizardMapPreview({
+  severity,
+  label,
+  iconId
+}: {
+  severity: MapMarkerSeverity
+  label: string
+  iconId?: string
+}) {
   const paletteSource = severityConfig[severity] ?? severityConfig.low
   const accent = paletteSource.previewText
   const fill = paletteSource.previewBg
@@ -886,14 +894,28 @@ function WizardMapPreview({ severity, label }: { severity: MapMarkerSeverity; la
     .replace(/#DC2626/g, accent)
     .replace(/#FECDD2/g, fill)
     .replace(/#DF3F40/g, accent)
+    .replace(/<path d="M23\.5693[\s\S]*?\/>/, '')
 
   const tintedLabel = markerLabel
     .replace(/#FECDD2/g, fill)
     .replace(/#DF3F40/g, accent)
 
+  const iconPair = iconId && eventIconMap[iconId] ? eventIconMap[iconId] : eventIconMap['info']
+  const IconPreview = iconPair?.outline
+
   return (
     <div className="flex flex-col items-center gap-2">
-      <div dangerouslySetInnerHTML={{ __html: tintedBody }} />
+      <div className="relative flex items-center justify-center" style={{ width: 34, height: 34 }}>
+        <div dangerouslySetInnerHTML={{ __html: tintedBody }} />
+        {IconPreview ? (
+          <IconPreview
+            className="absolute pointer-events-none"
+            color={accent}
+            strokeWidth={1.5}
+            style={{ width: 16, height: 16 }}
+          />
+        ) : null}
+      </div>
       <div className="relative" style={{ width: 74, height: 20 }}>
         <div dangerouslySetInnerHTML={{ __html: tintedLabel }} />
         <span
@@ -3956,6 +3978,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         <WizardMapPreview
                           severity={eventSeverity}
                           label={eventShortName.trim() || 'Evento'}
+                          iconId={eventIcon}
                         />
                       </div>
                     </div>
