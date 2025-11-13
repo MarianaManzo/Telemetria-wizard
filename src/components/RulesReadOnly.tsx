@@ -249,13 +249,9 @@ const operatorOptions = [
 ]
 
 type CollapseSectionKey = 'parametros' | 'configuracion' | 'acciones'
-type SectionKey = CollapseSectionKey | 'notas' | 'adjuntos'
 const COLLAPSE_SECTION_KEYS: CollapseSectionKey[] = ['parametros', 'configuracion', 'acciones']
-const SECTION_KEYS: SectionKey[] = [...COLLAPSE_SECTION_KEYS, 'notas', 'adjuntos']
 const isCollapseSection = (value: string): value is CollapseSectionKey =>
   COLLAPSE_SECTION_KEYS.includes(value as CollapseSectionKey)
-const isSectionKey = (value: string): value is SectionKey =>
-  SECTION_KEYS.includes(value as SectionKey)
 
 // Helper function to render condition value
 const formatConditionValue = (condition: any) => {
@@ -734,7 +730,13 @@ const getZoneScopeDescription = (rule: Rule) => {
   return 'En cualquier lugar'
 }
 
-  const [openPanelKey, setOpenPanelKey] = useState<CollapseSectionKey | null>(null)
+const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
+  parametros: 'Parámetros',
+  configuracion: 'Configuración',
+  acciones: 'Acciones a realizar'
+}
+
+  const [openPanelKey, setOpenPanelKey] = useState<CollapseSectionKey | null>('parametros')
   const [expandAll, setExpandAll] = useState(false)
   const [infoHeaderHeight, setInfoHeaderHeight] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
@@ -744,15 +746,14 @@ const getZoneScopeDescription = (rule: Rule) => {
   const accionesHeaderRef = useRef<HTMLButtonElement>(null)
   const notasHeaderRef = useRef<HTMLDivElement>(null)
   const adjuntosHeaderRef = useRef<HTMLDivElement>(null)
-  const stickySectionRef = useRef<SectionKey>('parametros')
-  const sectionHeaderRefs: Record<SectionKey, React.RefObject<HTMLElement>> = {
+  const sectionHeaderRefs: Record<CollapseSectionKey, React.RefObject<HTMLElement>> = {
     parametros: parametrosHeaderRef,
     configuracion: configuracionHeaderRef,
-    acciones: accionesHeaderRef,
-    notas: notasHeaderRef,
-    adjuntos: adjuntosHeaderRef
+    acciones: accionesHeaderRef
   }
-  const sectionStickyTop = (infoHeaderHeight || 64) + 12
+  const effectiveMainHeader = infoHeaderHeight || 64
+  const effectiveSectionHeader = 56
+  const sectionStickyTop = effectiveMainHeader + effectiveSectionHeader * COLLAPSE_SECTION_KEYS.length
   const collapseStyle = {
     '--section-sticky-top': `${sectionStickyTop}px`
   } as React.CSSProperties & { '--section-sticky-top': string }
@@ -764,34 +765,22 @@ const getZoneScopeDescription = (rule: Rule) => {
   ) => {
     const isActive = expandAll || openPanelKey === key
     return (
-      <div
+      <button
+        type="button"
         ref={ref}
         className={`collapse-pill ${isActive ? 'collapse-pill--active' : ''}`}
         style={{ scrollMarginTop: sectionStickyTop + 16 }}
       >
         <span>{label}</span>
         <ChevronDown className={`collapse-pill__icon ${isActive ? 'rotate-180' : ''}`} />
-      </div>
+      </button>
     )
   }
-
   const [configAvanzadaOpen, setConfigAvanzadaOpen] = useState(true)
   const [newNote, setNewNote] = useState("")
   const [notesSort, setNotesSort] = useState('recent')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
-
-  const handleToggleExpandAll = () => {
-    setExpandAll((prev) => {
-      const next = !prev
-      if (next) {
-        return true
-      }
-      setOpenPanelKey(null)
-      stickySectionRef.current = 'parametros'
-      return false
-    })
-  }
 
   const handleSectionChange = (key: string | string[]) => {
     if (expandAll) {
@@ -807,7 +796,6 @@ const getZoneScopeDescription = (rule: Rule) => {
       return
     }
 
-    stickySectionRef.current = normalizedKey
     setOpenPanelKey(normalizedKey)
     const headerElement = sectionHeaderRefs[normalizedKey]?.current
     headerElement?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' })
@@ -833,61 +821,6 @@ const getZoneScopeDescription = (rule: Rule) => {
     observer.observe(headerElement)
     return () => observer.disconnect()
   }, [])
-
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) {
-      return
-    }
-
-    let frame = 0
-    let hasScrolled = false
-
-    const handleScroll = () => {
-      hasScrolled = true
-      if (frame) {
-        cancelAnimationFrame(frame)
-      }
-      frame = requestAnimationFrame(() => {
-        const containerRect = container.getBoundingClientRect()
-        const stickyBoundary = containerRect.top + sectionStickyTop
-        let detected: SectionKey | null = null
-
-        SECTION_KEYS.forEach((key) => {
-          const headerEl = sectionHeaderRefs[key].current
-          if (!headerEl) {
-            return
-          }
-          const headerRect = headerEl.getBoundingClientRect()
-          if (headerRect.top <= stickyBoundary + 1) {
-            detected = key
-          }
-        })
-
-        if (!detected) {
-          detected = SECTION_KEYS[0]
-        }
-
-        if (!expandAll && hasScrolled && detected && detected !== stickySectionRef.current) {
-          stickySectionRef.current = detected
-          if (isCollapseSection(detected)) {
-            setOpenPanelKey(detected)
-          } else {
-            setOpenPanelKey(null)
-          }
-        }
-      })
-    }
-
-    container.addEventListener('scroll', handleScroll)
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll)
-      if (frame) {
-        cancelAnimationFrame(frame)
-      }
-    }
-  }, [sectionStickyTop, expandAll])
 
   const severityInfo = severityConfig[rule.eventSettings.severity]
   const severityPaletteColors = severityInfo?.palette ?? severityPalette.low
@@ -940,18 +873,17 @@ const advancedConfigItems = [
 
   const renderParametrosTab = () => (
     <div className="space-y-4">
-                        <SectionCard
-                          icon={<Settings className="w-4 h-4 text-muted-foreground" />}
-                          title="Parámetros a evaluar"
-                        >
+      <SectionCard
+        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+        title="Parámetros a evaluar"
+      >
         {renderConditionGroups(rule)}
       </SectionCard>
 
-                        <SectionCard
-                          icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                          title="Aplica esta regla a"
-                          showTopDivider
-                        >
+      <SectionCard
+        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+        title="Aplica esta regla a"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <span className="text-[14px] font-semibold text-foreground block mb-2">Unidades</span>
@@ -1277,36 +1209,51 @@ const advancedConfigItems = [
                     className="rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden"
                     style={collapseStyle}
                   >
-                    <div
-                      ref={generalInfoHeaderRef}
-                      className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E4E7EC] bg-white px-6 py-4"
-                      style={{ borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-                    >
-                      <h2 className="text-[18px] font-semibold text-foreground">Información general</h2>
-                      <button
-                        type="button"
-                        onClick={handleToggleExpandAll}
-                        className="flex items-center gap-2 rounded-full px-4 py-2 text-[14px] font-semibold transition-colors"
-                        style={{ color: '#2563EB' }}
-                      >
-                        {expandAll ? 'Cerrar todo' : 'Abrir todo'}
-                        <ChevronDown className={`h-4 w-4 transition-transform ${expandAll ? 'rotate-180' : ''}`} color='#2563EB' strokeWidth={3} />
-                      </button>
-                    </div>
+                    <div id="infoScroll" className="info-scroll" ref={scrollContainerRef}>
+                      <div
+        id="mainHeader"
+        ref={generalInfoHeaderRef}
+        className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E4E7EC] bg-white px-6 py-4"
+        style={{ borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+      >
+        <h2 className="text-[18px] font-semibold text-foreground">Información general</h2>
+        <button
+          type="button"
+          onClick={() => {
+            setExpandAll((prev) => {
+              const next = !prev
+              if (next) {
+                setOpenPanelKey(null)
+              } else {
+                setOpenPanelKey(null)
+              }
+              return next
+            })
+          }}
+          className="flex items-center gap-1 text-[14px] font-semibold transition-colors"
+          style={{ color: '#1677FF' }}
+        >
+          <span>{expandAll ? 'Cerrar todo' : 'Abrir todo'}</span>
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${expandAll ? 'rotate-180' : ''}`}
+            strokeWidth={2.5}
+          />
+        </button>
+      </div>
 
-                    <div className="info-collapse">
-                      <Collapse
-                        accordion={!expandAll}
-                        bordered={false}
-                        activeKey={expandAll ? COLLAPSE_SECTION_KEYS : openPanelKey ?? undefined}
-                        onChange={handleSectionChange}
-                        expandIcon={() => null}
-                      >
+                      <div className="info-collapse">
+                        <Collapse
+                          accordion={!expandAll}
+                          bordered={false}
+                          activeKey={expandAll ? COLLAPSE_SECTION_KEYS : openPanelKey ?? undefined}
+                          onChange={handleSectionChange}
+                          expandIcon={() => null}
+                        >
                       <Panel
                         key="parametros"
-                        header={renderPanelHeader('parametros', 'Parámetros', parametrosHeaderRef)}
+                        header={renderPanelHeader('parametros', COLLAPSE_SECTION_LABELS.parametros, parametrosHeaderRef)}
                       >
-                        <div className="space-y-4 py-4">
+                        <div className="space-y-4 px-6 pb-6 pt-4">
                           <SectionCard
                             icon={<Settings className="w-4 h-4 text-muted-foreground" />}
                             title="Parámetros a evaluar"
@@ -1317,7 +1264,6 @@ const advancedConfigItems = [
                           <SectionCard
                             icon={<Tag className="w-4 h-4 text-muted-foreground" />}
                             title="Aplica esta regla a"
-                            showTopDivider
                           >
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                               <div>
@@ -1339,55 +1285,71 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                        <SectionCard
-                          icon={<Settings className="w-4 h-4 text-muted-foreground" />}
-                          title="Configuración avanzada"
-                          showTopDivider
-                        >
-                          <div className="space-y-6">
-                            <Row gutter={[24, 24]}>
-                              {advancedConfigItems.map((item) => (
-                                <Col key={item.title} xs={24} md={12}>
-                                  <div className="flex flex-col gap-2">
-                                    <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
-                                    {typeof item.content === 'string' ? (
-                                      <p className="text-[14px] text-muted-foreground">{item.content}</p>
-                                    ) : (
-                                      item.content
-                                    )}
-                                  </div>
-                                </Col>
-                              ))}
-                              <Col xs={24} md={12}>
-                                <div className="flex flex-col gap-2">
-                                  <span className="text-[14px] font-semibold text-foreground">Activación de la regla</span>
-                                  <div className="text-[14px] text-muted-foreground">
-                                    {rule.schedule?.type === 'custom' ? 'Personalizada' : getScheduleSummary(rule)}
-                                  </div>
-                                </div>
-                              </Col>
-                            </Row>
+                          <SectionCard
+                            icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                            title="Configuración avanzada"
+                            headerExtra={
+                              <button
+                                type="button"
+                                onClick={() => setConfigAvanzadaOpen((prev) => !prev)}
+                                className="text-muted-foreground transition-colors hover:text-foreground"
+                              >
+                                {configAvanzadaOpen ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </button>
+                            }
+                            className="overflow-hidden"
+                            contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
+                          >
+                            {configAvanzadaOpen && (
+                              <div className="pb-4 space-y-6">
+                                <Row gutter={[24, 24]}>
+                                  {advancedConfigItems.map((item) => (
+                                    <Col key={item.title} xs={24} md={12}>
+                                      <div className="flex flex-col gap-2">
+                                        <span className="text-[14px] font-semibold text-foreground">{item.title}</span>
+                                        {typeof item.content === 'string' ? (
+                                          <p className="text-[14px] text-muted-foreground">{item.content}</p>
+                                        ) : (
+                                          item.content
+                                        )}
+                                      </div>
+                                    </Col>
+                                  ))}
+                                  <Col xs={24} md={12}>
+                                    <div className="flex flex-col gap-2">
+                                      <span className="text-[14px] font-semibold text-foreground">Activación de la regla</span>
+                                      <div className="text-[14px] text-muted-foreground">
+                                        {rule.schedule?.type === 'custom' ? 'Personalizada' : getScheduleSummary(rule)}
+                                      </div>
+                                    </div>
+                                  </Col>
+                                </Row>
 
-                            {rule.schedule?.type === 'custom' && (
-                              <div className="space-y-2">
-                                <span className="text-[14px] font-semibold text-foreground">Horario personalizado</span>
-                                {scheduleContent}
+                                {rule.schedule?.type === 'custom' && (
+                                  <div className="space-y-2">
+                                    <span className="text-[14px] font-semibold text-foreground">Horario personalizado</span>
+                                    {scheduleContent}
+                                  </div>
+                                )}
                               </div>
                             )}
-                          </div>
-                        </SectionCard>
+                          </SectionCard>
                         </div>
                       </Panel>
 
                       <Panel
                         key="configuracion"
-                        header={renderPanelHeader('configuracion', 'Configuración', configuracionHeaderRef)}
+                        header={renderPanelHeader('configuracion', COLLAPSE_SECTION_LABELS.configuracion, configuracionHeaderRef)}
                       >
-                        <div className="space-y-4 py-4">
-                        <SectionCard
-                          icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
-                          title="Clasificación del evento"
-                        >
+                        <div className="space-y-4 px-6 pb-6 pt-4">
+                          <SectionCard
+                            icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
+                            title="Clasificación del evento"
+                          >
                             <div className="space-y-6">
                               <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
                                 <div>
@@ -1440,11 +1402,10 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                        <SectionCard
-                          icon={<Clock className="w-4 h-4 text-muted-foreground" />}
-                          title="Cierre del evento"
-                          showTopDivider
-                        >
+                          <SectionCard
+                            icon={<Clock className="w-4 h-4 text-muted-foreground" />}
+                            title="Cierre del evento"
+                          >
                             <div className="space-y-3">
                               <span className="block text-[14px] font-semibold text-foreground">Cierre del evento:</span>
                               <div className="text-[14px] text-[rgba(113,113,130,1)]">
@@ -1460,11 +1421,10 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                        <SectionCard
-                          icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                          title="Asignar etiqueta a la unidad"
-                          showTopDivider
-                        >
+                          <SectionCard
+                            icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                            title="Asignar etiqueta a la unidad"
+                          >
                             <div className="space-y-3">
                               <span className="block text-[14px] font-semibold text-foreground">Etiquetas asignadas:</span>
                               {renderTagsList(
@@ -1477,11 +1437,10 @@ const advancedConfigItems = [
                           </SectionCard>
 
                           {rule.eventSettings.unitUntagsEnabled && (
-                          <SectionCard
-                            icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                            title="Desasignar etiqueta a la unidad"
-                            showTopDivider
-                          >
+                            <SectionCard
+                              icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+                              title="Desasignar etiqueta a la unidad"
+                            >
                               <div className="space-y-3">
                                 <span className="block text-[14px] font-semibold text-foreground">Etiquetas a desasignar:</span>
                                 {renderTagsList(
@@ -1498,9 +1457,9 @@ const advancedConfigItems = [
 
                       <Panel
                         key="acciones"
-                        header={renderPanelHeader('acciones', 'Acciones a realizar', accionesHeaderRef)}
+                        header={renderPanelHeader('acciones', COLLAPSE_SECTION_LABELS.acciones, accionesHeaderRef)}
                       >
-                        <div className="space-y-4 py-4">
+                        <div className="space-y-4 px-6 pb-6 pt-4">
                           <SectionCard
                             icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
                             title="Mensaje del evento"
@@ -1518,6 +1477,7 @@ const advancedConfigItems = [
                     </Collapse>
                     </div>
                   </div>
+                </div>
 
                   <div className="rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden">
                     <div className="px-6 py-6">
@@ -1633,15 +1593,15 @@ const advancedConfigItems = [
       onClose={() => setShowDeleteModal(false)}
     />
 
-      <RenameRuleModal
-        isOpen={showRenameModal}
-        rule={rule}
-        onClose={() => setShowRenameModal(false)}
-        onRename={(ruleId, newName, newDescription) => {
-          onRename?.(ruleId, newName, newDescription)
-          setShowRenameModal(false)
-        }}
-      />
-    </div>
-  )
+    <RenameRuleModal
+      isOpen={showRenameModal}
+      rule={rule}
+      onClose={() => setShowRenameModal(false)}
+      onRename={(ruleId, newName, newDescription) => {
+        onRename?.(ruleId, newName, newDescription)
+        setShowRenameModal(false)
+      }}
+    />
+  </div>
+)
 }

@@ -4908,6 +4908,27 @@ input[type="radio"]:focus {
   transition: transform 0.2s ease;
 }
 
+#infoScroll {
+  overflow-y: auto;
+}
+
+#mainHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+}
+
+#dockStack {
+  display: none;
+}
+
+.sectionHeader {
+  background: #f5f6fa;
+  border: 1px solid #edf0f4;
+  border-radius: 14px;
+}
+
 .section-sticky-header {
   position: sticky;
   top: var(--section-sticky-top, 76px);
