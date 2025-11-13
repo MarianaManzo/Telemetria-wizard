@@ -545,10 +545,6 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   description="¿Qué condiciones evalúa esta regla?"
                   contentClassName="space-y-4"
                 >
-                  {conditions.length > 0 && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
-                  )}
-
                   <div className="space-y-4">
                     {conditions.map((condition, index) => {
                       const sensor = telemetrySensors.find(s => s.value === condition.sensor)
@@ -626,6 +622,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                       )
                     })}
 
+                  {conditions.length > 0 && (
+                    <div className="border-b border-gray-200 mb-4"></div>
+                  )}
+
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-6">
                       <Button
@@ -664,7 +664,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   description="Elige a cuáles unidades o etiquetas esta regla debe aplicar"
                 >
                   {(selectedUnitsLocal.length > 0 || selectedTags.length > 0) && (
-                    <div className="-mx-4 border-b border-gray-200 mb-4"></div>
+                    <div className="border-b border-gray-200 mb-4"></div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4">
