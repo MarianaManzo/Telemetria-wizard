@@ -822,6 +822,7 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
   const collapseStyle = {
     '--section-sticky-top': `${sectionStickyTop}px`
   } as React.CSSProperties & { '--section-sticky-top': string }
+  const infoScrollMaxHeight = `calc(100vh - ${sectionStickyTop + 140}px)` // adjust for header + padding
 
   const renderPanelHeader = (
     key: CollapseSectionKey,
@@ -1340,7 +1341,7 @@ const advancedConfigItems = [
       <div className="flex flex-1 min-h-0 min-w-0">
         {/* Main Content */}
         <div className="flex flex-1 min-h-0 min-w-0 flex-col">
-          <div className="flex-1 overflow-auto" ref={scrollContainerRef}>
+          <div className="flex-1 overflow-hidden">
             <div className="w-full px-4 sm:px-6 py-6">
               {activeMainTab === 'informacion-general' && (
                 <div className="flex flex-col gap-6">
@@ -1348,7 +1349,12 @@ const advancedConfigItems = [
                     className="w-full rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden"
                     style={collapseStyle}
                   >
-                    <div id="infoScroll" className="info-scroll min-w-0" ref={scrollContainerRef}>
+                    <div
+                      id="infoScroll"
+                      className="info-scroll min-w-0 overflow-auto"
+                      style={{ maxHeight: infoScrollMaxHeight }}
+                      ref={scrollContainerRef}
+                    >
                       <div
         id="mainHeader"
         ref={generalInfoHeaderRef}
