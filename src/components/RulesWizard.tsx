@@ -924,7 +924,7 @@ export function RulesWizard({ ruleType, onSave, onCancel }: RulesWizardProps) {
               disabled={!isCurrentStepValid || !ruleName.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:text-gray-500 flex items-center gap-2"
             >
-              Guardar regla
+              Guardar
             </Button>
           ) : (
             <Button

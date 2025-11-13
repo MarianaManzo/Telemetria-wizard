@@ -1210,26 +1210,39 @@ function DraggableConditionInGroup({
                 </SelectContent>
               </Select>
             ) : sensor?.dataType === 'string' ? (
-              <Select
-                value={condition.value}
-                onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
-                disabled={!condition.sensor}
-                aria-invalid={showValueError}
-              >
-                <SelectTrigger
-                  className="w-full"
-                  status={showValueError ? "error" : undefined}
+              sensor.category === 'custom' ? (
+                <Input
+                  type="text"
+                  placeholder="Escribe un valor"
+                  value={condition.value}
+                  onChange={(e) => updateConditionInGroup(groupId, condition.id, 'value', e.target.value)}
+                  className="w-full text-[14px]"
+                  aria-invalid={showValueError}
+                  disabled={!condition.sensor}
+                  style={getInputErrorStyles(showValueError)}
+                />
+              ) : (
+                <Select
+                  value={condition.value}
+                  onValueChange={(value) => updateConditionInGroup(groupId, condition.id, 'value', value)}
+                  disabled={!condition.sensor}
+                  aria-invalid={showValueError}
                 >
-                  <SelectValue placeholder="Seleccionar opción" />
-                </SelectTrigger>
-                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
-                  {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectTrigger
+                    className="w-full"
+                    status={showValueError ? "error" : undefined}
+                  >
+                    <SelectValue placeholder="Seleccionar opción" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
+                    {sensor.options?.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="text-[14px]">
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )
             ) : (
             <Input
               type="number"
@@ -1446,26 +1459,38 @@ function DraggableCondition({
                 </SelectContent>
               </Select>
             ) : sensor?.dataType === 'string' ? (
-              // Select with predefined list for string sensors (Chofer, ID Chofer, etc.)
-            <Select
-              value={condition.value}
-              onValueChange={(value) => updateCondition(condition.id, 'value', value)}
-              disabled={!condition.sensor}
-            >
-                <SelectTrigger
-                  className="w-full"
-                  status={showValueError ? "error" : undefined}
-                >
-                  <SelectValue placeholder="Seleccionar opción" />
-                </SelectTrigger>
-                <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
-                  {sensor.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value} className="text-[14px]">
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              sensor.category === 'custom' ? (
+                <Input
+                  type="text"
+                  placeholder="Escribe un valor"
+                  value={condition.value}
+                  onChange={(e) => updateCondition(condition.id, 'value', e.target.value)}
+                  className="w-full text-[14px]"
+                  disabled={!condition.sensor}
+                  style={{ height: '32px', borderRadius: '8px' }}
+                />
+              ) : (
+                // Select with predefined list for string sensors (Chofer, ID Chofer, etc.)
+              <Select
+                value={condition.value}
+                onValueChange={(value) => updateCondition(condition.id, 'value', value)}
+                disabled={!condition.sensor}
+              >
+                  <SelectTrigger
+                    className="w-full"
+                    status={showValueError ? "error" : undefined}
+                  >
+                    <SelectValue placeholder="Seleccionar opción" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-lg overflow-hidden" style={{ borderRadius: '8px' }}>
+                    {sensor.options?.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="text-[14px]">
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )
             ) : (
               // Numeric input for measurable values (km/h, voltios, minutos, °C, etc.)
             <Input
@@ -3729,7 +3754,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 disabled={isSaving}
                 className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal disabled:opacity-50"
               >
-                {isEditing ? (isSaving ? 'Guardando...' : 'Guardar') : 'Guardar regla'}
+                {isEditing ? (isSaving ? 'Guardando...' : 'Guardar') : 'Guardar'}
               </Button>
             </div>
           </div>

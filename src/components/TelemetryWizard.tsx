@@ -458,7 +458,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                 onClick={handleSave}
                 className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal"
               >
-                {isEditing ? 'Guardar cambios' : 'Guardar regla'}
+                {isEditing ? 'Guardar cambios' : 'Guardar'}
               </Button>
               {isEditing && rule && (
                 <DropdownMenu>
