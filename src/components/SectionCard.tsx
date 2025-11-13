@@ -11,6 +11,7 @@ interface SectionCardProps {
   contentClassName?: string
   showTopDivider?: boolean
   variant?: 'default' | 'plain'
+  horizontalPadding?: 'default' | 'none'
 }
 
 export default function SectionCard({
@@ -22,9 +23,11 @@ export default function SectionCard({
   className,
   contentClassName,
   showTopDivider = false,
-  variant = 'default'
+  variant = 'default',
+  horizontalPadding = 'default'
 }: SectionCardProps) {
   const isDefaultVariant = variant === 'default'
+  const hasHorizontalPadding = horizontalPadding !== 'none'
 
   const headerStyle = isDefaultVariant
     ? {
@@ -33,6 +36,8 @@ export default function SectionCard({
         borderTopRightRadius: 16
       }
     : undefined
+  const headerPaddingClass = hasHorizontalPadding ? 'px-6' : 'px-0'
+  const contentPaddingClass = hasHorizontalPadding ? 'px-6' : 'px-0'
 
   return (
     <div
@@ -45,7 +50,8 @@ export default function SectionCard({
     >
       <div
         className={cn(
-          'flex items-start gap-3 px-6 py-4',
+          'flex items-start gap-3 py-4',
+          headerPaddingClass,
           isDefaultVariant && 'border-b border-[#E4E7EC]'
         )}
         style={headerStyle}
@@ -61,7 +67,7 @@ export default function SectionCard({
           </div>
         </div>
       </div>
-      <div className={cn('px-6 py-6', contentClassName)}>{children}</div>
+      <div className={cn(`${contentPaddingClass} py-6`, contentClassName)}>{children}</div>
     </div>
   )
 }

@@ -52,7 +52,7 @@ import { useColumnPreferences } from "../hooks/useColumnPreferences"
 const { Panel } = Collapse
 
 const SectionCard = (props: React.ComponentProps<typeof BaseSectionCard>) => (
-  <BaseSectionCard variant="plain" {...props} />
+  <BaseSectionCard variant="plain" horizontalPadding="none" {...props} />
 )
 
 // System sensors for telemetry (updated to match TelemetryWizardWithModal)
@@ -1624,7 +1624,7 @@ const advancedConfigItems = [
                         key="parametros"
                         header={renderPanelHeader('parametros', COLLAPSE_SECTION_LABELS.parametros, parametrosHeaderRef)}
                       >
-                        <div className="space-y-6 p-6">
+                        <div className="space-y-6 py-6 px-0">
                           <SectionCard className={SECTION_DIVIDER_CLASS}
                             icon={<Settings className="w-4 h-4 text-muted-foreground" />}
                             title="Parámetros a evaluar"
@@ -1715,7 +1715,7 @@ const advancedConfigItems = [
                         key="configuracion"
                         header={renderPanelHeader('configuracion', COLLAPSE_SECTION_LABELS.configuracion, configuracionHeaderRef)}
                       >
-                        <div className="space-y-6 p-6">
+                        <div className="space-y-6 py-6 px-0">
                           <SectionCard className={SECTION_DIVIDER_CLASS}
                             icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
                             title="Clasificación del evento"
@@ -1832,7 +1832,7 @@ const advancedConfigItems = [
                         key="acciones"
                         header={renderPanelHeader('acciones', COLLAPSE_SECTION_LABELS.acciones, accionesHeaderRef)}
                       >
-                        <div className="space-y-6 p-6">{renderAccionesTab()}</div>
+                        <div className="space-y-6 py-6 px-0">{renderAccionesTab()}</div>
                       </Panel>
                     </Collapse>
                     </div>
