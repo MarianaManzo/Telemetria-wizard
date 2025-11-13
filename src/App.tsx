@@ -353,7 +353,7 @@ export default function App() {
 
   const handleGlobalNavigation = useCallback((view: AppView) => {
     setCurrentView(view)
-    if (view !== 'rules' && !view.startsWith('tags-rules')) {
+    if (view !== 'rules') {
       setRulesView('list')
       setSelectedRule(null)
     }
@@ -371,7 +371,7 @@ export default function App() {
   }, [handleGlobalNavigation])
 
   const topMenuSelectedKey = useMemo(() => {
-    if (currentView === 'rules' || currentView === 'tags-rules' || rulesView !== 'list') {
+    if (currentView === 'rules' || rulesView !== 'list') {
       return 'reglas'
     }
 
@@ -497,13 +497,6 @@ export default function App() {
           onEventClick={handleEventClick}
           onStatusChange={handleEventStatusChange}
           viewType={currentView}
-        />
-      )
-    } else if (currentView === 'tags-rules') {
-      return (
-        <TagsList
-          tags={tags}
-          context="rules"
         />
       )
     } else if (currentView === 'tags-events') {

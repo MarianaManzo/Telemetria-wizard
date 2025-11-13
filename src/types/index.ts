@@ -1,5 +1,5 @@
 export type AppState = 'initial' | 'generating' | 'generated'
-export type AppView = 'rules' | 'events' | 'my-events' | 'reports' | 'drafts' | 'scheduled' | 'tags-rules' | 'tags-events'
+export type AppView = 'rules' | 'events' | 'my-events' | 'reports' | 'drafts' | 'scheduled' | 'tags-events'
 export type SaveModalMode = 'save' | 'save-as' | 'rename'
 export type TagsContext = 'rules' | 'events'
 

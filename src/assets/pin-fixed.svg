@@ -1,0 +1,12 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g filter="url(#dropshadow)">
+    <rect x="0.5" y="0.5" width="15" height="15" rx="4" fill="white" />
+  </g>
+  <path d="M5.5 6.5L8 9L6 11L5 10L4 11L5 12L3.5 13.5L2.5 12.5L4 11L5 12L7 10L4.5 7.5L5.5 6.5Z" fill="#475467"/>
+  <path d="M10.5 3.5L12.5 5.5L10 8L8 6L10.5 3.5Z" fill="#525252"/>
+  <defs>
+    <filter id="dropshadow" x="0" y="0" width="16" height="16" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+</svg>

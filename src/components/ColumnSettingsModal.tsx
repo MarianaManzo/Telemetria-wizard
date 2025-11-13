@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
-import { MenuOutlined, EyeInvisibleOutlined, EyeOutlined, SettingOutlined } from '@ant-design/icons'
+import { MenuOutlined, SettingOutlined } from '@ant-design/icons'
+import { Dropdown } from 'antd'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Button } from './ui/button'
 import { ColumnPreference } from '../hooks/useColumnPreferences'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import visibilityIcon from '../assets/Visibility Icon.svg'
+import eyeSolid from '../assets/eye-solid.svg'
+import eyeSolidOff from '../assets/eye-solid-off.svg'
 
 interface ColumnSettingsModalProps {
   isOpen: boolean
@@ -63,29 +66,51 @@ interface ColumnSettingsListProps {
 
 const ColumnSettingsList = ({ columns, onToggle, onDragStart, onDrop }: ColumnSettingsListProps) => (
   <div className="space-y-2 py-2">
-    {columns.map((column, index) => (
-      <div
-        key={column.id}
-        className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-[14px]"
-        draggable
-        onDragStart={() => onDragStart(index)}
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={() => onDrop(index)}
-      >
-        <div className="flex items-center gap-2">
-          <MenuOutlined className="text-gray-500" />
-          <span>{column.label}</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => onToggle(column.id)}
-          className="text-gray-600"
-          aria-label={column.enabled === false ? 'Mostrar columna' : 'Ocultar columna'}
+    {columns.map((column, index) => {
+      const isPinnedColumn = column.id === 'name'
+      return (
+        <div
+          key={column.id}
+          className="flex items-center justify-between rounded-lg bg-[#F8F9FB] px-3 py-2 text-[14px]"
+          draggable={!isPinnedColumn}
+          onDragStart={() => {
+            if (!isPinnedColumn) {
+              onDragStart(index)
+            }
+          }}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={() => {
+            if (!isPinnedColumn) {
+              onDrop(index)
+            }
+          }}
         >
-          {column.enabled === false ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-        </button>
-      </div>
-    ))}
+          <div className="flex items-center gap-2 text-gray-600">
+            {isPinnedColumn ? (
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#F4F4F5]">
+                <img src={visibilityIcon} alt="Columna fija" className="h-3.5 w-3.5" draggable={false} />
+              </span>
+            ) : (
+              <MenuOutlined className="text-gray-500" />
+            )}
+            <span>{column.label}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => onToggle(column.id)}
+            className="text-gray-600"
+            aria-label={column.enabled === false ? 'Mostrar columna' : 'Ocultar columna'}
+          >
+            <img
+              src={column.enabled === false ? eyeSolidOff : eyeSolid}
+              alt={column.enabled === false ? 'Mostrar columna' : 'Ocultar columna'}
+              className="h-4 w-4"
+              draggable={false}
+            />
+          </button>
+        </div>
+      )
+    })}
   </div>
 )
 
@@ -170,29 +195,42 @@ export function ColumnSettingsPopover({ columns, onApply }: ColumnSettingsPopove
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <Dropdown
+      open={open}
+      onOpenChange={setOpen}
+      trigger={['click']}
+      placement="bottomRight"
+      overlayClassName="column-settings-dropdown"
+      menu={{ items: [] }}
+      dropdownRender={() => (
+        <div
+          className="w-[320px] rounded-[16px] border border-gray-200 bg-white shadow-[0px_12px_32px_rgba(10,21,61,0.14)]"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="absolute inset-0 rounded-[16px] bg-black/10 blur-2xl pointer-events-none"></div>
+          <div className="px-4 py-3 border-b border-gray-200 text-[14px] font-semibold">
+            Personalizar columnas
+          </div>
+          <div className="max-h-64 overflow-auto px-4 py-2">
+            <ColumnSettingsList
+              columns={localColumns}
+              onToggle={handleToggle}
+              onDragStart={handleDragStart}
+              onDrop={handleDrop}
+            />
+          </div>
+          <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-4 py-3 bg-white rounded-b-[16px]">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancelar
+            </Button>
+            <Button onClick={handleApply}>Aplicar</Button>
+          </div>
+        </div>
+      )}
+    >
+      <span>
         <ColumnSettingsIconButton aria-label="Personalizar columnas" />
-      </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0" align="end">
-        <div className="px-4 py-3 border-b border-gray-200 text-[14px] font-semibold">
-          Personalizar columnas
-        </div>
-        <div className="max-h-64 overflow-auto px-2">
-          <ColumnSettingsList
-            columns={localColumns}
-            onToggle={handleToggle}
-            onDragStart={handleDragStart}
-            onDrop={handleDrop}
-          />
-        </div>
-        <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-4 py-3">
-          <Button variant="outline" onClick={handleCancel}>
-            Cancelar
-          </Button>
-          <Button onClick={handleApply}>Aplicar</Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+      </span>
+    </Dropdown>
   )
 }

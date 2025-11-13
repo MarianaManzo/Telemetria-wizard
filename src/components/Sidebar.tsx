@@ -60,12 +60,11 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     title: "Reglas",
     items: [
       { key: "rules", label: "Reglas" },
-      { key: "tags-rules", label: "Etiquetas" },
     ],
   }
 
   const isEventsContext = currentView === "events" || currentView === "my-events" || currentView === "tags-events"
-  const isRulesContext = currentView === "rules" || currentView === "tags-rules"
+  const isRulesContext = currentView === "rules"
 
   const sections: SidebarSection[] = []
 
@@ -82,9 +81,6 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   }
 
   const isItemActive = (key: AppView) => {
-    if (key === "rules") {
-      return currentView === "rules" || currentView === "tags-rules"
-    }
     return currentView === key
   }
 

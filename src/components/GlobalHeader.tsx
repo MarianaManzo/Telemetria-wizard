@@ -109,7 +109,7 @@ export function GlobalHeader({ currentView, onNavigate, searchQuery = "", onSear
           {navigationItems.map((item, index) => {
             const isItemActive =
               (item.title === "Eventos" && (currentView === "events" || currentView === "tags-events")) ||
-              (item.title === "Reglas" && (currentView === "rules" || currentView === "tags-rules")) ||
+              (item.title === "Reglas" && currentView === "rules") ||
               (item.title !== "Eventos" && item.title !== "Reglas" && item.isActive);
 
             return (
