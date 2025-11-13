@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
@@ -6,6 +6,9 @@ import { Textarea } from "./ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "./ui/dropdown-menu"
 import { Switch } from "./ui/switch"
+import abiertoIcon from "../assets/abierto.svg"
+import cerradoIcon from "../assets/cerrado.svg"
+
 import { 
   ArrowLeft, 
   AlertTriangle, 
@@ -28,7 +31,8 @@ import {
   Gauge,
   Thermometer,
   Radio,
-  AlertOctagon
+  AlertOctagon,
+  CheckCircle
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Row, Col, Collapse } from "antd"
@@ -37,6 +41,7 @@ import { Rule, Event, RuleConditionGroup, RuleSchedule } from "../types"
 import { userEmailTemplates } from "../constants/emailTemplates"
 import { DeleteRuleModal } from "./DeleteRuleModal"
 import { RenameRuleModal } from "./RenameRuleModal"
+import { ChangeStatusModal } from "./ChangeStatusModal"
 import exampleImage from 'figma:asset/25905393c492af8c8e0b3cf142e20c9dc3cbe9e4.png'
 import markerBody from "../assets/event.svg?raw"
 import markerLabel from "../assets/Label event.svg?raw"
@@ -353,6 +358,64 @@ const severityConfig = {
   low: { label: 'Baja', icon: AlertTriangle, palette: severityPalette.low },
   informative: { label: 'Informativo', icon: AlertTriangle, palette: severityPalette.informative }
 }
+
+const eventsTableStatusConfig: Record<Event['status'], { label: string; color: string }> = {
+  open: { label: 'Abierto', color: 'bg-green-100 text-green-800 border border-green-200' },
+  closed: { label: 'Cerrado', color: 'bg-gray-100 text-gray-800 border border-gray-200' }
+}
+
+const eventsTableSeverityConfig: Record<Event['severity'], { label: string; icon: LucideIcon }> = {
+  high: { label: 'Alta', icon: AlertTriangle },
+  medium: { label: 'Media', icon: AlertTriangle },
+  low: { label: 'Baja', icon: AlertTriangle },
+  informative: { label: 'Informativo', icon: AlertTriangle }
+}
+
+const eventsTableSeverityVisuals: Record<Event['severity'], {
+  shapeBgClass: string
+  iconColorClass: string
+  badgeClass: string
+  dotBorderClass: string
+  dotTextClass: string
+}> = {
+  high: {
+    shapeBgClass: 'bg-red-100',
+    iconColorClass: 'text-red-600',
+    badgeClass: 'bg-red-100 border border-red-200 text-red-700',
+    dotBorderClass: 'border-red-500',
+    dotTextClass: 'text-red-500'
+  },
+  medium: {
+    shapeBgClass: 'bg-orange-100',
+    iconColorClass: 'text-orange-600',
+    badgeClass: 'bg-orange-100 border border-orange-200 text-orange-700',
+    dotBorderClass: 'border-orange-500',
+    dotTextClass: 'text-orange-500'
+  },
+  low: {
+    shapeBgClass: 'bg-blue-100',
+    iconColorClass: 'text-blue-600',
+    badgeClass: 'bg-blue-100 border border-blue-200 text-blue-700',
+    dotBorderClass: 'border-blue-500',
+    dotTextClass: 'text-blue-500'
+  },
+  informative: {
+    shapeBgClass: 'bg-cyan-100',
+    iconColorClass: 'text-cyan-600',
+    badgeClass: 'bg-cyan-100 border border-cyan-200 text-cyan-700',
+    dotBorderClass: 'border-cyan-500',
+    dotTextClass: 'text-cyan-500'
+  }
+}
+
+const severityOctagonClipPath = 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)'
+
+const SAMPLE_EVENT_UNITS = [
+  { id: 'NN-001', label: 'XHDF-2390', location: 'Wallaby Way, Sydney' },
+  { id: 'NN-002', label: 'PQRT-1234', location: '90210 Sunset Boulevard, Los Angeles' },
+  { id: 'NN-003', label: 'LMNO-5678', location: 'Powell Street, San Francisco' },
+  { id: 'NN-004', label: 'ABCD-9101', location: 'Wisteria Lane, Sacramento' }
+]
 
 const responsibleProfiles: Record<string, { name: string; email: string; avatar: string }> = {
   'mariana.manzo@numaris.com': {
@@ -746,6 +809,7 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
   const accionesHeaderRef = useRef<HTMLButtonElement>(null)
   const notasHeaderRef = useRef<HTMLDivElement>(null)
   const adjuntosHeaderRef = useRef<HTMLDivElement>(null)
+  const eventosHeaderRef = useRef<HTMLDivElement>(null)
   const sectionHeaderRefs: Record<CollapseSectionKey, React.RefObject<HTMLElement>> = {
     parametros: parametrosHeaderRef,
     configuracion: configuracionHeaderRef,
@@ -781,6 +845,81 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
   const [notesSort, setNotesSort] = useState('recent')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
+  const [selectedEventForModal, setSelectedEventForModal] = useState<Event | null>(null)
+  const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
+  const [statusModalMode, setStatusModalMode] = useState<'close' | 'reopen'>('close')
+  const relatedEvents = useMemo(() => {
+    return events.filter((event) => event.ruleId === rule.id)
+  }, [events, rule.id])
+  const demoEvents = useMemo<Event[]>(() => {
+    if (relatedEvents.length > 0) {
+      return []
+    }
+    const baseDate = rule.updatedAt ?? rule.createdAt ?? new Date()
+    const severity = (rule.eventSettings?.severity ?? 'medium') as Event['severity']
+    return SAMPLE_EVENT_UNITS.slice(0, 3).map((unit, index) => {
+      const createdAt = new Date(baseDate.getTime() - index * 3_600_000)
+      const updatedAt = new Date(createdAt.getTime() + 600_000)
+      return {
+        id: `${rule.id.toUpperCase()}-DEMO-${index + 1}`,
+        ruleId: rule.id,
+        ruleName: rule.name,
+        status: index === 0 ? 'open' : 'closed',
+        severity,
+        icon: '',
+        unitId: unit.id,
+        unitName: unit.label,
+        responsible: rule.owner,
+        instructions: rule.eventSettings?.instructions ?? 'Sin instrucciones configuradas.',
+        createdAt,
+        updatedAt,
+        closedAt: index === 0 ? null : updatedAt,
+        startAddress: unit.location,
+        endAddress: unit.location,
+        historyUrl: undefined,
+        unitLink: undefined,
+        eventMessageHtml: undefined,
+        actionsRequired: [],
+        startLocationLink: undefined,
+        driverName: undefined,
+        speedRecorded: undefined,
+        notes: [],
+        tags: rule.eventSettings?.tags ?? [],
+        location: { lat: 0, lng: 0 },
+        closeNote: undefined
+      }
+    })
+  }, [relatedEvents.length, rule])
+  const hasRealEvents = relatedEvents.length > 0
+  const eventsToDisplay = hasRealEvents ? relatedEvents : demoEvents
+  const requireCloseNote = rule.closePolicy.type === 'manual'
+
+  const formatEventDateTime = (dateValue: Date | string) => {
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const handleOpenChangeStatus = (eventData: Event, mode: 'close' | 'reopen' = 'close') => {
+    setSelectedEventForModal(eventData)
+    setStatusModalMode(mode)
+    setShowChangeStatusModal(true)
+  }
+
+  const handleCloseChangeStatusModal = () => {
+    setShowChangeStatusModal(false)
+    setSelectedEventForModal(null)
+  }
+
+  const handleStatusSave = (newStatus: 'open' | 'closed', note?: string) => {
+    console.log('Change event status request:', selectedEventForModal?.id, newStatus, note)
+    handleCloseChangeStatusModal()
+  }
 
   const handleSectionChange = (key: string | string[]) => {
     if (expandAll) {
@@ -1020,30 +1159,73 @@ const advancedConfigItems = [
     </div>
   )
 
-  const renderAccionesTab = () => (
-    <SectionCard
-      icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
-      title="Mensaje del evento"
-    >
-      {emailMessageContent ? (
-        <div className="space-y-3">
-          <div className="flex items-center gap-1 text-[14px] font-semibold text-foreground">
-            <span className="text-red-500">*</span>
-            <span>Mensaje del evento</span>
-          </div>
-          <div className="rounded-2xl border border-[#E5E9FF] bg-white p-4">
-            <div className="rounded-lg border border-[#D6DDFF] bg-[#F8F9FF] p-4 text-[14px] leading-relaxed text-[#313655] whitespace-pre-wrap">
-              {highlightEmailTemplateMessage(emailMessageContent)}
+  const renderAccionesTab = () => {
+    const requiereNota = rule.closePolicy.type === 'manual'
+    const closeFlowSteps = [
+      {
+        title: 'Revisión del evento',
+        description: 'Abre el detalle del evento, valida telemetría, notas y evidencia recibida.'
+      },
+      {
+        title: 'Registro de acciones',
+        description: 'Documenta en notas las llamadas o actividades realizadas con el responsable.'
+      },
+      {
+        title: 'Cierre en plataforma',
+        description: requiereNota
+          ? 'Actualiza el estatus a Cerrado e ingresa la nota obligatoria con la justificación.'
+          : 'Actualiza el estatus a Cerrado desde el panel de acciones secundarias.'
+      },
+      {
+        title: 'Seguimiento',
+        description: 'El equipo recibirá la notificación automática del cierre para dar seguimiento.'
+      }
+    ]
+
+    return (
+      <div className="space-y-4">
+        <SectionCard
+          icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
+          title="Mensaje del evento"
+        >
+          {emailMessageContent ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-1 text-[14px] font-semibold text-foreground">
+                <span className="text-red-500">*</span>
+                <span>Mensaje del evento</span>
+              </div>
+              <div className="rounded-2xl border border-[#E5E9FF] bg-white p-4">
+                <div className="rounded-lg border border-[#D6DDFF] bg-[#F8F9FF] p-4 text-[14px] leading-relaxed text-[#313655] whitespace-pre-wrap">
+                  {highlightEmailTemplateMessage(emailMessageContent)}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      ) : (
-        <p className="text-[14px] text-muted-foreground">
-          No hay mensaje configurado para este canal.
-        </p>
-      )}
-    </SectionCard>
-  )
+          ) : (
+            <p className="text-[14px] text-muted-foreground">
+              No hay mensaje configurado para este canal.
+            </p>
+          )}
+        </SectionCard>
+
+        <SectionCard
+          icon={<CheckCircle className="w-4 h-4 text-muted-foreground" />}
+          title="Flujo para cerrar evento"
+        >
+          <ol className="space-y-4">
+            {closeFlowSteps.map((step, index) => (
+              <li key={step.title} className="flex gap-3">
+                <span className="mt-1 text-[13px] font-semibold text-[#94A3B8]">{index + 1}.</span>
+                <div>
+                  <p className="text-[14px] font-semibold text-foreground">{step.title}</p>
+                  <p className="text-[13px] text-muted-foreground">{step.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </SectionCard>
+      </div>
+    )
+  }
 
   const isSpecialRuleLayout = rule.name === 'Desconexión prolongada del GPS'
 
@@ -1079,7 +1261,7 @@ const advancedConfigItems = [
   const ruleHeaderHeight = 72
 
   return (
-    <div className="flex-1 flex flex-col bg-white min-h-0">
+    <div className="flex-1 flex flex-col bg-white min-h-0 min-w-0">
       {/* Header + Main Tabs */}
       <div
         className="bg-white"
@@ -1198,18 +1380,18 @@ const advancedConfigItems = [
         </div>
       </div>
 
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 min-w-0">
         {/* Main Content */}
-        <div className="flex flex-1 min-h-0 flex-col">
+        <div className="flex flex-1 min-h-0 min-w-0 flex-col">
           <div className="flex-1 overflow-auto" ref={scrollContainerRef}>
-            <div className="p-6">
+            <div className="w-full px-4 sm:px-6 py-6">
               {activeMainTab === 'informacion-general' && (
-                <div className="space-y-6">
+                <div className="flex flex-col gap-6">
                   <div
-                    className="rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden"
+                    className="w-full rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden"
                     style={collapseStyle}
                   >
-                    <div id="infoScroll" className="info-scroll" ref={scrollContainerRef}>
+                    <div id="infoScroll" className="info-scroll min-w-0" ref={scrollContainerRef}>
                       <div
         id="mainHeader"
         ref={generalInfoHeaderRef}
@@ -1459,20 +1641,7 @@ const advancedConfigItems = [
                         key="acciones"
                         header={renderPanelHeader('acciones', COLLAPSE_SECTION_LABELS.acciones, accionesHeaderRef)}
                       >
-                        <div className="space-y-4 px-6 pb-6 pt-4">
-                          <SectionCard
-                            icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
-                            title="Mensaje del evento"
-                          >
-                            {emailMessageContent ? (
-                              <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-4">
-                                {highlightEmailTemplateMessage(emailMessageContent)}
-                              </div>
-                            ) : (
-                              <p className="text-[14px] text-muted-foreground">No hay mensaje configurado para este canal.</p>
-                            )}
-                          </SectionCard>
-                        </div>
+                        <div className="space-y-4 px-6 pb-6 pt-4">{renderAccionesTab()}</div>
                       </Panel>
                     </Collapse>
                     </div>
@@ -1482,49 +1651,153 @@ const advancedConfigItems = [
                   <div className="rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden">
                     <div className="px-6 py-6">
                       <div
-                        ref={notasHeaderRef}
-                        className="mb-5 flex items-center justify-between text-[15px] font-semibold text-foreground"
+                        ref={eventosHeaderRef}
+                        className="mb-6 text-[15px] font-semibold text-foreground"
                         style={{ scrollMarginTop: sectionStickyTop + 16 }}
                       >
-                        <span>Notas</span>
-                        <Select value={notesSort} onValueChange={setNotesSort}>
-                          <SelectTrigger className="w-[190px] rounded-full border border-[#E4E7EC] bg-white text-[14px] font-medium text-foreground focus:ring-0 focus:ring-offset-0">
-                            <SelectValue placeholder="Recientes al principio" />
-                          </SelectTrigger>
-                          <SelectContent className="text-[14px]">
-                            <SelectItem value="recent">Recientes al principio</SelectItem>
-                            <SelectItem value="oldest">Antiguas al principio</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <span>Eventos</span>
                       </div>
-                      <Textarea
-                        value={newNote}
-                        onChange={(event) => setNewNote(event.target.value)}
-                        placeholder="Agregar nota..."
-                        className="min-h-[96px] rounded-2xl border border-[#E4E7EC] bg-[#FBFBFD] text-[14px] text-foreground placeholder:text-[#C0C5D0] focus-visible:border-[#2563EB] focus-visible:ring-0"
-                      />
-                    </div>
-                  </div>
 
-                  <div className="rounded-[12px] border border-[#E4E7EC] bg-white overflow-hidden">
-                    <div className="flex flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between">
-                      <span
-                        ref={adjuntosHeaderRef}
-                        className="text-[15px] font-semibold text-foreground"
-                        style={{ scrollMarginTop: sectionStickyTop + 16 }}
-                      >
-                        Archivos adjuntos
-                      </span>
-                      <div className="flex flex-1 items-center justify-between gap-4 md:justify-end">
-                        <p className="mb-0 text-[14px] text-muted-foreground">No tienes archivos adjuntos</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex items-center gap-2 rounded-full border border-[#2563EB] bg-white px-4 py-2 text-[14px] font-semibold text-[#2563EB] hover:bg-[#2563EB]/5"
-                        >
-                          <span className="text-[18px] leading-none">+</span>
-                          Adjuntar
-                        </Button>
+                      <div className="bg-white rounded-lg border overflow-x-auto">
+                        <table className="w-full table-auto border-collapse">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Identificador</th>
+                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[22rem]">Evento</th>
+                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-44">Inicio del evento</th>
+                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Unidad</th>
+                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[18rem]">Ubicación</th>
+                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Estatus</th>
+                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Severidad</th>
+                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20">
+                                Acciones
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {eventsToDisplay.length === 0 ? (
+                              <tr>
+                                <td colSpan={8} className="px-6 py-8 text-center text-[14px] text-gray-500">
+                                  No se han detonado eventos con esta regla todavía.
+                                </td>
+                              </tr>
+                            ) : (
+                              eventsToDisplay.map((event) => {
+                                const statusInfo = eventsTableStatusConfig[event.status]
+                                const severityInfo = eventsTableSeverityConfig[event.severity]
+                                const severityVisual = eventsTableSeverityVisuals[event.severity]
+                                const SeverityIconCompact = severityInfo.icon
+                                const locationText = event.startAddress || event.endAddress || '---'
+
+                                return (
+                                  <tr key={event.id} className="hover:bg-gray-50 cursor-pointer">
+                                    <td className="px-6 py-4 text-[14px] font-medium">
+                                      <span className="text-blue-600 hover:text-blue-900 hover:underline">
+                                        {event.id}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex items-center gap-3">
+                                        <span
+                                          className={`inline-flex h-9 w-9 items-center justify-center ${severityVisual.shapeBgClass}`}
+                                          style={{ clipPath: severityOctagonClipPath, paddingInline: '8px' }}
+                                        >
+                                          <SeverityIconCompact className={`h-4 w-4 ${severityVisual.iconColorClass}`} />
+                                        </span>
+                                        <div
+                                          className="truncate pr-2 text-[14px] font-medium text-gray-900"
+                                          title={event.ruleName}
+                                        >
+                                          {event.ruleName}
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500">
+                                      <div className="truncate pr-2" title={formatEventDateTime(event.createdAt)}>
+                                        {formatEventDateTime(event.createdAt)}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-[14px] font-medium">
+                                      <span className="text-blue-600 hover:text-blue-900 hover:underline">
+                                        {event.unitId || event.unitName || '---'}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-[14px] text-gray-500 w-[18rem]">
+                                      <div className="truncate pr-2" title={locationText}>
+                                        {locationText}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-[14px] text-gray-500">
+                                      <div className="flex items-center gap-2 font-medium whitespace-nowrap">
+                                        {event.status === 'open' ? (
+                                          <>
+                                            <img src={abiertoIcon} alt="Abierto" className="h-4 w-4" />
+                                            <span className="text-gray-900">{statusInfo.label}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <img src={cerradoIcon} alt="Cerrado" className="h-4 w-4" />
+                                            <span className="text-gray-900">{statusInfo.label}</span>
+                                          </>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-[14px] text-gray-500">
+                                      <span
+                                        className={`inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[12px] font-medium whitespace-nowrap ${severityVisual.badgeClass}`}
+                                      >
+                                        <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${severityVisual.dotBorderClass}`}>
+                                          <span className={`text-[10px] font-bold ${severityVisual.dotTextClass}`}>!</span>
+                                        </span>
+                                        {severityInfo.label}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10">
+                                      <div className="flex justify-center items-center">
+                                        {event.status === 'open' ? (
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <MoreVertical className="w-4 h-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                              <DropdownMenuItem
+                                                className="flex items-center gap-2"
+                                                onClick={(e) => {
+                                                  e.stopPropagation()
+                                                  handleOpenChangeStatus(event, 'close')
+                                                }}
+                                              >
+                                                <CheckCircle className="w-4 h-4" />
+                                                <span>Cerrar evento</span>
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        ) : (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            disabled
+                                            className="p-2 text-gray-400 cursor-not-allowed opacity-50"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <MoreVertical className="w-4 h-4" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )
+                              })
+                            )}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
@@ -1602,6 +1875,16 @@ const advancedConfigItems = [
         setShowRenameModal(false)
       }}
     />
+
+    {selectedEventForModal && (
+      <ChangeStatusModal
+        isOpen={showChangeStatusModal}
+        onClose={handleCloseChangeStatusModal}
+        onSave={handleStatusSave}
+        mode={statusModalMode}
+        requireNote={statusModalMode === 'close' && requireCloseNote}
+      />
+    )}
   </div>
 )
 }
