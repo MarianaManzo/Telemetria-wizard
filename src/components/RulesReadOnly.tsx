@@ -155,6 +155,7 @@ const customTelemetrySensors = [
 
 // Combined sensors
 const telemetrySensors = [...systemTelemetrySensors, ...customTelemetrySensors]
+const SECTION_DIVIDER_CLASS = 'border-b border-[#E4E7EC] last:border-b-0'
 
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string')
@@ -833,7 +834,10 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
         type="button"
         ref={ref}
         className={`collapse-pill ${isActive ? 'collapse-pill--active' : ''}`}
-        style={{ scrollMarginTop: sectionStickyTop + 16 }}
+        style={{
+          scrollMarginTop: sectionStickyTop + 16,
+          backgroundColor: '#F0F0F0'
+        }}
       >
         <span>{label}</span>
         <ChevronDown className={`collapse-pill__icon ${isActive ? 'rotate-180' : ''}`} />
@@ -1012,14 +1016,14 @@ const advancedConfigItems = [
 
   const renderParametrosTab = () => (
     <div className="space-y-4">
-      <SectionCard
+      <SectionCard className={SECTION_DIVIDER_CLASS}
         icon={<Settings className="w-4 h-4 text-muted-foreground" />}
         title="Parámetros a evaluar"
       >
         {renderConditionGroups(rule)}
       </SectionCard>
 
-      <SectionCard
+      <SectionCard className={SECTION_DIVIDER_CLASS}
         icon={<Tag className="w-4 h-4 text-muted-foreground" />}
         title="Aplica esta regla a"
       >
@@ -1043,7 +1047,7 @@ const advancedConfigItems = [
         </div>
       </SectionCard>
 
-      <SectionCard
+      <SectionCard className={`${SECTION_DIVIDER_CLASS} overflow-hidden`}
         icon={<Settings className="w-4 h-4 text-muted-foreground" />}
         title="Configuración avanzada"
         headerExtra={
@@ -1055,7 +1059,6 @@ const advancedConfigItems = [
             {configAvanzadaOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
         }
-        className="overflow-hidden"
         contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
       >
         {configAvanzadaOpen && (
@@ -1089,7 +1092,7 @@ const advancedConfigItems = [
 
   const renderConfiguracionTab = () => (
     <div className="space-y-4">
-      <SectionCard
+      <SectionCard className={SECTION_DIVIDER_CLASS}
         icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
         title="Clasificación del evento"
       >
@@ -1140,7 +1143,7 @@ const advancedConfigItems = [
         </div>
       </SectionCard>
 
-      <SectionCard
+      <SectionCard className={SECTION_DIVIDER_CLASS}
         icon={<Tag className="w-4 h-4 text-muted-foreground" />}
         title="Etiquetas de la unidad"
       >
@@ -1159,73 +1162,27 @@ const advancedConfigItems = [
     </div>
   )
 
-  const renderAccionesTab = () => {
-    const requiereNota = rule.closePolicy.type === 'manual'
-    const closeFlowSteps = [
-      {
-        title: 'Revisión del evento',
-        description: 'Abre el detalle del evento, valida telemetría, notas y evidencia recibida.'
-      },
-      {
-        title: 'Registro de acciones',
-        description: 'Documenta en notas las llamadas o actividades realizadas con el responsable.'
-      },
-      {
-        title: 'Cierre en plataforma',
-        description: requiereNota
-          ? 'Actualiza el estatus a Cerrado e ingresa la nota obligatoria con la justificación.'
-          : 'Actualiza el estatus a Cerrado desde el panel de acciones secundarias.'
-      },
-      {
-        title: 'Seguimiento',
-        description: 'El equipo recibirá la notificación automática del cierre para dar seguimiento.'
-      }
-    ]
-
-    return (
-      <div className="space-y-4">
-        <SectionCard
-          icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
-          title="Mensaje del evento"
-        >
-          {emailMessageContent ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-1 text-[14px] font-semibold text-foreground">
-                <span className="text-red-500">*</span>
-                <span>Mensaje del evento</span>
-              </div>
-              <div className="rounded-2xl border border-[#E5E9FF] bg-white p-4">
-                <div className="rounded-lg border border-[#D6DDFF] bg-[#F8F9FF] p-4 text-[14px] leading-relaxed text-[#313655] whitespace-pre-wrap">
-                  {highlightEmailTemplateMessage(emailMessageContent)}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p className="text-[14px] text-muted-foreground">
-              No hay mensaje configurado para este canal.
-            </p>
-          )}
-        </SectionCard>
-
-        <SectionCard
-          icon={<CheckCircle className="w-4 h-4 text-muted-foreground" />}
-          title="Flujo para cerrar evento"
-        >
-          <ol className="space-y-4">
-            {closeFlowSteps.map((step, index) => (
-              <li key={step.title} className="flex gap-3">
-                <span className="mt-1 text-[13px] font-semibold text-[#94A3B8]">{index + 1}.</span>
-                <div>
-                  <p className="text-[14px] font-semibold text-foreground">{step.title}</p>
-                  <p className="text-[13px] text-muted-foreground">{step.description}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </SectionCard>
-      </div>
-    )
-  }
+  const renderAccionesTab = () => (
+    <SectionCard
+      className={SECTION_DIVIDER_CLASS}
+      icon={<MessageSquare className="w-4 h-4 text-muted-foreground" />}
+      title="Mensaje del evento"
+    >
+      {emailMessageContent ? (
+        <div className="space-y-3">
+          <div className="flex items-center gap-1 text-[14px] font-semibold text-foreground">
+            <span className="text-red-500">*</span>
+            <span>Mensaje del evento</span>
+          </div>
+          <div className="rounded-2xl bg-white p-4 text-[14px] leading-relaxed text-[#313655] whitespace-pre-wrap">
+            {highlightEmailTemplateMessage(emailMessageContent)}
+          </div>
+        </div>
+      ) : (
+        <p className="text-[14px] text-muted-foreground">No hay mensaje configurado para este canal.</p>
+      )}
+    </SectionCard>
+  )
 
   const isSpecialRuleLayout = rule.name === 'Desconexión prolongada del GPS'
 
@@ -1436,14 +1393,14 @@ const advancedConfigItems = [
                         header={renderPanelHeader('parametros', COLLAPSE_SECTION_LABELS.parametros, parametrosHeaderRef)}
                       >
                         <div className="space-y-4 px-6 pb-6 pt-4">
-                          <SectionCard
+                          <SectionCard className={SECTION_DIVIDER_CLASS}
                             icon={<Settings className="w-4 h-4 text-muted-foreground" />}
                             title="Parámetros a evaluar"
                           >
                             {renderConditionGroups(rule)}
                           </SectionCard>
 
-                          <SectionCard
+                          <SectionCard className={SECTION_DIVIDER_CLASS}
                             icon={<Tag className="w-4 h-4 text-muted-foreground" />}
                             title="Aplica esta regla a"
                           >
@@ -1467,7 +1424,7 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                          <SectionCard
+                          <SectionCard className={`${SECTION_DIVIDER_CLASS} overflow-hidden`}
                             icon={<Settings className="w-4 h-4 text-muted-foreground" />}
                             title="Configuración avanzada"
                             headerExtra={
@@ -1483,7 +1440,6 @@ const advancedConfigItems = [
                                 )}
                               </button>
                             }
-                            className="overflow-hidden"
                             contentClassName={configAvanzadaOpen ? 'pt-4 pb-0' : 'p-0'}
                           >
                             {configAvanzadaOpen && (
@@ -1528,7 +1484,7 @@ const advancedConfigItems = [
                         header={renderPanelHeader('configuracion', COLLAPSE_SECTION_LABELS.configuracion, configuracionHeaderRef)}
                       >
                         <div className="space-y-4 px-6 pb-6 pt-4">
-                          <SectionCard
+                          <SectionCard className={SECTION_DIVIDER_CLASS}
                             icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
                             title="Clasificación del evento"
                           >
@@ -1584,10 +1540,11 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                          <SectionCard
-                            icon={<Clock className="w-4 h-4 text-muted-foreground" />}
-                            title="Cierre del evento"
-                          >
+      <SectionCard
+        className={SECTION_DIVIDER_CLASS}
+        icon={<Clock className="w-4 h-4 text-muted-foreground" />}
+        title="Cierre del evento"
+      >
                             <div className="space-y-3">
                               <span className="block text-[14px] font-semibold text-foreground">Cierre del evento:</span>
                               <div className="text-[14px] text-[rgba(113,113,130,1)]">
@@ -1603,10 +1560,11 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                          <SectionCard
-                            icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                            title="Asignar etiqueta a la unidad"
-                          >
+      <SectionCard
+        className={SECTION_DIVIDER_CLASS}
+        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+        title="Asignar etiqueta a la unidad"
+      >
                             <div className="space-y-3">
                               <span className="block text-[14px] font-semibold text-foreground">Etiquetas asignadas:</span>
                               {renderTagsList(
@@ -1618,10 +1576,11 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-                          {rule.eventSettings.unitUntagsEnabled && (
-                            <SectionCard
-                              icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                              title="Desasignar etiqueta a la unidad"
+      {rule.eventSettings.unitUntagsEnabled && (
+        <SectionCard
+          className={SECTION_DIVIDER_CLASS}
+          icon={<Tag className="w-4 h-4 text-muted-foreground" />}
+          title="Desasignar etiqueta a la unidad"
                             >
                               <div className="space-y-3">
                                 <span className="block text-[14px] font-semibold text-foreground">Etiquetas a desasignar:</span>
