@@ -1647,9 +1647,19 @@ const advancedConfigItems = [
                             <tr>
                               <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Identificador</th>
                               <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[22rem]">Evento</th>
-                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-44">Inicio del evento</th>
+                                <th
+                                  className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 whitespace-nowrap"
+                                  style={{ width: 176 }}
+                                >
+                                  Inicio del evento
+                                </th>
                               <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-32">Unidad</th>
-                              <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-[18rem]">Ubicación</th>
+                              <th
+                                className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 whitespace-nowrap"
+                                style={{ width: 150 }}
+                              >
+                                Ubicación
+                              </th>
                               <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Estatus</th>
                               <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-36">Severidad</th>
                               <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20">
@@ -1705,10 +1715,25 @@ const advancedConfigItems = [
                                         {event.unitId || event.unitName || '---'}
                                       </span>
                                     </td>
-                                    <td className="px-6 py-4 text-[14px] text-gray-500 w-[18rem]">
-                                      <div className="truncate pr-2" title={locationText}>
-                                        {locationText}
-                                      </div>
+                                    <td className="px-6 py-4 text-[14px] text-gray-500" style={{ width: 150 }}>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div
+                                              className="pr-2"
+                                              style={{
+                                                maxWidth: 150,
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                              }}
+                                            >
+                                              {locationText}
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent>{locationText}</TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
                                     </td>
                                     <td className="px-6 py-4 text-[14px] text-gray-500">
                                       <div className="flex items-center gap-2 font-medium whitespace-nowrap">
