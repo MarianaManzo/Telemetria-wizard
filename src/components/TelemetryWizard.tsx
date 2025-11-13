@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
+import { Steps } from "antd"
 import { 
   ArrowLeft, 
   X, 
@@ -397,9 +398,41 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   // Tab states
   const tabs = ['parameters', 'actions', 'notifications']
+  const wizardSteps = [
+    { key: 'parameters', label: 'Parámetros' },
+    { key: 'actions', label: 'Acciones a realizar' },
+    { key: 'notifications', label: 'Notificaciones' }
+  ]
   const currentTabIndex = tabs.indexOf(activeTab)
   const isFirstTab = currentTabIndex === 0
   const isLastTab = currentTabIndex === tabs.length - 1
+  const stepItems = wizardSteps.map((step, index) => {
+    const isCompleted = currentTabIndex > index
+    const isActive = currentTabIndex === index
+    return {
+      title: step.label,
+      status: isCompleted ? 'finish' : isActive ? 'process' : 'wait',
+      icon: (
+        <div
+          className={`flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-semibold ${
+            isActive
+              ? 'bg-blue-600 text-white'
+              : isCompleted
+                ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                : 'bg-[#E5E7EB] text-gray-500'
+          }`}
+        >
+          {index + 1}
+        </div>
+      )
+    }
+  })
+
+  const handleStepChange = (nextIndex: number) => {
+    if (nextIndex <= currentTabIndex) {
+      setActiveTab(tabs[nextIndex])
+    }
+  }
 
   return (
     <TooltipProvider>
@@ -490,52 +523,19 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         <Flex vertical style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
           <div className="max-w-4xl mx-auto p-6">
             <Tabs value={activeTab} onValueChange={() => {}} className="pb-6">
-              <TabsList className="sticky top-0 bg-white border-b border-gray-200 w-full justify-start h-auto p-0 space-x-8 z-10">
-                <TabsTrigger 
-                  value="parameters" 
-                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 pointer-events-none ${
-                    currentTabIndex >= 0 ? 'text-blue-600' : 'text-gray-500'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`w-5 h-5 rounded-full text-white text-[12px] font-medium flex items-center justify-center ${
-                      currentTabIndex >= 0 ? 'bg-blue-600' : 'bg-gray-400'
-                    }`}>
-                      1
-                    </div>
-                    <span>Parámetros</span>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="actions"
-                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 pointer-events-none ${
-                    currentTabIndex >= 1 ? 'text-blue-600' : 'text-gray-500'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`w-5 h-5 rounded-full text-white text-[12px] font-medium flex items-center justify-center ${
-                      currentTabIndex >= 1 ? 'bg-blue-600' : 'bg-gray-400'
-                    }`}>
-                      2
-                    </div>
-                    <span>Acciones a realizar</span>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="notifications"
-                  className={`bg-transparent border-0 rounded-none px-0 py-3 text-[14px] border-b-2 border-transparent data-[state=active]:border-blue-600 pointer-events-none ${
-                    currentTabIndex >= 2 ? 'text-blue-600' : 'text-gray-500'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={`w-5 h-5 rounded-full text-white text-[12px] font-medium flex items-center justify-center ${
-                      currentTabIndex >= 2 ? 'bg-blue-600' : 'bg-gray-400'
-                    }`}>
-                      3
-                    </div>
-                    <span>Notificaciones</span>
-                  </div>
-                </TabsTrigger>
+              <div className="mb-6">
+                <Steps
+                  className="wizard-steps"
+                  responsive={false}
+                  current={currentTabIndex}
+                  items={stepItems}
+                  onChange={handleStepChange}
+                />
+              </div>
+              <TabsList className="hidden">
+                <TabsTrigger value="parameters" />
+                <TabsTrigger value="actions" />
+                <TabsTrigger value="notifications" />
               </TabsList>
               
               <TabsContent value="parameters" className="mt-6 space-y-6">

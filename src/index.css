@@ -4936,3 +4936,23 @@ input[type="radio"]:focus {
   background: #fff;
   margin: 0;
 }
+
+.wizard-steps .ant-steps-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.wizard-steps .ant-steps-item-tail {
+  top: 14px;
+}
+
+.wizard-steps .ant-steps-item-tail::after {
+  height: 1px;
+  background-color: #E4E7EC;
+}
+
+.wizard-steps .ant-steps-item-icon {
+  background: transparent;
+  border: none;
+}
