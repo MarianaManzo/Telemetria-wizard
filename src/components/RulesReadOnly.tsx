@@ -35,7 +35,7 @@ import {
   CheckCircle
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
-import { Row, Col, Collapse } from "antd"
+import { Row, Col, Collapse, Pagination } from "antd"
 import type { LucideIcon } from "lucide-react"
 import { Rule, Event, RuleConditionGroup, RuleSchedule } from "../types"
 import { userEmailTemplates } from "../constants/emailTemplates"
@@ -359,6 +359,8 @@ const severityConfig = {
   low: { label: 'Baja', icon: AlertTriangle, palette: severityPalette.low },
   informative: { label: 'Informativo', icon: AlertTriangle, palette: severityPalette.informative }
 }
+
+const EVENTS_PAGE_SIZE = 7
 
 const eventsTableStatusConfig: Record<Event['status'], { label: string; color: string }> = {
   open: { label: 'Abierto', color: 'bg-green-100 text-green-800 border border-green-200' },
@@ -853,6 +855,7 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
   const [selectedEventForModal, setSelectedEventForModal] = useState<Event | null>(null)
   const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
   const [statusModalMode, setStatusModalMode] = useState<'close' | 'reopen'>('close')
+  const [eventsPage, setEventsPage] = useState(1)
   const relatedEvents = useMemo(() => {
     return events.filter((event) => event.ruleId === rule.id)
   }, [events, rule.id])
@@ -897,7 +900,22 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
   }, [relatedEvents.length, rule])
   const hasRealEvents = relatedEvents.length > 0
   const eventsToDisplay = hasRealEvents ? relatedEvents : demoEvents
+  const totalEventPages = Math.max(1, Math.ceil(eventsToDisplay.length / EVENTS_PAGE_SIZE) || 1)
+  const paginatedEvents =
+    eventsToDisplay.length === 0
+      ? []
+      : eventsToDisplay.slice((eventsPage - 1) * EVENTS_PAGE_SIZE, eventsPage * EVENTS_PAGE_SIZE)
   const requireCloseNote = rule.closePolicy.type === 'manual'
+
+  useEffect(() => {
+    setEventsPage(1)
+  }, [eventsToDisplay.length])
+
+  useEffect(() => {
+    if (eventsPage > totalEventPages) {
+      setEventsPage(totalEventPages)
+    }
+  }, [eventsPage, totalEventPages])
 
   const formatEventDateTime = (dateValue: Date | string) => {
     const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
@@ -1342,7 +1360,7 @@ const advancedConfigItems = [
         {/* Main Content */}
         <div className="flex flex-1 min-h-0 min-w-0 flex-col">
           <div className="flex-1 overflow-hidden">
-            <div className="w-full px-4 sm:px-6 py-6">
+            <div className="w-full px-6 py-6">
               {activeMainTab === 'informacion-general' && (
                 <div className="flex flex-col gap-6">
                   <div
@@ -1398,7 +1416,7 @@ const advancedConfigItems = [
                         key="parametros"
                         header={renderPanelHeader('parametros', COLLAPSE_SECTION_LABELS.parametros, parametrosHeaderRef)}
                       >
-                        <div className="space-y-4 px-6 pb-6 pt-4">
+                        <div className="space-y-6 p-6">
                           <SectionCard className={SECTION_DIVIDER_CLASS}
                             icon={<Settings className="w-4 h-4 text-muted-foreground" />}
                             title="Parámetros a evaluar"
@@ -1489,7 +1507,7 @@ const advancedConfigItems = [
                         key="configuracion"
                         header={renderPanelHeader('configuracion', COLLAPSE_SECTION_LABELS.configuracion, configuracionHeaderRef)}
                       >
-                        <div className="space-y-4 px-6 pb-6 pt-4">
+                        <div className="space-y-6 p-6">
                           <SectionCard className={SECTION_DIVIDER_CLASS}
                             icon={<AlertTriangle className="w-4 h-4 text-muted-foreground" />}
                             title="Clasificación del evento"
@@ -1606,7 +1624,7 @@ const advancedConfigItems = [
                         key="acciones"
                         header={renderPanelHeader('acciones', COLLAPSE_SECTION_LABELS.acciones, accionesHeaderRef)}
                       >
-                        <div className="space-y-4 px-6 pb-6 pt-4">{renderAccionesTab()}</div>
+                        <div className="space-y-6 p-6">{renderAccionesTab()}</div>
                       </Panel>
                     </Collapse>
                     </div>
@@ -1647,7 +1665,7 @@ const advancedConfigItems = [
                                 </td>
                               </tr>
                             ) : (
-                              eventsToDisplay.map((event) => {
+                              paginatedEvents.map((event) => {
                                 const statusInfo = eventsTableStatusConfig[event.status]
                                 const severityInfo = eventsTableSeverityConfig[event.severity]
                                 const severityVisual = eventsTableSeverityVisuals[event.severity]
@@ -1764,6 +1782,18 @@ const advancedConfigItems = [
                           </tbody>
                         </table>
                       </div>
+                      {eventsToDisplay.length > 0 && (
+                        <div className="flex flex-wrap items-center justify-center px-6 pt-4">
+                          <Pagination
+                            current={eventsPage}
+                            total={eventsToDisplay.length}
+                            pageSize={EVENTS_PAGE_SIZE}
+                            showSizeChanger={false}
+                            onChange={setEventsPage}
+                            showTotal={(total, range) => `${range[0]} - ${range[1]} Eventos`}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

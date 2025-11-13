@@ -24,7 +24,7 @@ export default function SectionCard({
 }: SectionCardProps) {
   return (
     <div className={cn('bg-white', showTopDivider && 'mt-6 pt-6 border-t border-[#C0C5CE]', className)}>
-      <div className="flex items-start gap-3 px-4 py-4 bg-white">
+      <div className="flex items-start gap-3 bg-white px-6 pt-6 pb-4">
         <div className="flex items-center justify-center text-gray-600">{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-col gap-1">
@@ -36,7 +36,7 @@ export default function SectionCard({
           </div>
         </div>
       </div>
-      <div className={cn('py-4', contentClassName)}>{children}</div>
+      <div className={cn('px-6 pb-6', contentClassName)}>{children}</div>
     </div>
   )
 }

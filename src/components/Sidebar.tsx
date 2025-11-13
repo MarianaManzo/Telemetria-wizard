@@ -23,7 +23,7 @@ const containerStyles: CSSProperties = {
   flex: 1,
   minHeight: 0,
   background: "#fafafa",
-  padding: `16px`,
+  padding: toPx(spacing.md),
   display: "flex",
   flexDirection: "column",
   gap: "30px",

@@ -19,7 +19,7 @@ const containerStyles: CSSProperties = {
   height: "calc(100vh - var(--app-header-height, 0px))",
   overflowY: "auto",
   background: "#fafafa",
-  padding: `${toPx(spacing.md)} ${toPx(spacing.sm)}`,
+  padding: toPx(spacing.md),
   display: "flex",
   flexDirection: "column",
   gap: toPx(spacing.lg),

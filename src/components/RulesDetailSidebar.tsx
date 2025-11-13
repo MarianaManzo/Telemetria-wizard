@@ -17,7 +17,7 @@ const headerVar = "var(--app-header-height, 64px)";
 const containerStyles: CSSProperties = {
   height: `calc(100vh - ${headerVar})`,
   background: "#fafafa",
-  padding: `${toPx(spacing.md)} ${toPx(spacing.sm)}`,
+  padding: toPx(spacing.md),
   display: "flex",
   flexDirection: "column",
   gap: toPx(spacing.lg),
