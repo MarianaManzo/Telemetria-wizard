@@ -9,7 +9,6 @@ const sidebarItems = [
   { id: "regla", label: "Información general" },
   { id: "notas", label: "Notas" },
   { id: "eventos", label: "Eventos" },
-  { id: "etiquetas", label: "Etiquetas" },
 ];
 
 const headerVar = "var(--app-header-height, 64px)";

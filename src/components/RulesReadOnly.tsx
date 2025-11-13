@@ -1370,22 +1370,6 @@ const advancedConfigItems = [
         </div>
       </SectionCard>
 
-      <SectionCard className={SECTION_DIVIDER_CLASS}
-        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-        title="Etiquetas de la unidad"
-      >
-        <div className="space-y-3">
-          <span className="text-[14px] font-semibold text-foreground block">Etiquetas asignadas a la unidad:</span>
-          {renderTagsList(rule.eventSettings.unitTags || [], "bg-orange-100", "text-orange-700", "hover:bg-orange-200")}
-        </div>
-
-        {rule.eventSettings.unitUntagsEnabled && (
-          <div className="space-y-3 mt-4">
-            <span className="text-[14px] font-semibold text-foreground block">Etiquetas a desasignar:</span>
-            {renderTagsList(rule.eventSettings.unitUntags || [], "bg-red-100", "text-red-700", "hover:bg-red-200")}
-          </div>
-        )}
-      </SectionCard>
     </div>
   )
 
@@ -1417,8 +1401,7 @@ const advancedConfigItems = [
     { id: 'contenido', label: 'Contenido', icon: FileText },
     { id: 'regla', label: 'Información general', icon: Settings },
     { id: 'notas', label: 'Notas', icon: MessageSquare },
-    { id: 'eventos', label: 'Eventos', icon: FileText },
-    { id: 'etiquetas', label: 'Etiquetas', icon: Tag }
+    { id: 'eventos', label: 'Eventos', icon: FileText }
   ]
 
   const formatConditions = () => {
@@ -1632,30 +1615,6 @@ const advancedConfigItems = [
                             {renderConditionGroups(rule)}
                           </SectionCard>
 
-                          <SectionCard className={SECTION_DIVIDER_CLASS}
-                            icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-                            title="Aplica esta regla a"
-                          >
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                              <div>
-                                <span className="mb-2 block text-[14px] font-semibold text-foreground">Unidades</span>
-                                {rule.appliesTo.type === 'units' ? (
-                                  renderUnits(rule.appliesTo.units || [])
-                                ) : (
-                                  <span className="text-[12px] text-muted-foreground">Sin unidades específicas</span>
-                                )}
-                              </div>
-                              <div>
-                                <span className="mb-2 block text-[14px] font-semibold text-foreground">Etiquetas</span>
-                                {rule.appliesTo.type === 'tags' ? (
-                                  renderTagsList(rule.appliesTo.tags || [])
-                                ) : (
-                                  <span className="text-[12px] text-muted-foreground">Sin etiquetas específicas</span>
-                                )}
-                              </div>
-                            </div>
-                          </SectionCard>
-
                           <SectionCard className={`${SECTION_DIVIDER_CLASS} overflow-hidden`}
                             icon={<Settings className="w-4 h-4 text-muted-foreground" />}
                             title="Configuración avanzada"
@@ -1792,39 +1751,7 @@ const advancedConfigItems = [
                             </div>
                           </SectionCard>
 
-      <SectionCard
-        className={SECTION_DIVIDER_CLASS}
-        icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-        title="Asignar etiqueta a la unidad"
-      >
-                            <div className="space-y-3">
-                              <span className="block text-[14px] font-semibold text-foreground">Etiquetas asignadas:</span>
-                              {renderTagsList(
-                                rule.eventSettings.unitTags || [],
-                                "bg-orange-100",
-                                "text-orange-700",
-                                "hover:bg-orange-200"
-                              )}
-                            </div>
-                          </SectionCard>
-
-      {rule.eventSettings.unitUntagsEnabled && (
-        <SectionCard
-          className={SECTION_DIVIDER_CLASS}
-          icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-          title="Desasignar etiqueta a la unidad"
-                            >
-                              <div className="space-y-3">
-                                <span className="block text-[14px] font-semibold text-foreground">Etiquetas a desasignar:</span>
-                                {renderTagsList(
-                                  rule.eventSettings.unitUntags || [],
-                                  "bg-red-100",
-                                  "text-red-700",
-                                  "hover:bg-red-200"
-                                )}
-                              </div>
-                            </SectionCard>
-                          )}
+      
                         </div>
                       </Panel>
 
