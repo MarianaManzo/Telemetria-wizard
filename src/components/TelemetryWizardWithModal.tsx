@@ -3708,7 +3708,7 @@ useEffect(() => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-6 items-center">
               <div className="flex flex-col gap-1">
-                <label className={`text-[14px] font-medium flex items-center gap-1 ${zoneSelectionHasError ? 'text-red-600' : 'text-gray-700'}`}>
+                <label className="text-[14px] font-medium flex items-center gap-1 text-gray-700">
                 <span className="text-red-500">*</span>
                 ¿Qué acción activará el evento?
                 </label>
@@ -3728,7 +3728,7 @@ useEffect(() => {
             </div>
 
             <div className="grid grid-cols-2 gap-6 items-center">
-              <label className={`text-[14px] font-medium ${zoneSelectionHasError ? 'text-red-600' : 'text-gray-700'}`}>Zonas geográficas</label>
+              <label className="text-[14px] font-medium text-gray-700">Zonas geográficas</label>
               <ZonasSelectorInput
                 selectedZones={selectedZonesData}
                 onSelectionChange={setSelectedZonesData}
@@ -3738,7 +3738,7 @@ useEffect(() => {
             </div>
 
             <div className="grid grid-cols-2 gap-6 items-center">
-              <label className={`text-[14px] font-medium ${zoneSelectionHasError ? 'text-red-600' : 'text-gray-700'}`}>Etiquetas de zona</label>
+              <label className="text-[14px] font-medium text-gray-700">Etiquetas de zona</label>
               <EtiquetasSelectorInput
                 selectedTags={selectedZoneTags}
                 onSelectionChange={handleZoneTagsChange}
