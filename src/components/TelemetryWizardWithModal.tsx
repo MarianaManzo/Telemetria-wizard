@@ -3626,7 +3626,7 @@ useEffect(() => {
               <div>
                 <Select value={ruleSchedule} onValueChange={setRuleSchedule}>
                   <SelectTrigger
-                    className={`w-full ${showScheduleDayError ? 'border border-red-400 focus:ring-red-200' : ''}`}
+                    className={`w-full ${showScheduleDayError ? 'focus:ring-red-200' : ''}`}
                     status={showScheduleDayError ? 'error' : undefined}
                   >
                     <SelectValue />
