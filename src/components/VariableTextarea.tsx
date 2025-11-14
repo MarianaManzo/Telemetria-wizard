@@ -12,6 +12,7 @@ interface VariableTextareaProps {
   showVariableButton?: boolean
   showCounter?: boolean
   editorClassName?: string
+  editorStyle?: React.CSSProperties
 }
 
 export interface VariableTextareaHandle {
@@ -179,7 +180,8 @@ const VariableTextareaComponent = (
     name,
     showVariableButton = true,
     showCounter = false,
-    editorClassName = ''
+    editorClassName = '',
+    editorStyle
   } = props
   const editorRef = useRef<HTMLDivElement>(null)
   const [isFocused, setIsFocused] = useState(false)
@@ -398,7 +400,8 @@ const VariableTextareaComponent = (
           className={`min-h-[100px] w-full resize-y p-3 pb-8 border border-gray-200 rounded-lg bg-white text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${editorClassName}`}
           style={{
             whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
+            wordBreak: 'break-word',
+            ...(editorStyle || {})
           }}
           suppressContentEditableWarning={true}
         />

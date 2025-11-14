@@ -9,6 +9,7 @@ interface RecipientsSelectorProps {
   className?: string
   dropdownSide?: 'top' | 'bottom'
   placeholder?: string
+  error?: boolean
 }
 
 const AVAILABLE_EMAILS = [
@@ -29,7 +30,8 @@ const RecipientsSelector = memo(function RecipientsSelector({
   disabled = false,
   className = "",
   dropdownSide = 'bottom',
-  placeholder = "Agregar correos (separa con coma)"
+  placeholder = "Agregar correos (separa con coma)",
+  error = false
 }: RecipientsSelectorProps) {
   const [inputValue, setInputValue] = useState("")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -262,10 +264,10 @@ const RecipientsSelector = memo(function RecipientsSelector({
       <div className={`relative ${className}`}>
         <div
           ref={containerRef}
-          className={`relative min-h-[2.5rem] max-h-[6rem] w-full max-w-full border border-gray-300 rounded-md bg-white cursor-text overflow-y-auto transition-all duration-200 ${
-            hasError
-              ? 'border-red-500 ring-1 ring-red-500 ring-opacity-20'
-              : 'focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500'
+          className={`relative min-h-[2.5rem] max-h-[6rem] w-full max-w-full rounded-md bg-white cursor-text overflow-y-auto transition-all duration-200 ${
+            hasError || error
+              ? 'border border-red-500 ring-1 ring-red-500 ring-opacity-20'
+              : 'border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500'
           } ${isShaking ? 'animate-pulse' : ''}`}
           onClick={() => {
             inputRef.current?.focus()

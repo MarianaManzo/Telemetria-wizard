@@ -1914,6 +1914,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [eventMessage, setEventMessage] = useState(defaultEventMessage)
   const eventMessageEditorRef = useRef<VariableTextareaHandle>(null)
   const emailMessageEditorRef = useRef<VariableTextareaHandle>(null)
+  const [showEventMessageError, setShowEventMessageError] = useState(false)
   const [emailEnabled, setEmailEnabled] = useState(rule?.notifications?.email?.enabled || false)
   const [emailRecipients, setEmailRecipients] = useState(
     rule?.notifications?.email?.recipients || ['usuario@email.com', 'usuario@email.com', 'usuario@email.com']
@@ -1928,11 +1929,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Email personalization state
   const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || defaultEventMessage)
 
+  const [showEmailSubjectError, setShowEmailSubjectError] = useState(false)
+  const [showEmailSendersError, setShowEmailSendersError] = useState(false)
+  const [showEmailRecipientsError, setShowEmailRecipientsError] = useState(false)
+  const [showEmailMessageError, setShowEmailMessageError] = useState(false)
   const [mapPreviewStart, setMapPreviewStart] = useState('Inicio del evento')
   const [mapPreviewEnd, setMapPreviewEnd] = useState('Punto de seguimiento')
   const pushNotificationEnabled = false
   const headerRef = useRef<HTMLDivElement | null>(null)
   const [headerHeight, setHeaderHeight] = useState(0)
+
+  useEffect(() => {
+    if (!emailEnabled) {
+      setShowEmailSubjectError(false)
+      setShowEmailSendersError(false)
+      setShowEmailRecipientsError(false)
+      setShowEmailMessageError(false)
+    }
+  }, [emailEnabled])
 
   useEffect(() => {
     const element = headerRef.current
@@ -1998,15 +2012,21 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       if (eventMessageEditorRef.current) {
         eventMessageEditorRef.current.focus()
         eventMessageEditorRef.current.insertVariable(variableKey)
+        if (showEventMessageError) {
+          setShowEventMessageError(false)
+        }
         return
       }
 
       setEventMessage((prev) => {
         const next = (prev + variableKey).slice(0, EVENT_MESSAGE_LIMIT)
+        if (showEventMessageError && next.trim().length > 0) {
+          setShowEventMessageError(false)
+        }
         return next
       })
     },
-    []
+    [showEventMessageError]
   )
   const handleInsertEmailVariable = useCallback(
     (variableKey: string) => {
@@ -2723,10 +2743,70 @@ const handleToggleZoneValidation = (checked: boolean) => {
     showActionsErrors,
   ])
 
+  const flagNotificationErrors = useCallback(() => {
+    let isValid = true
+    if (!eventMessage.trim()) {
+      setShowEventMessageError(true)
+      isValid = false
+    } else if (showEventMessageError) {
+      setShowEventMessageError(false)
+    }
+
+    if (emailEnabled) {
+      if (!emailSubject.trim()) {
+        setShowEmailSubjectError(true)
+        isValid = false
+      } else if (showEmailSubjectError) {
+        setShowEmailSubjectError(false)
+      }
+
+      if (emailSenders.length === 0) {
+        setShowEmailSendersError(true)
+        isValid = false
+      } else if (showEmailSendersError) {
+        setShowEmailSendersError(false)
+      }
+
+      if (emailRecipients.length === 0) {
+        setShowEmailRecipientsError(true)
+        isValid = false
+      } else if (showEmailRecipientsError) {
+        setShowEmailRecipientsError(false)
+      }
+
+      if (!customEmailMessage.trim()) {
+        setShowEmailMessageError(true)
+        isValid = false
+      } else if (showEmailMessageError) {
+        setShowEmailMessageError(false)
+      }
+    } else {
+      if (showEmailSubjectError) setShowEmailSubjectError(false)
+      if (showEmailSendersError) setShowEmailSendersError(false)
+      if (showEmailRecipientsError) setShowEmailRecipientsError(false)
+      if (showEmailMessageError) setShowEmailMessageError(false)
+    }
+
+    return isValid
+  }, [
+    customEmailMessage,
+    emailEnabled,
+    emailRecipients.length,
+    emailSenders.length,
+    emailSubject,
+    eventMessage,
+    showEmailMessageError,
+    showEmailRecipientsError,
+    showEmailSendersError,
+    showEmailSubjectError,
+    showEventMessageError,
+  ])
+
   const handleSave = async () => {
     const parametersOk = flagParameterErrors()
     const actionsOk = flagActionErrors()
-    if (!parametersOk || !actionsOk) {
+    const notificationsOk = flagNotificationErrors()
+    if (!parametersOk || !actionsOk || !notificationsOk) {
       return
     }
 
@@ -3007,7 +3087,9 @@ useEffect(() => {
   }
   const isFirstTab = currentTabIndex === 0
   const isLastTab = currentTabIndex === tabs.length - 1
-  const isNextButtonBlocked = currentTabIndex === 0 && !canProceedToConfig
+  const isNextButtonBlocked =
+    (currentTabIndex === 0 && !canProceedToConfig) ||
+    (currentTabIndex === 1 && !hasValidActions)
 
   const renderConditionsCard = () => {
     const isZone = resolvedRuleType === 'zone'
@@ -4402,7 +4484,12 @@ useEffect(() => {
                         ref={eventMessageEditorRef}
                         name="event-message"
                         value={eventMessage}
-                        onChange={setEventMessage}
+                        onChange={(text) => {
+                          setEventMessage(text)
+                          if (showEventMessageError && text.trim().length > 0) {
+                            setShowEventMessageError(false)
+                          }
+                        }}
                         showVariableButton={false}
                         placeholder={
                           hasConfiguredSensors
@@ -4411,8 +4498,16 @@ useEffect(() => {
                         }
                         maxLength={EVENT_MESSAGE_LIMIT}
                         showCounter
-                        className="min-h-[120px]"
+                        editorClassName="min-h-[120px]"
+                        editorStyle={
+                          showEventMessageError
+                            ? { borderColor: '#F04438', boxShadow: '0 0 0 1px rgba(240,68,56,0.3)' }
+                            : undefined
+                        }
                       />
+                      {showEventMessageError && (
+                        <p className="text-[12px] text-red-500">Campo obligatorio.</p>
+                      )}
 
                       {/* Vista previa oculta temporalmente */}
                     </div>
@@ -4487,11 +4582,27 @@ useEffect(() => {
                               </label>
                               <Input
                                 value={emailSubject}
-                                onChange={(e) => setEmailSubject(e.target.value)}
+                                onChange={(e) => {
+                                  setEmailSubject(e.target.value)
+                                  if (showEmailSubjectError && e.target.value.trim().length > 0) {
+                                    setShowEmailSubjectError(false)
+                                  }
+                                }}
                                 placeholder="Alerta Velocidad"
                                 className="h-11 rounded-xl border-[#CBD3FF] bg-white text-[14px]"
+                                aria-invalid={showEmailSubjectError}
+                                style={{
+                                  ...(showEmailSubjectError
+                                    ? { border: '1px solid #F04438', boxShadow: 'none' }
+                                    : {}),
+                                }}
                               />
                             </div>
+                            {showEmailSubjectError && (
+                              <p className="text-[12px] text-red-500">
+                                Define el asunto del correo electrónico.
+                              </p>
+                            )}
 
                             <div
                               className="grid gap-4 items-center"
@@ -4503,11 +4614,20 @@ useEffect(() => {
                               </label>
                               <RecipientsSelector
                                 value={emailSenders}
-                                onChange={setEmailSenders}
+                                onChange={(values) => {
+                                  setEmailSenders(values)
+                                  if (showEmailSendersError && values.length > 0) {
+                                    setShowEmailSendersError(false)
+                                  }
+                                }}
                                 className="w-full"
                                 placeholder="noreply@numaris.com"
+                                error={showEmailSendersError}
                               />
                             </div>
+                            {showEmailSendersError && (
+                              <p className="text-[12px] text-red-500">Agrega al menos un remitente.</p>
+                            )}
 
                             <div
                               className="grid gap-4 items-center"
@@ -4519,11 +4639,20 @@ useEffect(() => {
                               </label>
                               <RecipientsSelector
                                 value={emailRecipients}
-                                onChange={setEmailRecipients}
+                                onChange={(values) => {
+                                  setEmailRecipients(values)
+                                  if (showEmailRecipientsError && values.length > 0) {
+                                    setShowEmailRecipientsError(false)
+                                  }
+                                }}
                                 className="w-full"
                                 placeholder="Agregar destinatarios (separa con coma)"
+                                error={showEmailRecipientsError}
                               />
                             </div>
+                            {showEmailRecipientsError && (
+                              <p className="text-[12px] text-red-500">Agrega al menos un destinatario.</p>
+                            )}
 
                             <div className="border-t border-gray-200 pt-4 space-y-2">
                               <div className="flex items-center justify-between">
@@ -4539,13 +4668,26 @@ useEffect(() => {
                               <VariableTextarea
                                 ref={emailMessageEditorRef}
                                 value={customEmailMessage}
-                                onChange={setCustomEmailMessage}
+                                onChange={(value) => {
+                                  setCustomEmailMessage(value)
+                                  if (showEmailMessageError && value.trim().length > 0) {
+                                    setShowEmailMessageError(false)
+                                  }
+                                }}
                                 placeholder="Escribe el mensaje que recibirán tus destinatarios..."
                                 className="w-full"
                                 editorClassName="min-h-[160px] border border-[#CBD3FF] rounded-2xl bg-white px-4 py-3 text-[14px]"
+                                editorStyle={
+                                  showEmailMessageError
+                                    ? { borderColor: '#F04438', boxShadow: '0 0 0 1px rgba(240,68,56,0.3)' }
+                                    : undefined
+                                }
                                 showVariableButton={false}
                                 maxLength={EVENT_MESSAGE_LIMIT}
                               />
+                              {showEmailMessageError && (
+                                <p className="text-[12px] text-red-500">Escribe el cuerpo del correo.</p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -4589,11 +4731,11 @@ useEffect(() => {
               Anterior
             </Button>
             <Button
-              onClick={handleNextStep}
-              disabled={isLastTab}
+              onClick={isLastTab ? handleSave : handleNextStep}
+              disabled={!isLastTab && isNextButtonBlocked}
               className="bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-normal"
             >
-              Siguiente
+              {isLastTab ? 'Guardar' : 'Siguiente'}
             </Button>
           </div>
         </div>
