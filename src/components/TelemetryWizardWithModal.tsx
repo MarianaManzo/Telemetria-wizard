@@ -4356,8 +4356,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                     <div className="border border-gray-200 rounded-lg bg-gray-50 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 whitespace-nowrap">
-                          <Zap className="h-4 w-4 text-blue-600" />
-                          <h4 className="text-[13px] font-medium text-gray-700">Variables sugeridas</h4>
+                          <h4 className="text-[13px] font-medium text-gray-700">Variables configuradas</h4>
                           <span className="text-[11px] text-gray-500">
                             Escribe ‘#’ en el mensaje para abrir el listado de variables disponibles o haz clic para insertarlas.
                           </span>
