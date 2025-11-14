@@ -422,6 +422,40 @@ export const initialRules: Rule[] = [
         templateId: 'template-1'
       }
     },
+    notes: [
+      {
+        id: 'rule-1-note-1',
+        content: 'Se actualizó el protocolo de respuesta para intervenciones en campo.',
+        createdAt: new Date('2024-01-18T09:30:00'),
+        createdBy: 'mariana.manzo@numaris.com',
+        type: 'update'
+      },
+      {
+        id: 'rule-1-note-2',
+        content: 'Recordatorio: validar calibración de sensores de velocidad en unidades nuevas.',
+        createdAt: new Date('2024-01-19T11:45:00'),
+        createdBy: 'juan.perez@numaris.com'
+      }
+    ],
+    attachments: [
+      {
+        id: 'rule-1-attachment-1',
+        name: 'Guía de actuación en exceso de velocidad.pdf',
+        type: 'PDF',
+        size: '1.2 MB',
+        uploadedBy: 'soporte-operaciones@numaris.com',
+        uploadedAt: new Date('2024-01-18T08:15:00'),
+        description: 'Procedimiento de intervención y escalamiento.'
+      },
+      {
+        id: 'rule-1-attachment-2',
+        name: 'Checklist de inspección rápida.xlsx',
+        type: 'XLSX',
+        size: '340 KB',
+        uploadedBy: 'mariana.manzo@numaris.com',
+        uploadedAt: new Date('2024-01-19T10:05:00')
+      }
+    ],
     createdAt: new Date('2024-01-15'),
     updatedAt: new Date('2024-01-20'),
     owner: 'Juan Pérez',

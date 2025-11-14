@@ -63,6 +63,25 @@ export interface EventNote {
   createdBy: string
 }
 
+export interface RuleNote {
+  id: string
+  content: string
+  createdAt: Date
+  createdBy: string
+  type?: 'comment' | 'update'
+}
+
+export interface RuleAttachment {
+  id: string
+  name: string
+  type: string
+  size: string
+  uploadedBy: string
+  uploadedAt: Date
+  description?: string
+  url?: string
+}
+
 export interface Rule {
   id: string
   name: string
@@ -83,6 +102,8 @@ export interface Rule {
   owner: string
   relatedEventsCount: number
   isFavorite: boolean
+  notes?: RuleNote[]
+  attachments?: RuleAttachment[]
 }
 
 export interface RuleCondition {

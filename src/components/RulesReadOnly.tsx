@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
-import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
 import { Textarea } from "./ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "./ui/dropdown-menu"
@@ -32,12 +31,14 @@ import {
   Thermometer,
   Radio,
   AlertOctagon,
-  CheckCircle
+  CheckCircle,
+  Paperclip,
+  Download
 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Row, Col, Collapse, Pagination } from "antd"
 import type { LucideIcon } from "lucide-react"
-import { Rule, Event, RuleConditionGroup, RuleSchedule } from "../types"
+import { Rule, Event, RuleConditionGroup, RuleSchedule, RuleAttachment, RuleNote } from "../types"
 import { userEmailTemplates } from "../constants/emailTemplates"
 import { DeleteRuleModal } from "./DeleteRuleModal"
 import { RenameRuleModal } from "./RenameRuleModal"
@@ -862,8 +863,9 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
     )
   }
   const [configAvanzadaOpen, setConfigAvanzadaOpen] = useState(true)
+  const [notes, setNotes] = useState<RuleNote[]>(rule.notes ?? [])
   const [newNote, setNewNote] = useState("")
-  const [notesSort, setNotesSort] = useState('recent')
+  const [notesSort, setNotesSort] = useState<'recent' | 'oldest'>('recent')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
   const [selectedEventForModal, setSelectedEventForModal] = useState<Event | null>(null)
@@ -920,6 +922,16 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
       ? []
       : eventsToDisplay.slice((eventsPage - 1) * EVENTS_PAGE_SIZE, eventsPage * EVENTS_PAGE_SIZE)
   const requireCloseNote = rule.closePolicy.type === 'manual'
+  const sortedNotes = useMemo(() => {
+    const notesCopy = [...notes]
+    return notesCopy.sort((a, b) => {
+      if (notesSort === 'recent') {
+        return b.createdAt.getTime() - a.createdAt.getTime()
+      }
+      return a.createdAt.getTime() - b.createdAt.getTime()
+    })
+  }, [notes, notesSort])
+  const attachments = rule.attachments ?? []
 
   const detailEventColumns: RuleDetailEventsColumnDefinition[] = [
     {
@@ -1136,6 +1148,34 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
     })
   }
 
+  const formatNoteTimestamp = (dateValue: Date | string) => {
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
+    return date.toLocaleString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const formatAttachmentDate = (dateValue: Date | string) => {
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue)
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    })
+  }
+
+  const getInitials = (value: string) =>
+    value
+      ?.split(/[\s@.]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('') || 'NA'
+
   const handleOpenChangeStatus = (eventData: Event, mode: 'close' | 'reopen' = 'close') => {
     setSelectedEventForModal(eventData)
     setStatusModalMode(mode)
@@ -1150,6 +1190,23 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
   const handleStatusSave = (newStatus: 'open' | 'closed', note?: string) => {
     console.log('Change event status request:', selectedEventForModal?.id, newStatus, note)
     handleCloseChangeStatusModal()
+  }
+
+  const handleAddNote = () => {
+    const content = newNote.trim()
+    if (!content) {
+      return
+    }
+    const newEntry: RuleNote = {
+      id: `rule-note-${Date.now()}`,
+      content,
+      createdAt: new Date(),
+      createdBy: rule.owner,
+      type: 'comment'
+    }
+    setNotes((prev) => [newEntry, ...prev])
+    setNewNote('')
+    setNotesSort('recent')
   }
 
   const handleSectionChange = (key: string | string[]) => {
@@ -1174,6 +1231,12 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
   // Debug effect to track rule changes
   useEffect(() => {
     console.log('RulesReadOnly received rule update:', rule.id, rule.updatedAt, rule)
+  }, [rule])
+
+  useEffect(() => {
+    setNotes(rule.notes ?? [])
+    setNewNote('')
+    setNotesSort('recent')
   }, [rule])
 
   useEffect(() => {
@@ -1401,6 +1464,7 @@ const advancedConfigItems = [
     { id: 'contenido', label: 'Contenido', icon: FileText },
     { id: 'regla', label: 'Información general', icon: Settings },
     { id: 'notas', label: 'Notas', icon: MessageSquare },
+    { id: 'adjuntos', label: 'Archivos adjuntos', icon: Paperclip },
     { id: 'eventos', label: 'Eventos', icon: FileText }
   ]
 
@@ -1762,6 +1826,115 @@ const advancedConfigItems = [
                         <div className="space-y-6 py-6 px-0">{renderAccionesTab()}</div>
                       </Panel>
                     </Collapse>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6 mt-6">
+                  <div
+                    ref={notasHeaderRef}
+                    className="rounded-[12px] border border-[#E4E7EC] bg-white"
+                    style={{ scrollMarginTop: sectionStickyTop + 16 }}
+                  >
+                    <div className="px-6 py-6">
+                      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <h3 className="text-[18px] font-semibold text-[#1F1F1F] m-0">Notas</h3>
+                        <Select
+                          value={notesSort}
+                          onValueChange={(value) => setNotesSort(value as 'recent' | 'oldest')}
+                        >
+                          <SelectTrigger className="w-56 h-11 rounded-full border-[#D0D5DD] bg-white text-[14px] text-[#1D2939] shadow-[0_1px_2px_rgba(16,24,40,0.05)]">
+                            <SelectValue placeholder="Recientes al principio" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="recent">Recientes al principio</SelectItem>
+                            <SelectItem value="oldest">Más antiguas al principio</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Textarea
+                        placeholder="Agregar nota..."
+                        className="mb-4 rounded-[16px] border border-[#D0D5DD] bg-white text-[14px] text-[#1D2939] placeholder:text-[#98A2B3] focus:border-[#1677FF] focus:ring-[#1677FF]/30 min-h-[96px]"
+                        value={newNote}
+                        onChange={(event) => setNewNote(event.target.value)}
+                      />
+
+                      {sortedNotes.length > 0 && (
+                        <div className="space-y-4">
+                          {sortedNotes.map((note) => (
+                            <div key={note.id} className="flex flex-col gap-1 rounded-2xl border border-[#EEF0F4] px-4 py-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-[14px] font-semibold text-[#101828]">
+                                  {note.createdBy || 'Usuario'}
+                                </span>
+                              <span className="text-[12px] text-[#98A2B3]">
+                                {formatNoteTimestamp(note.createdAt)}
+                              </span>
+                            </div>
+                            <p className="text-[14px] text-[#475467] whitespace-pre-line">
+                              {note.content}
+                            </p>
+                              {note.type === 'update' && (
+                                <span className="text-[12px] font-medium text-[#1677FF]">
+                                  Actualización
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    ref={adjuntosHeaderRef}
+                    className="rounded-[12px] border border-[#E4E7EC] bg-white"
+                    style={{ scrollMarginTop: sectionStickyTop + 16 }}
+                  >
+                    <div className="px-6 py-6 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-[18px] font-semibold text-[#1F1F1F] m-0">Archivos adjuntos</h3>
+                          <span className="text-[15px] text-[#98A2B3]">
+                            {attachments.length === 0 ? 'No tienes archivos adjuntos' : `${attachments.length} archivo${attachments.length === 1 ? '' : 's'}`}
+                          </span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="rounded-full bg-white flex items-center gap-3 h-10 px-5"
+                          style={{ borderColor: '#1677FF', color: '#1677FF' }}
+                        >
+                          <span className="text-[20px] leading-none text-[#1677FF]">+</span>
+                          <span className="text-[15px] font-medium text-[#1677FF]">Adjuntar</span>
+                        </Button>
+                      </div>
+
+                      {attachments.length > 0 && (
+                        <div className="space-y-3">
+                          {attachments.map((file) => (
+                            <div
+                              key={file.id}
+                              className="flex flex-col gap-3 rounded-2xl border border-[#EEF0F4] px-4 py-3 md:flex-row md:items-center md:justify-between"
+                            >
+                              <div className="min-w-0">
+                                <p className="truncate text-[14px] font-semibold text-[#101828]">
+                                  {file.name}
+                                </p>
+                                <p className="text-[13px] text-[#475467]">
+                                  {file.size}{file.description ? ` · ${file.description}` : ''}
+                                </p>
+                                <p className="text-[12px] text-[#98A2B3]">
+                                  Cargado por {file.uploadedBy} · {formatAttachmentDate(file.uploadedAt)}
+                                </p>
+                              </div>
+                              <Button variant="secondary" className="rounded-full h-9 px-4 bg-[#F5F8FF] text-[#1677FF] hover:bg-[#E4ECFF]">
+                                Descargar
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
