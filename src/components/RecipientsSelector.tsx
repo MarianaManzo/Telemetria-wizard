@@ -394,6 +394,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
           </div>
         </div>
 
+        <div className="relative">
         {isDropdownOpen && (
           <div
             ref={dropdownRef}
@@ -467,6 +468,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
             Escribe correos (deben terminar en .com o .mx) y sepáralos con comas, o usa el selector para agregar rápidamente.
           </div>
         )}
+        </div>
       </div>
     </TooltipProvider>
   )
