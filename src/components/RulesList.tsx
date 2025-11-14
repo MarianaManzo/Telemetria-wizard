@@ -450,7 +450,7 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
         </div>
       ) : (
         <div className="bg-white rounded-lg border overflow-x-auto">
-          <table className="w-full table-fixed min-w-[1200px]">
+          <table className="w-full min-w-[1200px]" style={{ tableLayout: 'auto' }}>
             <thead className="bg-gray-50">
               <tr>
                 {orderedColumns.map((column) => (
