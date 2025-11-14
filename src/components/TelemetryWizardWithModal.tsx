@@ -1807,6 +1807,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [selectedTags, setSelectedTags] = useState<TagData[]>([])
   const [showAppliesErrors, setShowAppliesErrors] = useState(false)
   const [showZoneSelectionErrors, setShowZoneSelectionErrors] = useState(false)
+  const [showScheduleDayError, setShowScheduleDayError] = useState(false)
   const [showDurationError, setShowDurationError] = useState(false)
   const [showActionsErrors, setShowActionsErrors] = useState(false)
 
@@ -1945,6 +1946,9 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const tabsStickyTop = headerHeight > 0 ? headerHeight : 88
 
   const zoneSelectionEmpty = selectedZonesData.length === 0 && selectedZoneTags.length === 0
+  const scheduleHasSelectedDay = useMemo(() => {
+    return Object.values(scheduleConfig).some((day) => day.enabled)
+  }, [scheduleConfig])
 
   const zoneContextValue = useMemo(() => {
     if (resolvedRuleType === 'zone') {
@@ -2993,6 +2997,8 @@ const handleToggleZoneValidation = (checked: boolean) => {
 
   const hasAtLeastOneGroup = conditionGroups.length > 0
   const zoneSelectionRequired = resolvedRuleType === 'zone'
+  const scheduleRequiresDays = ruleSchedule === 'personalizado'
+  const scheduleValid = !scheduleRequiresDays || scheduleHasSelectedDay
   const isZoneValidationRequired = !(resolvedRuleType === 'zone' && !validateZoneEntry)
   const effectiveHasAtLeastOneGroup = isZoneValidationRequired ? hasAtLeastOneGroup : true
   const effectiveHasValidCondition = isZoneValidationRequired ? hasValidCondition : true
@@ -3006,7 +3012,8 @@ const handleToggleZoneValidation = (checked: boolean) => {
     effectiveHasValidCondition &&
     !needsCustomTargets &&
     !needsDurationValue &&
-    (!zoneSelectionRequired || !zoneSelectionEmpty)
+    (!zoneSelectionRequired || !zoneSelectionEmpty) &&
+    scheduleValid
   const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
   const shortNameHasError = showActionsErrors && trimmedShortName.length < 3
 
@@ -3022,11 +3029,20 @@ useEffect(() => {
   }
 }, [zoneSelectionEmpty, showZoneSelectionErrors])
 
+useEffect(() => {
+  if (scheduleValid) {
+    setShowScheduleDayError(false)
+  }
+}, [scheduleValid])
+
   const handleNextStep = () => {
     if (currentTabIndex === 0) {
       flagParameterErrors({ requireZoneScope: false })
       if (zoneSelectionRequired && zoneSelectionEmpty) {
         setShowZoneSelectionErrors(true)
+      }
+      if (scheduleRequiresDays && !scheduleHasSelectedDay) {
+        setShowScheduleDayError(true)
       }
     }
     if (currentTabIndex === 0 && !canProceedToConfig) {
@@ -3055,6 +3071,9 @@ useEffect(() => {
       flagParameterErrors({ requireZoneScope: false })
       if (zoneSelectionRequired && zoneSelectionEmpty) {
         setShowZoneSelectionErrors(true)
+      }
+      if (scheduleRequiresDays && !scheduleHasSelectedDay) {
+        setShowScheduleDayError(true)
       }
     }
     if (currentTabIndex === 0 && nextTab !== 'parameters' && !canProceedToConfig) {
@@ -3593,15 +3612,22 @@ useEffect(() => {
             )}
 
             <div className="grid grid-cols-2 gap-8 items-center">
-                  <div>
-                    <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
-                      <span className="text-red-500">*</span>
-                      ¿Cuándo estará activa esta regla?
-                    </label>
-                  </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
+                  <span className="text-red-500">*</span>
+                  ¿Cuándo estará activa esta regla?
+                </label>
+                {scheduleRequiresDays && (
+                  <span className={`text-[12px] ${showScheduleDayError ? 'text-red-500' : 'text-gray-500'}`}>
+                    Selecciona al menos un día.
+                  </span>
+                )}
+              </div>
               <div>
                 <Select value={ruleSchedule} onValueChange={setRuleSchedule}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className={`w-full ${showScheduleDayError ? 'border border-red-400 focus:ring-red-200' : ''}`}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
