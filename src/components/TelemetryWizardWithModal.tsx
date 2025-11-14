@@ -4623,6 +4623,7 @@ useEffect(() => {
                                 className="w-full"
                                 placeholder="noreply@numaris.com"
                                 error={showEmailSendersError}
+                                dropdownSide="top"
                               />
                             </div>
                             {showEmailSendersError && (
@@ -4648,6 +4649,7 @@ useEffect(() => {
                                 className="w-full"
                                 placeholder="Agregar destinatarios (separa con coma)"
                                 error={showEmailRecipientsError}
+                                dropdownSide="top"
                               />
                             </div>
                             {showEmailRecipientsError && (
