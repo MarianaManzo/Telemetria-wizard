@@ -1896,9 +1896,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   // Notifications tab state
   const defaultEventMessage = rule?.notifications?.eventMessage || 'La unidad {unidad} ha registrado una alerta en {ubicacion_link} a las {fecha_hora}.'
-  const [eventMessage, setEventMessage] = useState(defaultEventMessage)
   const EVENT_MESSAGE_LIMIT = 2500
-  const [eventMessageCharCount, setEventMessageCharCount] = useState(defaultEventMessage.length)
+  const [eventMessage, setEventMessage] = useState(defaultEventMessage)
   const eventMessageEditorRef = useRef<VariableTextareaHandle>(null)
   const [emailEnabled, setEmailEnabled] = useState(rule?.notifications?.email?.enabled || false)
   const [emailRecipients, setEmailRecipients] = useState(
@@ -4403,21 +4402,15 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[14px] font-medium text-gray-700">
-                          <span className="text-red-500">*</span> Mensaje del evento
-                        </label>
-                        <span className={`text-[12px] ${eventMessageCharCount > EVENT_MESSAGE_LIMIT ? 'text-red-500' : 'text-gray-500'}`}>
-                          {eventMessageCharCount}/{EVENT_MESSAGE_LIMIT}
-                        </span>
-                      </div>
+                      <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
+                        <span className="text-red-500">*</span> Mensaje del evento
+                      </label>
                       <VariableTextarea
                         ref={eventMessageEditorRef}
                         name="event-message"
                         value={eventMessage}
                         onChange={(text) => {
                           setEventMessage(text)
-                          setEventMessageCharCount(text.length)
                           setEmailDescription(text)
                           setDescriptionCharCount(text.length)
                         }}
@@ -4428,6 +4421,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             : 'Escribe el mensaje del evento (máx. 2500 caracteres). Puedes insertar variables desde "Más variables".'
                         }
                         maxLength={EVENT_MESSAGE_LIMIT}
+                        showCounter
                         className="min-h-[120px]"
                       />
 

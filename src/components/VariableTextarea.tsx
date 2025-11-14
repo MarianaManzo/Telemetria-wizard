@@ -10,6 +10,7 @@ interface VariableTextareaProps {
   maxLength?: number
   name?: string
   showVariableButton?: boolean
+  showCounter?: boolean
 }
 
 export interface VariableTextareaHandle {
@@ -176,6 +177,7 @@ const VariableTextareaComponent = (
     maxLength = 120,
     name,
     showVariableButton = true,
+    showCounter = false
   } = props
   const editorRef = useRef<HTMLDivElement>(null)
   const [isFocused, setIsFocused] = useState(false)
@@ -366,6 +368,8 @@ const VariableTextareaComponent = (
     [focusEditor, insertVariableAtCursor]
   )
 
+  const characterCount = value.length
+
   return (
     <div className={className}>
       {/* Botón de variables arriba del textarea a la derecha - solo si showVariableButton es true */}
@@ -410,6 +414,11 @@ const VariableTextareaComponent = (
           name={name}
           value={value}
         />
+        {showCounter && (
+          <div className="absolute bottom-2 right-3 text-[12px] text-gray-400">
+            {characterCount}/{maxLength}
+          </div>
+        )}
       </div>
     </div>
   )
