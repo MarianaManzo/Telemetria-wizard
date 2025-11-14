@@ -20,8 +20,9 @@ import { Rule, Event, AppView, Tag } from "./types"
 import { initialRules, initialEvents, initialTags } from "./constants/data"
 
 const { Sider, Content } = Layout;
+const PRIMARY_SIDEBAR_WIDTH = 200
+const EVENT_SIDEBAR_WIDTH = 240
 
-const SIDEBAR_WIDTH = 240;
 
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>('rules')
@@ -533,7 +534,7 @@ export default function App() {
         <Layout hasSider style={{ flex: 1, minHeight: 0, background: "var(--color-bg-base)" }}>
           {primarySidebar && (
             <Sider
-              width={SIDEBAR_WIDTH}
+              width={PRIMARY_SIDEBAR_WIDTH}
               theme="light"
               style={{
                 background: "#fafafa",
@@ -548,7 +549,7 @@ export default function App() {
           )}
           {eventSidebar && (
             <Sider
-              width={SIDEBAR_WIDTH}
+              width={EVENT_SIDEBAR_WIDTH}
               theme="light"
               style={{
                 background: "#fafafa",
