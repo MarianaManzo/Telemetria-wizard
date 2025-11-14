@@ -376,7 +376,6 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
             className="bg-blue-600 hover:bg-blue-700 text-white"
             size="sm"
           >
-            <Plus className="w-4 h-4 mr-2" />
             Crear regla
           </Button>
         </div>
