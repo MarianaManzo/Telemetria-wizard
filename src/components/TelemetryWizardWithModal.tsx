@@ -4430,32 +4430,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         className="min-h-[120px]"
                       />
 
-                      {eventMessage && (
-                        <div className="bg-gray-50 border border-gray-200 rounded p-3">
-                          <div className="text-[12px] font-medium text-gray-600 mb-1">Vista previa</div>
-                          <div className="text-[13px] text-gray-700 leading-relaxed">
-                            {(() => {
-                              const parts = eventMessage.split(VARIABLE_TOKEN_REGEX)
-                              const variables = eventMessage.match(VARIABLE_TOKEN_REGEX) || []
-                              const fragments: React.ReactNode[] = []
-                              for (let i = 0; i < parts.length; i++) {
-                                if (parts[i]) {
-                                  fragments.push(<span key={`text-${i}`}>{parts[i]}</span>)
-                                }
-                                if (variables[i]) {
-                                  const exampleValue = resolveVariablePreview(variables[i])
-                                  fragments.push(
-                                    <span key={`var-${i}`} className="text-purple-600 font-medium">
-                                      {exampleValue}
-                                    </span>
-                                  )
-                                }
-                              }
-                              return fragments
-                            })()}
-                          </div>
-                        </div>
-                      )}
+                      {/* Vista previa oculta temporalmente */}
                     </div>
                   </SectionCard>
 
