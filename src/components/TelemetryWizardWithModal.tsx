@@ -1923,11 +1923,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     rule?.notifications?.email?.sender || DEFAULT_EMAIL_SENDERS
   )
   const [emailSubject, setEmailSubject] = useState(
-    rule?.notifications?.email?.subject || '[ALERTA] {unidad} - {regla_nombre}'
+    rule?.notifications?.email?.subject || ''
   )
   
   // Email personalization state
-  const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || defaultEventMessage)
+  const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || '')
 
   const [showEmailSubjectError, setShowEmailSubjectError] = useState(false)
   const [showEmailSendersError, setShowEmailSendersError] = useState(false)
@@ -2181,9 +2181,9 @@ const handleToggleZoneValidation = (checked: boolean) => {
         if (rule.notifications.email) {
           setEmailEnabled(rule.notifications.email.enabled || false)
           setEmailSubject(rule.notifications.email.subject || '')
-          setEmailRecipients(rule.notifications.email.recipients || [])
-          const emailBody = rule.notifications.email.body || rule.notifications.eventMessage || ''
-          setCustomEmailMessage(emailBody)
+        setEmailRecipients(rule.notifications.email.recipients || [])
+        const emailBody = rule.notifications.email.body || ''
+        setCustomEmailMessage(emailBody)
           setEmailSenders(rule.notifications.email.sender || DEFAULT_EMAIL_SENDERS)
         }
         
