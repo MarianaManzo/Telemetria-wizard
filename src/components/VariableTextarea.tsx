@@ -18,24 +18,41 @@ export interface VariableTextareaHandle {
   focus: () => void
 }
 
+export type VariableCategory = 'configuration' | 'event' | 'unit' | 'device'
+
 export interface MessageVariableDescriptor {
   key: string
   label: string
   description: string
+  category?: VariableCategory
 }
+
+const VARIABLE_CATEGORY_LABELS: Record<VariableCategory, string> = {
+  configuration: 'Variables usadas en la configuración',
+  event: 'Variables del evento',
+  unit: 'Variables de unidad',
+  device: 'Variables de dispositivo'
+}
+
+const VARIABLE_CATEGORY_ORDER: VariableCategory[] = [
+  'configuration',
+  'event',
+  'unit',
+  'device'
+]
 
 // Lista de variables disponibles
 const AVAILABLE_VARIABLES: MessageVariableDescriptor[] = [
-  { key: '{unidad}', label: 'Nombre de la unidad', description: 'Nombre del vehículo o dispositivo' },
-  { key: '{velocidad}', label: 'Velocidad actual', description: 'Velocidad registrada en el momento del evento' },
-  { key: '{ubicacion_link}', label: 'Ubicación con enlace', description: 'Dirección con enlace a Google Maps' },
-  { key: '{fecha_hora}', label: 'Fecha y hora', description: 'Timestamp del evento' },
-  { key: '{conductor}', label: 'Conductor', description: 'Nombre del conductor asignado' },
-  { key: '{temperatura}', label: 'Temperatura', description: 'Temperatura del motor o ambiente' },
-  { key: '{combustible}', label: 'Nivel de combustible', description: 'Porcentaje de combustible restante' },
-  { key: '{rpm}', label: 'RPM del motor', description: 'Revoluciones por minuto del motor' },
-  { key: '{zona}', label: 'Zona geográfica', description: 'Nombre de la zona donde ocurrió el evento' },
-  { key: '{voltaje}', label: 'Voltaje de batería', description: 'Voltaje actual de la batería del dispositivo' }
+  { key: '{unidad}', label: 'Nombre de la unidad', description: 'Nombre del vehículo o dispositivo', category: 'unit' },
+  { key: '{velocidad}', label: 'Velocidad actual', description: 'Velocidad registrada en el momento del evento', category: 'configuration' },
+  { key: '{ubicacion_link}', label: 'Ubicación con enlace', description: 'Dirección con enlace a Google Maps', category: 'event' },
+  { key: '{fecha_hora}', label: 'Fecha y hora', description: 'Timestamp del evento', category: 'event' },
+  { key: '{conductor}', label: 'Conductor', description: 'Nombre del conductor asignado', category: 'unit' },
+  { key: '{temperatura}', label: 'Temperatura', description: 'Temperatura del motor o ambiente', category: 'configuration' },
+  { key: '{combustible}', label: 'Nivel de combustible', description: 'Porcentaje de combustible restante', category: 'configuration' },
+  { key: '{rpm}', label: 'RPM del motor', description: 'Revoluciones por minuto del motor', category: 'configuration' },
+  { key: '{zona}', label: 'Zona geográfica', description: 'Nombre de la zona donde ocurrió el evento', category: 'event' },
+  { key: '{voltaje}', label: 'Voltaje de batería', description: 'Voltaje actual de la batería del dispositivo', category: 'configuration' }
 ]
 
 interface VariableButtonProps {
@@ -75,31 +92,79 @@ export function VariableButton({
         align="end"
       >
         <div className="p-3 border-b border-gray-100 bg-white">
-          <div className="text-[12px] font-medium text-gray-700">Variables disponibles</div>
+          <div className="text-[12px] font-medium text-gray-900">Variables disponibles</div>
           <div className="text-[11px] text-gray-500">Click para insertar en el cursor</div>
         </div>
         <div className="max-h-64 overflow-y-auto bg-white">
-          {variables.map((variable) => (
-            <button
-              key={variable.key}
-              type="button"
-              className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-              draggable
-              onDragStart={(event) => {
-                event.dataTransfer.setData('application/x-variable-key', variable.key)
-                event.dataTransfer.setData('text/plain', variable.key)
-                event.dataTransfer.effectAllowed = 'copy'
-              }}
-              onClick={() => onInsertVariable(variable.key)}
-            >
-              <div className="text-[13px] font-medium text-blue-600">
-                {variable.key}
-              </div>
-              <div className="text-[12px] text-gray-600 mt-1">
-                {variable.description}
-              </div>
-            </button>
-          ))}
+          {(() => {
+            const hasCategories = variables.some((variable) => !!variable.category)
+            const renderVariableRow = (variable: MessageVariableDescriptor) => (
+              <button
+                key={variable.key}
+                type="button"
+                className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData('application/x-variable-key', variable.key)
+                  event.dataTransfer.setData('text/plain', variable.key)
+                  event.dataTransfer.effectAllowed = 'copy'
+                }}
+                onClick={() => onInsertVariable(variable.key)}
+              >
+                <div className="text-[13px] font-medium text-blue-600">
+                  {variable.key}
+                </div>
+                <div className="text-[12px] text-gray-600 mt-1">
+                  {variable.description}
+                </div>
+              </button>
+            )
+
+            if (!hasCategories) {
+              return variables.map(renderVariableRow)
+            }
+
+            return VARIABLE_CATEGORY_ORDER.map((category) => {
+              const categoryVariables = variables
+                .filter((variable) => variable.category === category)
+              if (categoryVariables.length === 0) {
+                return null
+              }
+              const sortedVariables = [...categoryVariables].sort((a, b) =>
+                a.label.localeCompare(b.label, 'es', { sensitivity: 'accent' })
+              )
+              return (
+                <details
+                  key={category}
+                  className="border-b border-gray-100 last:border-b-0 group"
+                  open
+                >
+                  <summary
+                    className="flex items-center justify-between px-3 py-2 text-[12px] font-medium cursor-pointer select-none text-gray-500 bg-gray-50"
+                  >
+                    <span className="text-gray-500 font-medium">{VARIABLE_CATEGORY_LABELS[category]}</span>
+                    <svg
+                      className="w-[14px] h-[14px] text-gray-500 transition-transform duration-200 group-open:rotate-180 shrink-0"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M4 6L8 10L12 6"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </summary>
+                  <div>
+                    {sortedVariables.map(renderVariableRow)}
+                  </div>
+                </details>
+              )
+            })
+          })()}
         </div>
       </PopoverContent>
     </Popover>
