@@ -2122,11 +2122,16 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   }
 
   const updateDaySchedule = (day: string, field: string, value: any) => {
+    const normalizedValue =
+      field === 'enabled'
+        ? value === true
+        : value
+
     setScheduleConfig(prev => ({
       ...prev,
       [day]: {
         ...prev[day],
-        [field]: value
+        [field]: normalizedValue
       }
     }))
   }
