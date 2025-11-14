@@ -1860,30 +1860,30 @@ const advancedConfigItems = [
                         onChange={(event) => setNewNote(event.target.value)}
                       />
 
-                      {sortedNotes.length > 0 && (
-                        <div className="space-y-4">
-                          {sortedNotes.map((note) => (
+                      <div className="space-y-4">
+                        {sortedNotes.length === 0 ? null : (
+                          sortedNotes.map((note) => (
                             <div key={note.id} className="flex flex-col gap-1 rounded-2xl border border-[#EEF0F4] px-4 py-3">
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <span className="text-[14px] font-semibold text-[#101828]">
                                   {note.createdBy || 'Usuario'}
                                 </span>
-                              <span className="text-[12px] text-[#98A2B3]">
-                                {formatNoteTimestamp(note.createdAt)}
-                              </span>
-                            </div>
-                            <p className="text-[14px] text-[#475467] whitespace-pre-line">
-                              {note.content}
-                            </p>
+                                <span className="text-[12px] text-[#98A2B3]">
+                                  {formatNoteTimestamp(note.createdAt)}
+                                </span>
+                              </div>
+                              <p className="text-[14px] text-[#475467] whitespace-pre-line">
+                                {note.content}
+                              </p>
                               {note.type === 'update' && (
                                 <span className="text-[12px] font-medium text-[#1677FF]">
                                   Actualización
                                 </span>
                               )}
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          ))
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1910,7 +1910,7 @@ const advancedConfigItems = [
                         </Button>
                       </div>
 
-                      {attachments.length > 0 && (
+                      {attachments.length === 0 ? null : (
                         <div className="space-y-3">
                           {attachments.map((file) => (
                             <div
