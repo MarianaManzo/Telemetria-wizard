@@ -842,31 +842,6 @@ const resolveVariablePreview = (key: string): string => {
   return typeof preview === 'function' ? preview() : preview
 }
 
-const SuggestedVariableDragIcon = () => (
-  <svg
-    width="12"
-    height="16"
-    viewBox="0 0 12 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="shrink-0"
-  >
-    {[0, 1, 2, 3].map((row) => (
-      <g key={row} transform={`translate(0, ${row * 4})`}>
-        {[2, 8].map((cx) => (
-          <circle
-            key={cx}
-            cx={cx}
-            cy={2}
-            r={1.4}
-            fill="#BEA5F5"
-          />
-        ))}
-      </g>
-    ))}
-  </svg>
-)
-
 // Severity configuration with colors
 const severityConfig = {
   high: {
@@ -4384,7 +4359,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           <Zap className="h-4 w-4 text-blue-600" />
                           <h4 className="text-[13px] font-medium text-gray-700">Variables sugeridas</h4>
                           <span className="text-[11px] text-gray-500">
-                            Arrastra o haz clic para insertar la variable en tu mensaje.
+                            Haz clic para insertar la variable en tu mensaje.
                           </span>
                         </div>
                         <VariableButton
@@ -4404,7 +4379,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                             <button
                               key={variable.key}
                               type="button"
-                              className="inline-flex items-center gap-2 cursor-grab active:cursor-grabbing transition-colors"
+                              className="inline-flex items-center transition-colors"
                               style={{
                                 backgroundColor: '#F9F0FF',
                                 borderColor: '#BEA5F5',
@@ -4414,17 +4389,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                                 borderStyle: 'solid',
                                 padding: '4px 12px',
                               }}
-                              draggable
-                              onDragStart={(event) => {
-                                event.dataTransfer.setData('application/x-variable-key', variable.key)
-                                event.dataTransfer.setData('text/plain', variable.key)
-                                event.dataTransfer.effectAllowed = 'copy'
-                              }}
                               onClick={() => handleInsertEventVariable(variable.key)}
                             >
-                              <span className="flex items-center justify-center">
-                                <SuggestedVariableDragIcon />
-                              </span>
                               <span className="text-[13px] leading-none" style={{ color: '#7839EE' }}>
                                 {variable.key}
                               </span>
