@@ -3712,9 +3712,9 @@ useEffect(() => {
                 <span className="text-red-500">*</span>
                 ¿Qué acción activará el evento?
                 </label>
-                {zoneSelectionHasError && (
-                  <span className="text-[12px] text-red-500">Selecciona al menos una zona o etiqueta.</span>
-                )}
+                <span className={`text-[12px] ${zoneSelectionHasError ? 'text-red-500' : 'text-gray-500'}`}>
+                  Selecciona al menos una zona o etiqueta.
+                </span>
               </div>
               <Select value={zoneEventAction} onValueChange={(value: 'entrada' | 'salida') => setZoneEventAction(value)}>
                 <SelectTrigger className="w-full">
