@@ -3631,7 +3631,7 @@ useEffect(() => {
                         <div className="flex items-center gap-4 pl-8 pr-12">
                           <Checkbox
                             checked={config.enabled}
-                            onCheckedChange={(checked) => updateDaySchedule(day, 'enabled', checked)}
+                            onChange={(event) => updateDaySchedule(day, 'enabled', event.target.checked)}
                           />
                           <label className="text-[14px] text-gray-700 font-medium">
                             {dayLabels[day]}
