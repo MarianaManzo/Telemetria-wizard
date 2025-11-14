@@ -2692,7 +2692,7 @@ const handleToggleZoneValidation = (checked: boolean) => {
     if (zoneScopeActive && zoneSelectionEmpty) {
       setShowZoneScopeErrors(true)
     }
-    if (requireZoneSelection && zoneSelectionEmpty && !showZoneSelectionErrors) {
+    if (requireZoneSelection && zoneSelectionEmpty) {
       setShowZoneSelectionErrors(true)
     }
 
@@ -2724,7 +2724,6 @@ const handleToggleZoneValidation = (checked: boolean) => {
     resolvedRuleType,
     geographicScope,
     zoneSelectionEmpty,
-    showZoneSelectionErrors,
     validateZoneEntry,
   ])
 
