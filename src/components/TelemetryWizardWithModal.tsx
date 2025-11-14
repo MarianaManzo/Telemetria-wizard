@@ -3704,7 +3704,7 @@ useEffect(() => {
   const renderZoneCard = () => {
     if (resolvedRuleType !== 'zone') return null
 
-    const zoneSelectionHasError = validateZoneEntry && showZoneSelectionErrors && zoneSelectionEmpty
+    const zoneSelectionHasError = showZoneSelectionErrors && zoneSelectionEmpty
 
     return (
       <div className="bg-white border border-gray-200 rounded-lg">
