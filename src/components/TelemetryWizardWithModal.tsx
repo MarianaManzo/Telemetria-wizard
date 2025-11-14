@@ -2987,6 +2987,7 @@ const handleToggleZoneValidation = (checked: boolean) => {
   )
 
   const hasAtLeastOneGroup = conditionGroups.length > 0
+  const zoneSelectionRequired = resolvedRuleType === 'zone'
   const isZoneValidationRequired = !(resolvedRuleType === 'zone' && !validateZoneEntry)
   const effectiveHasAtLeastOneGroup = isZoneValidationRequired ? hasAtLeastOneGroup : true
   const effectiveHasValidCondition = isZoneValidationRequired ? hasValidCondition : true
@@ -2995,7 +2996,12 @@ const handleToggleZoneValidation = (checked: boolean) => {
   const shouldRestrictByZone = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
   const showCustomTargetsError = appliesTo === 'custom' && showAppliesErrors && needsCustomTargets
   const showZoneScopeError = shouldRestrictByZone && showZoneScopeErrors && zoneSelectionEmpty
-  const canProceedToConfig = effectiveHasAtLeastOneGroup && effectiveHasValidCondition && !needsCustomTargets && !needsDurationValue
+  const canProceedToConfig =
+    effectiveHasAtLeastOneGroup &&
+    effectiveHasValidCondition &&
+    !needsCustomTargets &&
+    !needsDurationValue &&
+    (!zoneSelectionRequired || !zoneSelectionEmpty)
   const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
   const shortNameHasError = showActionsErrors && trimmedShortName.length < 3
 
@@ -3020,6 +3026,9 @@ useEffect(() => {
   const handleNextStep = () => {
     if (currentTabIndex === 0) {
       flagParameterErrors({ requireZoneScope: false })
+      if (zoneSelectionRequired && zoneSelectionEmpty) {
+        setShowZoneSelectionErrors(true)
+      }
     }
     if (currentTabIndex === 0 && !canProceedToConfig) {
       return
@@ -3045,6 +3054,9 @@ useEffect(() => {
     if (nextTab === activeTab) return
     if (currentTabIndex === 0) {
       flagParameterErrors({ requireZoneScope: false })
+      if (zoneSelectionRequired && zoneSelectionEmpty) {
+        setShowZoneSelectionErrors(true)
+      }
     }
     if (currentTabIndex === 0 && nextTab !== 'parameters' && !canProceedToConfig) {
       return
