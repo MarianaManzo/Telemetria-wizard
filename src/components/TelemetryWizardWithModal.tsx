@@ -1806,6 +1806,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [selectedUnitsLocal, setSelectedUnitsLocal] = useState<UnidadData[]>([])
   const [selectedTags, setSelectedTags] = useState<TagData[]>([])
   const [showAppliesErrors, setShowAppliesErrors] = useState(false)
+  const [showZoneSelectionErrors, setShowZoneSelectionErrors] = useState(false)
   const [showDurationError, setShowDurationError] = useState(false)
   const [showActionsErrors, setShowActionsErrors] = useState(false)
 
@@ -1943,9 +1944,11 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   const tabsStickyTop = headerHeight > 0 ? headerHeight : 88
 
+  const zoneSelectionEmpty = selectedZonesData.length === 0 && selectedZoneTags.length === 0
+
   const zoneContextValue = useMemo(() => {
     if (resolvedRuleType === 'zone') {
-      return selectedZonesData.length > 0 || selectedZoneTags.length > 0
+      return !zoneSelectionEmpty
         ? 'zonas-especificas'
         : 'cualquier-lugar'
     }
@@ -1955,7 +1958,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     }
 
     return 'cualquier-lugar'
-  }, [resolvedRuleType, selectedZonesData, selectedZoneTags, geographicScope])
+  }, [resolvedRuleType, zoneSelectionEmpty, geographicScope])
 
   const suggestedEventVariables = useMemo(
     () =>
@@ -2681,11 +2684,14 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
     const missingDuration = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
     const zoneScopeActive = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
-    const zoneSelectionEmpty = selectedZonesData.length === 0 && selectedZoneTags.length === 0
     const missingZoneScope = zoneScopeActive && zoneSelectionEmpty
+    const requireZoneSelection = resolvedRuleType === 'zone'
 
     if (zoneScopeActive && zoneSelectionEmpty) {
       setShowZoneScopeErrors(true)
+    }
+    if (requireZoneSelection && zoneSelectionEmpty) {
+      setShowZoneSelectionErrors(true)
     }
 
     const hasErrors =
@@ -2693,7 +2699,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       !hasValidCondition ||
       missingCustomTargets ||
       missingDuration ||
-      (requireZoneScope && missingZoneScope)
+      (requireZoneScope && missingZoneScope) ||
+      (requireZoneSelection && zoneSelectionEmpty)
 
     if (!hasAtLeastOneGroup || !hasValidCondition) {
       setShowParametersErrors(true)
@@ -2715,8 +2722,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     durationValue,
     resolvedRuleType,
     geographicScope,
-    selectedZonesData.length,
-    selectedZoneTags.length,
+    zoneSelectionEmpty,
   ])
 
   const requiresClosureTime = closePolicy === 'automaticamente-tiempo'
@@ -2982,18 +2988,23 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const needsCustomTargets = appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
   const needsDurationValue = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
   const shouldRestrictByZone = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
-  const zoneSelectionEmpty = selectedZonesData.length === 0 && selectedZoneTags.length === 0
   const showCustomTargetsError = appliesTo === 'custom' && showAppliesErrors && needsCustomTargets
   const showZoneScopeError = shouldRestrictByZone && showZoneScopeErrors && zoneSelectionEmpty
   const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue
   const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
   const shortNameHasError = showActionsErrors && trimmedShortName.length < 3
 
-  useEffect(() => {
-    if (!shouldRestrictByZone || !zoneSelectionEmpty) {
-      setShowZoneScopeErrors(false)
-    }
-  }, [shouldRestrictByZone, zoneSelectionEmpty])
+useEffect(() => {
+  if (!shouldRestrictByZone || !zoneSelectionEmpty) {
+    setShowZoneScopeErrors(false)
+  }
+}, [shouldRestrictByZone, zoneSelectionEmpty])
+
+useEffect(() => {
+  if (!zoneSelectionEmpty && showZoneSelectionErrors) {
+    setShowZoneSelectionErrors(false)
+  }
+}, [zoneSelectionEmpty, showZoneSelectionErrors])
 
   const handleNextStep = () => {
     if (currentTabIndex === 0) {
@@ -3682,6 +3693,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const renderZoneCard = () => {
     if (resolvedRuleType !== 'zone') return null
 
+    const zoneSelectionHasError = showZoneSelectionErrors && zoneSelectionEmpty
+
     return (
       <div className="bg-white border border-gray-200 rounded-lg">
         <div className="px-4 py-4 bg-gray-100 border-b border-gray-200 rounded-t-lg flex flex-col gap-1">
@@ -3694,10 +3707,15 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
         <div className="p-4 flex flex-col gap-4">
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-6 items-center">
-              <label className="text-[14px] font-medium text-gray-700 flex items-center gap-1">
+              <div className="flex flex-col gap-1">
+                <label className={`text-[14px] font-medium flex items-center gap-1 ${zoneSelectionHasError ? 'text-red-600' : 'text-gray-700'}`}>
                 <span className="text-red-500">*</span>
                 ¿Qué acción activará el evento?
-              </label>
+                </label>
+                {zoneSelectionHasError && (
+                  <span className="text-[12px] text-red-500">Selecciona al menos una zona o etiqueta.</span>
+                )}
+              </div>
               <Select value={zoneEventAction} onValueChange={(value: 'entrada' | 'salida') => setZoneEventAction(value)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -3710,19 +3728,21 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
             </div>
 
             <div className="grid grid-cols-2 gap-6 items-center">
-              <label className="text-[14px] font-medium text-gray-700">Zonas geográficas</label>
+              <label className={`text-[14px] font-medium ${zoneSelectionHasError ? 'text-red-600' : 'text-gray-700'}`}>Zonas geográficas</label>
               <ZonasSelectorInput
                 selectedZones={selectedZonesData}
                 onSelectionChange={setSelectedZonesData}
                 placeholder="Seleccionar zonas"
+                hasError={zoneSelectionHasError}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-6 items-center">
-              <label className="text-[14px] font-medium text-gray-700">Etiquetas de zona</label>
+              <label className={`text-[14px] font-medium ${zoneSelectionHasError ? 'text-red-600' : 'text-gray-700'}`}>Etiquetas de zona</label>
               <EtiquetasSelectorInput
                 selectedTags={selectedZoneTags}
                 onSelectionChange={handleZoneTagsChange}
+                hasError={zoneSelectionHasError}
               />
             </div>
           </div>
