@@ -1917,7 +1917,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   const [showEventMessageError, setShowEventMessageError] = useState(false)
   const [emailEnabled, setEmailEnabled] = useState(rule?.notifications?.email?.enabled || false)
   const [emailRecipients, setEmailRecipients] = useState(
-    rule?.notifications?.email?.recipients || ['usuario@email.com', 'usuario@email.com', 'usuario@email.com']
+    rule?.notifications?.email?.recipients || []
   )
   const [emailSenders, setEmailSenders] = useState<string[]>(
     rule?.notifications?.email?.sender || DEFAULT_EMAIL_SENDERS
