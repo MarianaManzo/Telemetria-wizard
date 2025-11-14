@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from "react"
-import type { DragEvent } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { ChevronDownIcon } from "lucide-react@0.487.0"
 
@@ -103,12 +102,6 @@ export function VariableButton({
                 key={variable.key}
                 type="button"
                 className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                draggable
-                onDragStart={(event) => {
-                  event.dataTransfer.setData('application/x-variable-key', variable.key)
-                  event.dataTransfer.setData('text/plain', variable.key)
-                  event.dataTransfer.effectAllowed = 'copy'
-                }}
                 onClick={() => onInsertVariable(variable.key)}
               >
                 <div className="text-[13px] font-medium text-blue-600">
@@ -348,33 +341,6 @@ const VariableTextareaComponent = (
     }
   }, [])
 
-  const setCaretFromPoint = useCallback((clientX: number, clientY: number) => {
-    if (!editorRef.current) return
-
-    const selection = window.getSelection()
-    if (!selection) return
-
-    const doc: any = document
-
-    let range: Range | null = null
-
-    if (typeof doc.caretRangeFromPoint === 'function') {
-      range = doc.caretRangeFromPoint(clientX, clientY)
-    } else if (typeof doc.caretPositionFromPoint === 'function') {
-      const position = doc.caretPositionFromPoint(clientX, clientY)
-      if (position) {
-        range = document.createRange()
-        range.setStart(position.offsetNode, position.offset)
-        range.collapse(true)
-      }
-    }
-
-    if (range) {
-      selection.removeAllRanges()
-      selection.addRange(range)
-    }
-  }, [])
-
   // Actualizar contenido cuando cambie el valor externo
   useEffect(() => {
     if (!editorRef.current || isUpdatingRef.current) return
@@ -400,27 +366,6 @@ const VariableTextareaComponent = (
     [focusEditor, insertVariableAtCursor]
   )
 
-  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
-    if (!editorRef.current) return
-    e.preventDefault()
-    setCaretFromPoint(e.clientX, e.clientY)
-  }, [setCaretFromPoint])
-
-  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
-    if (!editorRef.current) return
-    e.preventDefault()
-
-    const variableKey =
-      e.dataTransfer.getData('application/x-variable-key') ||
-      e.dataTransfer.getData('text/plain')
-
-    if (!variableKey) return
-
-    focusEditor()
-    setCaretFromPoint(e.clientX, e.clientY)
-    insertVariableAtCursor(variableKey)
-  }, [focusEditor, insertVariableAtCursor, setCaretFromPoint])
-
   return (
     <div className={className}>
       {/* Botón de variables arriba del textarea a la derecha - solo si showVariableButton es true */}
@@ -444,8 +389,6 @@ const VariableTextareaComponent = (
           onPaste={handlePaste}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
           className="min-h-[100px] w-full resize-y p-3 pb-8 border border-gray-200 rounded-lg bg-white text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           style={{
             whiteSpace: 'pre-wrap',
