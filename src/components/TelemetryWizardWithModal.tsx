@@ -4353,42 +4353,44 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   description="Redacta el mensaje que se enviará cuando ocurra este evento. Puedes usar variables para personalizar el contenido."
                   contentClassName="space-y-4"
                 >
-                    <div className="border border-gray-200 rounded-lg bg-gray-50 p-4 space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <h4 className="text-[13px] font-medium text-gray-700">Variables configuradas</h4>
+                    <div className="border border-gray-200 rounded-lg bg-white p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <h4 className="text-[13px] font-medium text-gray-900">Variables configuradas</h4>
                         <VariableButton
                           label="Más variables"
                           variables={EVENT_MESSAGE_VARIABLES}
                           onInsertVariable={handleInsertEventVariable}
                         />
                       </div>
-                      <span className="text-[11px] text-gray-500 block">
-                        Escribe ‘#’ en el mensaje para abrir el listado de variables disponibles o haz clic para insertarlas.
-                      </span>
+                      <p className="text-[11px] text-gray-500 leading-relaxed">
+                        Escribe ‘#’ en el mensaje<br />
+                        para abrir el listado de variables disponibles o haz clic para insertarlas.
+                      </p>
                       {!hasConfiguredSensors && (
                         <p className="text-[11px] text-gray-500 mt-2">
                           Configura condiciones con sensores para obtener recomendaciones más precisas.
                         </p>
                       )}
-                      <div className="flex flex-wrap gap-2 mt-3">
+                      <div className="flex flex-wrap gap-3 mt-1">
                         {suggestedEventVariables.length > 0 ? (
                           suggestedEventVariables.map((variable) => (
                             <button
                               key={variable.key}
                               type="button"
-                              className="inline-flex items-center transition-colors"
+                              className="inline-flex items-center justify-center transition-colors"
                               style={{
-                                backgroundColor: '#F9F0FF',
-                                borderColor: '#BEA5F5',
-                                color: '#7839EE',
+                                backgroundColor: '#F4EBFF',
+                                borderColor: '#D6BCFA',
+                                color: '#6938EF',
                                 borderRadius: '8px',
                                 borderWidth: '1px',
                                 borderStyle: 'solid',
-                                padding: '4px 12px',
+                                padding: '6px 14px',
+                                minWidth: '110px',
                               }}
                               onClick={() => handleInsertEventVariable(variable.key)}
                             >
-                              <span className="text-[13px] leading-none" style={{ color: '#7839EE' }}>
+                              <span className="text-[13px] leading-none font-medium" style={{ color: '#6938EF' }}>
                                 {variable.key}
                               </span>
                             </button>
