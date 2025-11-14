@@ -24,6 +24,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collap
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import SectionCard from "./SectionCard"
+import { cn } from "./ui/utils"
 
 import type { LucideIcon, LucideIconProps } from 'lucide-react'
 
@@ -158,6 +159,22 @@ const normalizeUnitSelection = (unit: UnidadData | string, fallbackIndex = 0): U
 
 const normalizeUnitsSelection = (units: (UnidadData | string)[] = []): UnidadData[] =>
   units.map((unit, index) => normalizeUnitSelection(unit, index))
+
+const VersionBadge = ({ className = '' }: { className?: string }) => (
+  <span
+    className={cn(
+      'inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] shadow-sm border',
+      className
+    )}
+    style={{
+      backgroundColor: '#111323',
+      borderColor: '#05060C',
+      color: '#FFFFFF'
+    }}
+  >
+    V2
+  </span>
+)
 
 // System sensors for telemetry
 const systemTelemetrySensors = [
@@ -4279,7 +4296,12 @@ useEffect(() => {
 
                 {/* Section 6 - Enviar comando al dispositivo */}
                 <SectionCard
-                  icon={<Tag className="h-4 w-4 text-gray-600" />}
+                  icon={
+                    <div className="flex items-center gap-2">
+                      <VersionBadge />
+                      <Tag className="h-4 w-4 text-gray-600" />
+                    </div>
+                  }
                   title="Enviar comando al dispositivo"
                   description="Selecciona si deseas ejecutar un comando automáticamente cuando se active el evento"
                   headerExtra={
@@ -4407,6 +4429,7 @@ useEffect(() => {
                     <div className="border border-gray-200 rounded-lg">
                       <div className="flex items-center justify-between p-3">
                         <div className="flex items-center gap-3">
+                          <VersionBadge />
                           <Monitor className="h-5 w-5 text-gray-500" />
                           <div>
                             <div className="text-[14px] font-medium text-gray-700">Notificación Web</div>
@@ -4421,6 +4444,7 @@ useEffect(() => {
                     <div className="border border-gray-200 rounded-lg">
                       <div className="flex items-center justify-between p-3">
                         <div className="flex items-center gap-3">
+                          <VersionBadge />
                           <Smartphone className="h-5 w-5 text-gray-500" />
                           <div>
                             <div className="text-[14px] font-medium text-gray-700">Notificación Móvil</div>
@@ -4531,7 +4555,12 @@ useEffect(() => {
 
               {/* Section 3 - Webhook (referencia) */}
               <SectionCard
-                icon={<Link className="h-4 w-4 text-gray-600" />}
+                icon={
+                  <div className="flex items-center gap-2">
+                    <VersionBadge />
+                    <Link className="h-4 w-4 text-gray-600" />
+                  </div>
+                }
                 title="Webhook"
                 description="Integración externa administrada desde la plataforma web"
                 headerExtra={
