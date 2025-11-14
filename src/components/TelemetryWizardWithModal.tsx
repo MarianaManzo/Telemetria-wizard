@@ -3012,12 +3012,6 @@ useEffect(() => {
 }, [shouldRestrictByZone, zoneSelectionEmpty])
 
 useEffect(() => {
-  if (!validateZoneEntry && showZoneSelectionErrors) {
-    setShowZoneSelectionErrors(false)
-  }
-}, [validateZoneEntry, showZoneSelectionErrors])
-
-useEffect(() => {
   if (!zoneSelectionEmpty && showZoneSelectionErrors) {
     setShowZoneSelectionErrors(false)
   }
