@@ -4359,7 +4359,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                           <Zap className="h-4 w-4 text-blue-600" />
                           <h4 className="text-[13px] font-medium text-gray-700">Variables sugeridas</h4>
                           <span className="text-[11px] text-gray-500">
-                            Haz clic para insertar la variable en tu mensaje.
+                            Escribe ‘#’ en el mensaje para abrir el listado de variables disponibles o haz clic para insertarlas.
                           </span>
                         </div>
                         <VariableButton
