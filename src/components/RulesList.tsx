@@ -197,8 +197,8 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
     {
       id: 'actions',
       label: 'Acciones',
-      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-24 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10',
-      cellClassName: 'px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10',
+      headerClassName: 'px-4 py-3 text-left text-[14px] font-medium text-gray-500 w-24 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10 text-center',
+      cellClassName: 'px-4 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10',
       render: (rule) => (
         <div className="flex justify-center items-center">
           <DropdownMenu>
