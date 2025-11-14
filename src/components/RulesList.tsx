@@ -197,8 +197,8 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
     {
       id: 'actions',
       label: 'Acciones',
-      headerClassName: 'px-2 py-2 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.15)] after:absolute after:inset-y-0 after:left-0 after:w-[1px] after:bg-black/5 relative z-10 text-center',
-      cellClassName: 'px-2 py-2 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] after:absolute after:inset-y-0 after:left-0 after:w-[1px] after:bg-black/5 relative z-10',
+      headerClassName: 'px-2 py-2 text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.15)] after:absolute after:inset-y-0 after:left-0 after:w-[1px] after:bg-black/5 relative z-10 text-center w-[48px]',
+      cellClassName: 'px-2 py-2 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] after:absolute after:inset-y-0 after:left-0 after:w-[1px] after:bg-black/5 relative z-10 w-[48px]',
       render: (rule) => (
         <div className="flex justify-center items-center">
           <DropdownMenu>
