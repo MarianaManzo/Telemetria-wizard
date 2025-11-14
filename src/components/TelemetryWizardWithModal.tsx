@@ -1984,14 +1984,13 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
       }
 
       setEventMessage((prev) => {
-        const next = (prev + variableKey).slice(0, 120)
-        setEventMessageCharCount(next.length)
+        const next = (prev + variableKey).slice(0, EVENT_MESSAGE_LIMIT)
         setEmailDescription(next)
         setDescriptionCharCount(next.length)
         return next
       })
     },
-    [setEmailDescription, setDescriptionCharCount, setEventMessageCharCount]
+    [setEmailDescription, setDescriptionCharCount]
   )
   const [webhookNotificationEnabled, setWebhookNotificationEnabled] = useState(rule?.notifications?.webhook?.enabled || false)
   const [platformNotificationEnabled, setPlatformNotificationEnabled] = useState(rule?.notifications?.platform?.enabled || false)
