@@ -111,9 +111,15 @@ export function SaveRuleModal({ isOpen, onClose, onSave, defaultData, isRenaming
 
         <div>
           <Label htmlFor="rule-description" className="text-[14px] font-medium text-gray-700 mb-2 block text-left">
-            Descripción (opcional)
+            Descripción
           </Label>
-          <Textarea id="rule-description" value={ruleDescription} onChange={(e) => setRuleDescription(e.target.value)} placeholder="Agrega una descripción breve" className="min-h-[80px] text-[14px] w-full resize-none" />
+          <Textarea
+            id="rule-description"
+            value={ruleDescription}
+            onChange={(e) => setRuleDescription(e.target.value)}
+            placeholder="Agrega una descripción breve"
+            className="min-h-[80px] text-[14px] w-full resize-none"
+          />
         </div>
       </div>
     </ModalBase>
