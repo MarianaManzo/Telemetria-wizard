@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MenuOutlined, SettingOutlined } from '@ant-design/icons'
+import { MenuOutlined } from '@ant-design/icons'
 import { Dropdown } from 'antd'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import { Button } from './ui/button'
@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import visibilityIcon from '../assets/Visibility Icon.svg'
 import eyeSolid from '../assets/eye-solid.svg'
 import eyeSolidOff from '../assets/eye-solid-off.svg'
+import SlidersOutlined from '../assets/SlidersOutlined.svg'
 
 interface ColumnSettingsModalProps {
   isOpen: boolean
@@ -156,7 +157,7 @@ export function ColumnSettingsIconButton(
       className={`ml-auto flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-gray-600 transition hover:border-gray-200 hover:text-gray-900 ${className}`}
       {...rest}
     >
-      <SettingOutlined className="text-[16px]" />
+      <img src={SlidersOutlined} alt="Personalizar columnas" className="h-4 w-4" />
     </button>
   )
 }
