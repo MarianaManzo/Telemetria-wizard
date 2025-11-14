@@ -207,28 +207,16 @@ const RecipientsSelector = memo(function RecipientsSelector({
   const getVisibleTags = () => {
     if (value.length === 0) return { visible: value, hidden: [] }
 
-    const containerWidthValue = containerRef.current?.offsetWidth || 400
-    const averageTagWidth = 110
-    const controlsWidth = 60
-    const padding = 16
-    const availableWidth = containerWidthValue - controlsWidth - padding
-    const tagsPerLine = Math.max(1, Math.floor(availableWidth / averageTagWidth))
+    const MAX_VISIBLE_TAGS_INLINE = 2
 
-    if (value.length <= tagsPerLine) return { visible: value, hidden: [] }
-
-    const counterWidth = 80
-    const availableForSecondLine = availableWidth - counterWidth
-    const tagsInSecondLine = Math.max(1, Math.floor(availableForSecondLine / averageTagWidth))
-    const maxTotalVisible = tagsPerLine + tagsInSecondLine
-
-    if (value.length > maxTotalVisible) {
-      return {
-        visible: value.slice(0, maxTotalVisible),
-        hidden: value.slice(maxTotalVisible)
-      }
+    if (value.length <= MAX_VISIBLE_TAGS_INLINE) {
+      return { visible: value, hidden: [] }
     }
 
-    return { visible: value, hidden: [] }
+    return {
+      visible: value.slice(0, MAX_VISIBLE_TAGS_INLINE),
+      hidden: value.slice(MAX_VISIBLE_TAGS_INLINE)
+    }
   }
 
   const { visible: visibleTags, hidden: hiddenTags } = getVisibleTags()
@@ -284,7 +272,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
             setIsDropdownOpen(true)
           }}
         >
-          <div className="flex flex-wrap items-start gap-1 p-2 w-full min-h-[2.5rem]">
+          <div className="flex items-center gap-1 p-2 w-full min-h-[2.5rem] flex-nowrap overflow-hidden">
             {visibleTags.map((email, index) => (
               <div
                 key={index}
@@ -338,7 +326,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
               </Tooltip>
             )}
 
-            <div className="flex items-center min-w-[120px] flex-1">
+            <div className="flex items-center min-w-0 flex-1">
               <input
                 ref={inputRef}
                 type="text"
@@ -359,7 +347,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
                   }
                 }}
                 placeholder={value.length === 0 ? placeholder : ""}
-                className="flex-1 min-w-[80px] outline-none text-[14px] border-none p-0 bg-transparent placeholder-gray-500 text-gray-900"
+                className="flex-1 min-w-0 outline-none text-[14px] border-none p-0 bg-transparent placeholder-gray-500 text-gray-900"
                 disabled={disabled}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -483,4 +471,3 @@ const RecipientsSelector = memo(function RecipientsSelector({
 })
 
 export { RecipientsSelector }
-

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback, Fragment } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { Flex, Typography } from "antd";
@@ -11,7 +11,7 @@ import { Checkbox } from "./ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group"
 import { Switch } from "./ui/switch"
 import { VariableTextarea, VariableButton, type VariableTextareaHandle, type MessageVariableDescriptor, type VariableCategory } from "./VariableTextarea"
-import { EmailTemplateDrawer } from "./EmailTemplateDrawer"
+import { RecipientsSelector } from "./RecipientsSelector"
 import { 
   Select,
   SelectContent,
@@ -158,12 +158,6 @@ const normalizeUnitSelection = (unit: UnidadData | string, fallbackIndex = 0): U
 
 const normalizeUnitsSelection = (units: (UnidadData | string)[] = []): UnidadData[] =>
   units.map((unit, index) => normalizeUnitSelection(unit, index))
-
-// Import email templates from separate file
-import { userEmailTemplates as initialEmailTemplates, type UserEmailTemplate } from "../constants/emailTemplates"
-import { showCustomToast } from "./CustomToast"
-
-
 
 // System sensors for telemetry
 const systemTelemetrySensors = [
@@ -1898,24 +1892,24 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
   // Notifications tab state
   const defaultEventMessage = rule?.notifications?.eventMessage || 'La unidad {unidad} ha registrado una alerta en {ubicacion_link} a las {fecha_hora}.'
+  const DEFAULT_EMAIL_SENDERS = ['noreply@numaris.com']
   const EVENT_MESSAGE_LIMIT = 2500
   const [eventMessage, setEventMessage] = useState(defaultEventMessage)
   const eventMessageEditorRef = useRef<VariableTextareaHandle>(null)
+  const emailMessageEditorRef = useRef<VariableTextareaHandle>(null)
   const [emailEnabled, setEmailEnabled] = useState(rule?.notifications?.email?.enabled || false)
   const [emailRecipients, setEmailRecipients] = useState(
     rule?.notifications?.email?.recipients || ['usuario@email.com', 'usuario@email.com', 'usuario@email.com']
   )
+  const [emailSenders, setEmailSenders] = useState<string[]>(
+    rule?.notifications?.email?.sender || DEFAULT_EMAIL_SENDERS
+  )
   const [emailSubject, setEmailSubject] = useState(
     rule?.notifications?.email?.subject || '[ALERTA] {unidad} - {regla_nombre}'
   )
-  const [emailDescription, setEmailDescription] = useState(defaultEventMessage)
-  const [descriptionCharCount, setDescriptionCharCount] = useState(defaultEventMessage.length)
   
-  // Email personalization states
-  const [emailTemplates, setEmailTemplates] = useState<UserEmailTemplate[]>(initialEmailTemplates)
+  // Email personalization state
   const [customEmailMessage, setCustomEmailMessage] = useState(rule?.notifications?.email?.body || defaultEventMessage)
-  const [selectedEmailTemplate, setSelectedEmailTemplate] = useState<string | null>(rule?.notifications?.email?.templateId ?? null)
-  const [templateDrawerOpen, setTemplateDrawerOpen] = useState(false)
 
   const [mapPreviewStart, setMapPreviewStart] = useState('Inicio del evento')
   const [mapPreviewEnd, setMapPreviewEnd] = useState('Punto de seguimiento')
@@ -1992,121 +1986,30 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
 
       setEventMessage((prev) => {
         const next = (prev + variableKey).slice(0, EVENT_MESSAGE_LIMIT)
-        setEmailDescription(next)
-        setDescriptionCharCount(next.length)
         return next
       })
     },
-    [setEmailDescription, setDescriptionCharCount]
+    []
+  )
+  const handleInsertEmailVariable = useCallback(
+    (variableKey: string) => {
+      if (emailMessageEditorRef.current) {
+        emailMessageEditorRef.current.focus()
+        emailMessageEditorRef.current.insertVariable(variableKey)
+        return
+      }
+
+      setCustomEmailMessage((prev) => {
+        const next = (prev + variableKey).slice(0, EVENT_MESSAGE_LIMIT)
+        return next
+      })
+    },
+    [setCustomEmailMessage]
   )
   const [webhookNotificationEnabled, setWebhookNotificationEnabled] = useState(rule?.notifications?.webhook?.enabled || false)
   const [platformNotificationEnabled, setPlatformNotificationEnabled] = useState(rule?.notifications?.platform?.enabled || false)
 
-  const extractPlainTextFromHtml = useCallback((input: string) => {
-    if (typeof document === 'undefined') {
-      return input
-    }
-    const temp = document.createElement('div')
-    temp.innerHTML = input
-    return temp.textContent || temp.innerText || ''
-  }, [])
-
-  // Optimized template selection handler
-  const handleTemplateSelection = useCallback((template: UserEmailTemplate) => {
-    setEmailRecipients(template.recipients && template.recipients.length > 0 ? template.recipients : [])
-    setEmailSubject(template.subject)
-    setCustomEmailMessage(template.message)
-    const plainDescription = template.message.includes('<')
-      ? extractPlainTextFromHtml(template.message)
-      : template.message
-    setEmailDescription(plainDescription)
-    setSelectedEmailTemplate(template.id)
-  }, [extractPlainTextFromHtml])
-
-  const handleTemplateSaved = useCallback((payload: {
-    name: string;
-    subject: string;
-    description: string;
-    recipients: string[];
-    sender: string[];
-    messageHtml: string;
-  }) => {
-    const newTemplate: UserEmailTemplate = {
-      id: `template-${Date.now()}`,
-      name: payload.name,
-      description: payload.description,
-      createdBy: 'Usuario',
-      createdAt: new Date().toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }),
-      usageCount: 0,
-      category: 'personal',
-      recipients: payload.recipients,
-      sender: payload.sender,
-      subject: payload.subject,
-      message: payload.messageHtml,
-    }
-
-    setEmailTemplates((prev) => [newTemplate, ...prev])
-    handleTemplateSelection(newTemplate)
-    setTemplateDrawerOpen(false)
-    showCustomToast({
-      title: 'Plantilla guardada',
-      description: `"${payload.name}" se añadió a tus plantillas`,
-    })
-  }, [handleTemplateSelection])
-
-  const selectedEmailTemplateData = useMemo(() => {
-    if (!selectedEmailTemplate) return null
-    return emailTemplates.find((template) => template.id === selectedEmailTemplate) || null
-  }, [selectedEmailTemplate, emailTemplates])
-
-  const renderedEmailTemplateMessage = useMemo(() => {
-    if (!customEmailMessage) return []
-
-    const containsHtml = /<\/?[a-z][\s\S]*>/i.test(customEmailMessage)
-    if (containsHtml) {
-      return [
-        <div
-          key="html-preview"
-          className="text-[13px] leading-[22px] text-[#313655]"
-          dangerouslySetInnerHTML={{ __html: customEmailMessage }}
-        />,
-      ]
-    }
-
-    const tokenRegex = /(\{[^}]+\})/g
-
-    return customEmailMessage.split(tokenRegex).map((segment, index) => {
-      if (!segment) return null
-
-      if (/^\{[^}]+\}$/.test(segment)) {
-        return (
-          <span
-            key={`token-${index}`}
-            className="inline-flex items-center rounded-md bg-[#EFE7FF] px-2 py-0.5 text-[12px] font-medium text-[#5B34B6]"
-          >
-            {segment}
-          </span>
-        )
-      }
-
-      const lines = segment.split('\n')
-
-      return (
-        <Fragment key={`text-${index}`}>
-          {lines.map((line, lineIndex) => (
-            <Fragment key={`text-${index}-${lineIndex}`}>
-              {line}
-              {lineIndex < lines.length - 1 && <br />}
-            </Fragment>
-          ))}
-        </Fragment>
-      )
-    }).filter(Boolean) as React.ReactNode[]
-  }, [customEmailMessage])
+  // Template selection temporalmente deshabilitado: los usuarios redactan el mensaje manualmente
 
   const handleZonesChange = (zones) => {
     setSelectedZonesData(zones)
@@ -2243,9 +2146,8 @@ const handleToggleZoneValidation = (checked: boolean) => {
           setEmailSubject(rule.notifications.email.subject || '')
           setEmailRecipients(rule.notifications.email.recipients || [])
           const emailBody = rule.notifications.email.body || rule.notifications.eventMessage || ''
-          setEmailDescription(emailBody)
           setCustomEmailMessage(emailBody)
-          setSelectedEmailTemplate(rule.notifications.email.templateId || null)
+          setEmailSenders(rule.notifications.email.sender || DEFAULT_EMAIL_SENDERS)
         }
         
         if (rule.notifications.push) {
@@ -2950,10 +2852,11 @@ const handleToggleZoneValidation = (checked: boolean) => {
         eventMessage: eventMessage,
         email: {
           enabled: emailEnabled,
+          sender: emailSenders,
           recipients: emailRecipients,
           subject: emailSubject,
           body: customEmailMessage,
-          templateId: selectedEmailTemplate
+          templateId: rule?.notifications?.email?.templateId ?? null
         },
         push: {
           enabled: pushNotificationEnabled
@@ -4477,11 +4380,7 @@ useEffect(() => {
                         ref={eventMessageEditorRef}
                         name="event-message"
                         value={eventMessage}
-                        onChange={(text) => {
-                          setEventMessage(text)
-                          setEmailDescription(text)
-                          setDescriptionCharCount(text.length)
-                        }}
+                        onChange={setEventMessage}
                         showVariableButton={false}
                         placeholder={
                           hasConfiguredSensors
@@ -4539,7 +4438,7 @@ useEffect(() => {
                           <Mail className="h-5 w-5 text-gray-600" />
                           <div>
                             <div className="text-[14px] font-medium text-gray-700">Correo electrónico</div>
-                            <div className="text-[12px] text-gray-600">Usa plantillas guardadas para automatizar el mensaje</div>
+                            <div className="text-[12px] text-gray-600">Envío por email con asunto personalizable</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -4552,125 +4451,79 @@ useEffect(() => {
                       </div>
 
                       {emailEnabled && (
-                        <div className="border-t border-gray-200 bg-gray-50 p-3 space-y-4">
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#2B3075]">
-                              <span className="text-[#4C6FFF]">*</span>
-                              Seleccionar plantilla
-                            </label>
-                            <div className="flex flex-wrap items-center gap-3">
-                              <div className="min-w-[240px] flex-1">
-                                <Select
-                                  value={selectedEmailTemplate || ''}
-                                  onValueChange={(value) => {
-                                    const template = emailTemplates.find((tpl) => tpl.id === value)
-                                    if (template) {
-                                      handleTemplateSelection(template)
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className="w-full [&_.ant-select-selector]:!h-[44px] [&_.ant-select-selector]:!rounded-xl [&_.ant-select-selector]:!border-[#CBD3FF] [&_.ant-select-selector]:!px-4 [&_.ant-select-selector]:!py-2 [&_.ant-select-selector]:!text-[13px] [&_.ant-select-selector:hover]:!border-[#7B8CFF] [&_.ant-select-selector:focus-within]:!border-[#4C6FFF]">
-                                    <SelectValue placeholder="Selecciona una plantilla guardada" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {emailTemplates.map((template) => (
-                                      <SelectItem key={template.id} value={template.id}>
-                                        {template.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                        <div className="border-t border-gray-200 p-4 space-y-5">
+                          <div className="space-y-4">
+                            <div
+                              className="grid gap-4 items-center"
+                              style={{ gridTemplateColumns: '220px minmax(0, 1fr)' }}
+                            >
+                              <label className="text-[13px] font-medium text-gray-700 flex items-center gap-1">
+                                <span className="text-red-500">*</span>
+                                Asunto
+                              </label>
+                              <Input
+                                value={emailSubject}
+                                onChange={(e) => setEmailSubject(e.target.value)}
+                                placeholder="Alerta Velocidad"
+                                className="h-11 rounded-xl border-[#CBD3FF] bg-white text-[14px]"
+                              />
+                            </div>
+
+                            <div
+                              className="grid gap-4 items-center"
+                              style={{ gridTemplateColumns: '220px minmax(0, 1fr)' }}
+                            >
+                              <label className="text-[13px] font-medium text-gray-700 flex items-center gap-1">
+                                <span className="text-red-500">*</span>
+                                Remitentes
+                              </label>
+                              <RecipientsSelector
+                                value={emailSenders}
+                                onChange={setEmailSenders}
+                                className="w-full"
+                                placeholder="noreply@numaris.com"
+                              />
+                            </div>
+
+                            <div
+                              className="grid gap-4 items-center"
+                              style={{ gridTemplateColumns: '220px minmax(0, 1fr)' }}
+                            >
+                              <label className="text-[13px] font-medium text-gray-700 flex items-center gap-1">
+                                <span className="text-red-500">*</span>
+                                Destinatarios
+                              </label>
+                              <RecipientsSelector
+                                value={emailRecipients}
+                                onChange={setEmailRecipients}
+                                className="w-full"
+                                placeholder="Agregar destinatarios (separa con coma)"
+                              />
+                            </div>
+
+                            <div className="border-t border-gray-200 pt-4 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="text-[13px] font-medium text-gray-700 flex items-center gap-1">
+                                  <span className="text-red-500">*</span>
+                                  Mensaje de correo electrónico
+                                </label>
+                                <VariableButton
+                                  label="Más variables"
+                                  onInsertVariable={handleInsertEmailVariable}
+                                />
                               </div>
-                              <Button
-                                type="link"
-                                className="px-0 text-[#3559FF] hover:text-[#1D37B7]"
-                                onClick={() => setTemplateDrawerOpen(true)}
-                              >
-                                + Crear plantilla
-                              </Button>
+                              <VariableTextarea
+                                ref={emailMessageEditorRef}
+                                value={customEmailMessage}
+                                onChange={setCustomEmailMessage}
+                                placeholder="Escribe el mensaje que recibirán tus destinatarios..."
+                                className="w-full"
+                                editorClassName="min-h-[160px] border border-[#CBD3FF] rounded-2xl bg-white px-4 py-3 text-[14px]"
+                                showVariableButton={false}
+                                maxLength={EVENT_MESSAGE_LIMIT}
+                              />
                             </div>
                           </div>
-
-                          {selectedEmailTemplateData ? (
-                            <div className="space-y-4">
-                              <div className="rounded-lg border border-[#E1E6FF] bg-white p-4 shadow-[0px_8px_20px_rgba(76,111,255,0.08)] space-y-4">
-                                <div className="space-y-1">
-                                  <span className="text-[13px] font-semibold text-[#1C2452]">
-                                    Plantilla - {selectedEmailTemplateData.name}
-                                  </span>
-                                  <span className="text-[12px] text-[#6F7390]">{selectedEmailTemplateData.description}</span>
-                                </div>
-
-                                <div className="rounded-lg border border-[#EEF1FF] bg-[#FAFBFF] p-4 shadow-inner">
-                                  {renderedEmailTemplateMessage.length > 0 ? (
-                                    <div className="text-[13px] leading-[22px] text-[#313655]">
-                                      {renderedEmailTemplateMessage.map((node, index) => (
-                                        <Fragment key={index}>{node}</Fragment>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <span className="text-[12px] text-gray-500">Esta plantilla no tiene mensaje definido.</span>
-                                  )}
-                                </div>
-
-                                <div className="grid gap-3 md:grid-cols-2">
-                                  <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-3">
-                                    <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
-                                      Remitentes
-                                    </span>
-                                    <div className="flex flex-wrap gap-2">
-                                      {selectedEmailTemplateData?.sender && selectedEmailTemplateData.sender.length > 0 ? (
-                                        selectedEmailTemplateData.sender.map((sender: string) => (
-                                          <span
-                                            key={sender}
-                                            className="inline-flex items-center rounded-[8px] border border-[#D5DCFF] bg-white px-3 py-1 text-[12px] font-medium text-[#394074]"
-                                          >
-                                            {sender}
-                                          </span>
-                                        ))
-                                      ) : (
-                                        <span className="text-[12px] text-gray-500">
-                                          {selectedEmailTemplateData ? 'Sin remitentes guardados.' : 'Selecciona una plantilla para ver remitentes.'}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-3">
-                                    <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
-                                      Destinatarios
-                                    </span>
-                                    <div className="flex flex-wrap gap-2">
-                                      {emailRecipients.length > 0 ? (
-                                        emailRecipients.map((recipient) => (
-                                          <span
-                                            key={recipient}
-                                            className="inline-flex items-center rounded-[8px] border border-[#D5DCFF] bg-white px-3 py-1 text-[12px] font-medium text-[#394074]"
-                                          >
-                                            {recipient}
-                                          </span>
-                                        ))
-                                      ) : (
-                                        <span className="text-[12px] text-gray-500">Sin destinatarios guardados.</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="rounded-lg border border-[#E5E9FF] bg-[#F8F9FF] p-3">
-                                  <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.08em] text-[#363C6E]">
-                                    Asunto del correo
-                                  </span>
-                                  <div className="rounded-md border border-[#D6DDFF] bg-white px-3 py-2 text-[13px] font-medium text-[#1C2452]">
-                                    {emailSubject || 'Sin asunto definido.'}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="rounded-lg border border-dashed border-[#C5CCF7] bg-white px-4 py-8 text-center text-[13px] text-[#6F7390]">
-                              Selecciona una plantilla para visualizar el detalle guardado.
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>
@@ -4737,12 +4590,6 @@ useEffect(() => {
           onOpenChange={setShowExitConfirmModal}
           onExitWithoutSaving={handleExitWithoutSaving}
           onStay={handleStayInEditor}
-        />
-
-        <EmailTemplateDrawer
-          open={templateDrawerOpen}
-          onClose={() => setTemplateDrawerOpen(false)}
-          onSave={handleTemplateSaved}
         />
       </div>
     </TooltipProvider>

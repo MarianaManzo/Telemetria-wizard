@@ -161,12 +161,23 @@ export interface RuleEventSettings {
 }
 
 export interface RuleNotifications {
+  eventMessage?: string
   email: {
     enabled: boolean
+    sender?: string[]
     recipients: string[]
     subject: string
     body: string
     templateId?: string | null
+  }
+  push?: {
+    enabled: boolean
+  }
+  webhook?: {
+    enabled: boolean
+  }
+  platform?: {
+    enabled: boolean
   }
 }
 

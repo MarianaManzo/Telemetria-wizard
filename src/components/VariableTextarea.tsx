@@ -11,6 +11,7 @@ interface VariableTextareaProps {
   name?: string
   showVariableButton?: boolean
   showCounter?: boolean
+  editorClassName?: string
 }
 
 export interface VariableTextareaHandle {
@@ -177,7 +178,8 @@ const VariableTextareaComponent = (
     maxLength = 120,
     name,
     showVariableButton = true,
-    showCounter = false
+    showCounter = false,
+    editorClassName = ''
   } = props
   const editorRef = useRef<HTMLDivElement>(null)
   const [isFocused, setIsFocused] = useState(false)
@@ -393,7 +395,7 @@ const VariableTextareaComponent = (
           onPaste={handlePaste}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="min-h-[100px] w-full resize-y p-3 pb-8 border border-gray-200 rounded-lg bg-white text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className={`min-h-[100px] w-full resize-y p-3 pb-8 border border-gray-200 rounded-lg bg-white text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${editorClassName}`}
           style={{
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word'
