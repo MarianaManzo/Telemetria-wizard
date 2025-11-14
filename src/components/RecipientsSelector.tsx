@@ -276,10 +276,10 @@ const RecipientsSelector = memo(function RecipientsSelector({
             {visibleTags.map((email, index) => (
               <div
                 key={index}
-                className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-md border border-blue-200 flex-shrink-0"
+                className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-sm px-2 py-1 rounded-md border border-gray-200 flex-shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="text-sm truncate max-w-[100px]" title={email}>{email}</span>
+                <span className="text-sm truncate max-w-[120px]" title={email}>{email}</span>
                 {!disabled && (
                   <button
                     type="button"
@@ -287,7 +287,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
                       e.stopPropagation()
                       removeEmail(email)
                     }}
-                    className="flex-shrink-0 text-blue-600 hover:text-blue-800 transition-colors"
+                    className="flex-shrink-0 text-gray-500 hover:text-gray-700 transition-colors"
                   >
                     <X className="h-3 w-3" />
                   </button>
