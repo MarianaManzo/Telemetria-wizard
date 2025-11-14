@@ -149,7 +149,7 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
             size="sm"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Nueva regla
+            Crear regla
           </Button>
         </div>
       </div>
