@@ -191,7 +191,7 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
                 <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28">Severidad</th>
                 <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28">Último evento</th>
                 <th className="px-6 py-3 text-left text-[14px] font-medium text-gray-500 w-28">Responsable</th>
-                <th className="px-2 py-3 text-center text-[14px] font-medium text-gray-500 w-12">Acciones</th>
+                <th className="px-4 py-2 text-center text-[14px] font-medium text-gray-500 w-10">Acciones</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -247,7 +247,7 @@ export function RulesList({ rules, events, onRuleClick, onNewRule, onToggleFavor
                         {rule.owner}
                       </div>
                     </td>
-                    <td className="px-2 py-3 whitespace-nowrap text-[14px] text-gray-500">
+                    <td className="px-4 py-2 whitespace-nowrap text-[14px] text-gray-500">
                       <div className="flex justify-center items-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
