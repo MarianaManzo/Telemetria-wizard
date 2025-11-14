@@ -2164,13 +2164,15 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     })
   }
 
-  const handleToggleZoneValidation = (checked: boolean) => {
-    if (resolvedRuleType !== 'zone') return
-    setValidateZoneEntry(checked)
-    if (checked) {
-      ensureInitialConditionGroup()
-    }
+const handleToggleZoneValidation = (checked: boolean) => {
+  if (resolvedRuleType !== 'zone') return
+  setValidateZoneEntry(checked)
+  if (checked) {
+    ensureInitialConditionGroup()
+  } else {
+    setShowZoneSelectionErrors(false)
   }
+}
 
   // Effect to initialize form data when editing an existing rule
   useEffect(() => {
@@ -2685,7 +2687,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     const missingDuration = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
     const zoneScopeActive = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
     const missingZoneScope = zoneScopeActive && zoneSelectionEmpty
-    const requireZoneSelection = resolvedRuleType === 'zone'
+    const requireZoneSelection = resolvedRuleType === 'zone' && validateZoneEntry
 
     if (zoneScopeActive && zoneSelectionEmpty) {
       setShowZoneScopeErrors(true)
@@ -2723,6 +2725,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
     resolvedRuleType,
     geographicScope,
     zoneSelectionEmpty,
+    validateZoneEntry,
   ])
 
   const requiresClosureTime = closePolicy === 'automaticamente-tiempo'
@@ -2999,6 +3002,12 @@ useEffect(() => {
     setShowZoneScopeErrors(false)
   }
 }, [shouldRestrictByZone, zoneSelectionEmpty])
+
+useEffect(() => {
+  if (!validateZoneEntry && showZoneSelectionErrors) {
+    setShowZoneSelectionErrors(false)
+  }
+}, [validateZoneEntry, showZoneSelectionErrors])
 
 useEffect(() => {
   if (!zoneSelectionEmpty && showZoneSelectionErrors) {
@@ -3693,7 +3702,7 @@ useEffect(() => {
   const renderZoneCard = () => {
     if (resolvedRuleType !== 'zone') return null
 
-    const zoneSelectionHasError = showZoneSelectionErrors && zoneSelectionEmpty
+    const zoneSelectionHasError = validateZoneEntry && showZoneSelectionErrors && zoneSelectionEmpty
 
     return (
       <div className="bg-white border border-gray-200 rounded-lg">
