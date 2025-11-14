@@ -23,6 +23,8 @@ export function ExitRuleConfirmationModal({
     <ModalBase
       open={open}
       onClose={handleClose}
+      hideHeaderDivider
+      hideFooterDivider
       title={
         <Space align="start" size={8}>
           <ExclamationCircleFilled style={{ color: "#faad14" }} />
