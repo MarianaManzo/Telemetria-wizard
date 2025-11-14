@@ -395,64 +395,63 @@ const RecipientsSelector = memo(function RecipientsSelector({
         </div>
 
         <div className="relative">
-        {isDropdownOpen && (
-          <div
-            ref={dropdownRef}
-            className="absolute left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-            style={{
-              position: 'absolute',
-              zIndex: 9999,
-              ...(dropdownPosition === 'top'
-                ? { bottom: 'calc(100% + 4px)' }
-                : { top: 'calc(100% + 4px)' }
-              )
-            }}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            <div className="text-xs font-medium text-gray-500 px-3 py-2 border-b bg-gray-50">
-              {inputValue.trim() ? `Buscando: "${inputValue.trim()}"` : "Seleccionar destinatarios:"}
+          {isDropdownOpen && (
+            <div
+              ref={dropdownRef}
+              className="absolute left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto z-20"
+              style={{
+                ...(dropdownPosition === 'top'
+                  ? { bottom: 'calc(100% + 4px)' }
+                  : { top: 'calc(100% + 4px)' }
+                )
+              }}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <div className="text-xs font-medium text-gray-500 px-3 py-2 border-b bg-gray-50">
+                {inputValue.trim() ? `Buscando: "${inputValue.trim()}"` : "Seleccionar destinatarios:"}
+              </div>
+
+              {showAddOption && (
+                <div
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleEmailSelect(inputValue.trim())
+                  }}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 border-b"
+                >
+                  <span className="text-blue-600">Agregar: </span>
+                  <span className="font-medium">{inputValue.trim()}</span>
+                </div>
+              )}
+
+              {filteredEmails.map((email) => (
+                <div
+                  key={email}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleEmailSelect(email)
+                  }}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
+                >
+                  {email}
+                </div>
+              ))}
+
+              {filteredEmails.length === 0 && !showAddOption && (
+                <div className="px-3 py-2 text-sm text-gray-500">
+                  {inputValue.trim() && !isValidEmail(inputValue.trim())
+                    ? "Ingresa un correo válido (debe terminar en .com o .mx)"
+                    : inputValue.trim()
+                      ? "No se encontraron correos"
+                      : "Todos los correos ya están agregados"
+                  }
+                </div>
+              )}
             </div>
-
-            {showAddOption && (
-              <div
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  handleEmailSelect(inputValue.trim())
-                }}
-                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 border-b"
-              >
-                <span className="text-blue-600">Agregar: </span>
-                <span className="font-medium">{inputValue.trim()}</span>
-              </div>
-            )}
-
-            {filteredEmails.map((email) => (
-              <div
-                key={email}
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  handleEmailSelect(email)
-                }}
-                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"
-              >
-                {email}
-              </div>
-            ))}
-
-            {filteredEmails.length === 0 && !showAddOption && (
-              <div className="px-3 py-2 text-sm text-gray-500">
-                {inputValue.trim() && !isValidEmail(inputValue.trim())
-                  ? "Ingresa un correo válido (debe terminar en .com o .mx)"
-                  : inputValue.trim()
-                    ? "No se encontraron correos"
-                    : "Todos los correos ya están agregados"
-                }
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
         {validationError && (
           <div className="mt-1 text-xs text-red-600 flex items-center gap-1">
@@ -468,7 +467,6 @@ const RecipientsSelector = memo(function RecipientsSelector({
             Escribe correos (deben terminar en .com o .mx) y sepáralos con comas, o usa el selector para agregar rápidamente.
           </div>
         )}
-        </div>
       </div>
     </TooltipProvider>
   )
