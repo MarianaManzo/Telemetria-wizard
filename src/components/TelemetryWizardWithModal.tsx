@@ -2687,7 +2687,7 @@ const handleToggleZoneValidation = (checked: boolean) => {
     const missingDuration = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
     const zoneScopeActive = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
     const missingZoneScope = zoneScopeActive && zoneSelectionEmpty
-    const requireZoneSelection = resolvedRuleType === 'zone'
+    const requireZoneSelection = resolvedRuleType === 'zone' && validateZoneEntry
 
     if (zoneScopeActive && zoneSelectionEmpty) {
       setShowZoneScopeErrors(true)
@@ -2987,7 +2987,7 @@ const handleToggleZoneValidation = (checked: boolean) => {
   )
 
   const hasAtLeastOneGroup = conditionGroups.length > 0
-  const zoneSelectionRequired = resolvedRuleType === 'zone'
+  const zoneSelectionRequired = resolvedRuleType === 'zone' && validateZoneEntry
   const zoneSelectionValid = !zoneSelectionRequired || !zoneSelectionEmpty
   const isZoneValidationRequired = !(resolvedRuleType === 'zone' && !validateZoneEntry)
   const effectiveHasAtLeastOneGroup = isZoneValidationRequired ? hasAtLeastOneGroup : true
