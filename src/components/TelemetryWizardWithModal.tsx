@@ -2697,14 +2697,13 @@ const handleToggleZoneValidation = (checked: boolean) => {
     }
 
     const hasErrors =
-      !hasAtLeastOneGroup ||
-      !hasValidCondition ||
+      (isZoneValidationRequired && (!hasAtLeastOneGroup || !hasValidCondition)) ||
       missingCustomTargets ||
       missingDuration ||
       (requireZoneScope && missingZoneScope) ||
       (requireZoneSelection && zoneSelectionEmpty)
 
-    if (!hasAtLeastOneGroup || !hasValidCondition) {
+    if (isZoneValidationRequired && (!hasAtLeastOneGroup || !hasValidCondition)) {
       setShowParametersErrors(true)
     }
     if (missingCustomTargets) {
@@ -2988,12 +2987,15 @@ const handleToggleZoneValidation = (checked: boolean) => {
   )
 
   const hasAtLeastOneGroup = conditionGroups.length > 0
+  const isZoneValidationRequired = !(resolvedRuleType === 'zone' && !validateZoneEntry)
+  const effectiveHasAtLeastOneGroup = isZoneValidationRequired ? hasAtLeastOneGroup : true
+  const effectiveHasValidCondition = isZoneValidationRequired ? hasValidCondition : true
   const needsCustomTargets = appliesTo === 'custom' && selectedUnitsLocal.length === 0 && selectedTags.length === 0
   const needsDurationValue = eventTiming === 'despues-tiempo' && (!durationValue || Number(durationValue) <= 0)
   const shouldRestrictByZone = resolvedRuleType !== 'zone' && geographicScope !== 'anywhere'
   const showCustomTargetsError = appliesTo === 'custom' && showAppliesErrors && needsCustomTargets
   const showZoneScopeError = shouldRestrictByZone && showZoneScopeErrors && zoneSelectionEmpty
-  const canProceedToConfig = hasAtLeastOneGroup && hasValidCondition && !needsCustomTargets && !needsDurationValue
+  const canProceedToConfig = effectiveHasAtLeastOneGroup && effectiveHasValidCondition && !needsCustomTargets && !needsDurationValue
   const showClosureTimeHelper = requiresClosureTime && showClosureTimeError
   const shortNameHasError = showActionsErrors && trimmedShortName.length < 3
 
