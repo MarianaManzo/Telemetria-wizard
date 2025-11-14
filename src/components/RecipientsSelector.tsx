@@ -264,7 +264,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
       <div className={`relative ${className}`}>
         <div
           ref={containerRef}
-          className={`relative min-h-[2.5rem] max-h-[6rem] w-full max-w-full rounded-md bg-white cursor-text overflow-y-auto transition-all duration-200 ${
+          className={`relative min-h-[2.5rem] max-h-[6rem] w-full max-w-full rounded-md bg-white cursor-text overflow-hidden transition-all duration-200 ${
             hasError || error
               ? 'border border-red-500 ring-1 ring-red-500 ring-opacity-20'
               : 'border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500'
@@ -274,7 +274,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
             setIsDropdownOpen(true)
           }}
         >
-          <div className="flex items-center gap-1 p-2 w-full min-h-[2.5rem] flex-nowrap overflow-hidden">
+          <div className="flex items-center gap-1 p-2 w-full min-h-[2.5rem] flex-nowrap">
             {visibleTags.map((email, index) => (
               <div
                 key={index}
@@ -349,7 +349,7 @@ const RecipientsSelector = memo(function RecipientsSelector({
                   }
                 }}
                 placeholder={value.length === 0 ? placeholder : ""}
-                className="flex-1 min-w-0 outline-none text-[14px] border-none p-0 bg-transparent placeholder-gray-500 text-gray-900"
+                className="flex-1 min-w-0 outline-none text-[14px] border-none p-0 bg-transparent placeholder-gray-400 text-gray-900"
                 disabled={disabled}
                 onClick={(e) => {
                   e.stopPropagation()

@@ -408,7 +408,7 @@ const VariableTextareaComponent = (
         
         {/* Placeholder cuando está vacío */}
         {!value && !isFocused && (
-          <div className="absolute inset-0 p-3 text-gray-500 text-[14px] leading-relaxed pointer-events-none">
+          <div className="absolute inset-0 p-3 text-gray-400 text-[14px] leading-relaxed pointer-events-none">
             {placeholder}
           </div>
         )}
