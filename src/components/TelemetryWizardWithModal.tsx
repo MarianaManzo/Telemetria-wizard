@@ -4353,20 +4353,18 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                   description="Redacta el mensaje que se enviará cuando ocurra este evento. Puedes usar variables para personalizar el contenido."
                   contentClassName="space-y-4"
                 >
-                    <div className="border border-gray-200 rounded-lg bg-gray-50 p-4">
+                    <div className="border border-gray-200 rounded-lg bg-gray-50 p-4 space-y-2">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 whitespace-nowrap">
-                          <h4 className="text-[13px] font-medium text-gray-700">Variables configuradas</h4>
-                          <span className="text-[11px] text-gray-500">
-                            Escribe ‘#’ en el mensaje para abrir el listado de variables disponibles o haz clic para insertarlas.
-                          </span>
-                        </div>
+                        <h4 className="text-[13px] font-medium text-gray-700">Variables configuradas</h4>
                         <VariableButton
                           label="Más variables"
                           variables={EVENT_MESSAGE_VARIABLES}
                           onInsertVariable={handleInsertEventVariable}
                         />
                       </div>
+                      <span className="text-[11px] text-gray-500 block">
+                        Escribe ‘#’ en el mensaje para abrir el listado de variables disponibles o haz clic para insertarlas.
+                      </span>
                       {!hasConfiguredSensors && (
                         <p className="text-[11px] text-gray-500 mt-2">
                           Configura condiciones con sensores para obtener recomendaciones más precisas.
