@@ -28,7 +28,7 @@ export interface MessageVariableDescriptor {
 }
 
 const VARIABLE_CATEGORY_LABELS: Record<VariableCategory, string> = {
-  configuration: 'Variables usadas en la configuración',
+  configuration: 'Variables de la configuración',
   event: 'Variables del evento',
   unit: 'Variables de unidad',
   device: 'Variables de dispositivo'
