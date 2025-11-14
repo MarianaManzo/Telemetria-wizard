@@ -1897,6 +1897,7 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
   // Notifications tab state
   const defaultEventMessage = rule?.notifications?.eventMessage || 'La unidad {unidad} ha registrado una alerta en {ubicacion_link} a las {fecha_hora}.'
   const [eventMessage, setEventMessage] = useState(defaultEventMessage)
+  const EVENT_MESSAGE_LIMIT = 2500
   const [eventMessageCharCount, setEventMessageCharCount] = useState(defaultEventMessage.length)
   const eventMessageEditorRef = useRef<VariableTextareaHandle>(null)
   const [emailEnabled, setEmailEnabled] = useState(rule?.notifications?.email?.enabled || false)
@@ -4406,8 +4407,8 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         <label className="text-[14px] font-medium text-gray-700">
                           <span className="text-red-500">*</span> Mensaje del evento
                         </label>
-                        <span className={`text-[12px] ${eventMessageCharCount > 110 ? 'text-red-500' : 'text-gray-500'}`}>
-                          {eventMessageCharCount}/120
+                        <span className={`text-[12px] ${eventMessageCharCount > EVENT_MESSAGE_LIMIT ? 'text-red-500' : 'text-gray-500'}`}>
+                          {eventMessageCharCount}/{EVENT_MESSAGE_LIMIT}
                         </span>
                       </div>
                       <VariableTextarea
@@ -4423,10 +4424,10 @@ export function TelemetryWizard({ onSave, onCancel, onBackToTypeSelector, rule, 
                         showVariableButton={false}
                         placeholder={
                           hasConfiguredSensors
-                            ? 'Escribe el mensaje (máx. 120 caracteres) o arrastra variables desde la barra superior.'
-                            : 'Escribe el mensaje del evento (máx. 120 caracteres). Puedes insertar variables desde "Más variables".'
+                            ? 'Escribe el mensaje (máx. 2500 caracteres) o inserta variables desde la barra superior.'
+                            : 'Escribe el mensaje del evento (máx. 2500 caracteres). Puedes insertar variables desde "Más variables".'
                         }
-                        maxLength={120}
+                        maxLength={EVENT_MESSAGE_LIMIT}
                         className="min-h-[120px]"
                       />
 
