@@ -202,7 +202,7 @@ export function EtiquetasSelectorInput({
           display: 'flex',
           flexWrap: layout === 'grid' ? 'wrap' : 'nowrap',
           flexDirection: layout === 'grid' ? 'row' : 'column',
-          gap: layout === 'grid' ? 8 : 4
+          gap: layout === 'grid' ? 8 : 6
         }}
       >
         {filteredTags.length > 0 ? (
