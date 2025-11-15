@@ -3794,6 +3794,7 @@ useEffect(() => {
                 selectedTags={selectedZoneTags}
                 onSelectionChange={handleZoneTagsChange}
                 hasError={zoneSelectionHasError}
+                title="Etiquetas de zona"
               />
             </div>
           </div>

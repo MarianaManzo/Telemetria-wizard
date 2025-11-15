@@ -17,6 +17,7 @@ interface EtiquetasSelectorInputProps {
   placeholder?: string
   className?: string
   hasError?: boolean
+  title?: string
 }
 
 const mockTags: TagData[] = [
@@ -45,7 +46,8 @@ export function EtiquetasSelectorInput({
   onSelectionChange,
   placeholder = "Seleccionar etiquetas",
   className = "",
-  hasError = false
+  hasError = false,
+  title = "Etiquetas de unidades"
 }: EtiquetasSelectorInputProps) {
   const [open, setOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -154,7 +156,7 @@ export function EtiquetasSelectorInput({
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#1f2937' }}>Etiquetas de unidades</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#1f2937' }}>{title}</span>
         <Button
           variant="ghost"
           size="sm"
