@@ -106,6 +106,7 @@ export function EtiquetasSelectorInput({
     const color = '#FFFFFF'
     const borderColor = baseColor
 
+    const isList = layout === 'list'
     return (
       <button
         key={tag.id}
@@ -122,9 +123,9 @@ export function EtiquetasSelectorInput({
           borderRadius: 999,
           padding: '6px 12px',
           fontSize: 12,
-          display: layout === 'list' ? 'block' : 'inline-flex',
-          width: layout === 'list' ? '100%' : undefined,
-          textAlign: layout === 'list' ? 'center' : undefined,
+          display: isList ? 'block' : 'inline-flex',
+          width: isList ? '100%' : undefined,
+          textAlign: isList ? 'center' : undefined,
           cursor: 'pointer',
           transition: 'transform 0.15s ease',
           boxShadow: isSelected ? '0 8px 16px rgba(0,0,0,0.18)' : 'none'
@@ -201,7 +202,7 @@ export function EtiquetasSelectorInput({
           display: 'flex',
           flexWrap: layout === 'grid' ? 'wrap' : 'nowrap',
           flexDirection: layout === 'grid' ? 'row' : 'column',
-          gap: 8
+          gap: layout === 'grid' ? 8 : 4
         }}
       >
         {filteredTags.length > 0 ? (
