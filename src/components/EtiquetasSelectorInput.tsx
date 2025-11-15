@@ -122,22 +122,15 @@ export function EtiquetasSelectorInput({
           borderRadius: 999,
           padding: '6px 12px',
           fontSize: 12,
-          display: layout === 'list' ? 'flex' : 'inline-flex',
-          alignItems: 'center',
-          justifyContent: layout === 'list' ? 'space-between' : 'flex-start',
-          gap: 8,
+          display: layout === 'list' ? 'block' : 'inline-flex',
           width: layout === 'list' ? '100%' : undefined,
+          textAlign: layout === 'list' ? 'center' : undefined,
           cursor: 'pointer',
           transition: 'transform 0.15s ease',
           boxShadow: isSelected ? '0 8px 16px rgba(0,0,0,0.18)' : 'none'
         }}
       >
         <span style={{ fontWeight: 500 }}>{tag.name}</span>
-        {layout === 'list' && (
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)' }}>
-            {tag.vehicleCount} zonas
-          </span>
-        )}
       </button>
     )
   }
