@@ -101,9 +101,10 @@ export function EtiquetasSelectorInput({
 
   const renderTagCapsule = (tag: TagData) => {
     const isSelected = selectedTags.some(item => item.id === tag.id)
-    const background = isSelected ? tag.color : '#f5f5f5'
-    const color = isSelected ? '#ffffff' : '#1f2937'
-    const borderColor = isSelected ? tag.color : '#e5e7eb'
+    const baseColor = tag.color || '#6B7280'
+    const background = baseColor
+    const color = '#FFFFFF'
+    const borderColor = baseColor
 
     return (
       <button
@@ -118,27 +119,25 @@ export function EtiquetasSelectorInput({
           border: `1px solid ${borderColor}`,
           background,
           color,
-          borderRadius: layout === 'list' ? 999 : 999,
+          borderRadius: 999,
           padding: '6px 12px',
           fontSize: 12,
-          display: 'inline-flex',
+          display: layout === 'list' ? 'flex' : 'inline-flex',
           alignItems: 'center',
+          justifyContent: layout === 'list' ? 'space-between' : 'flex-start',
           gap: 8,
+          width: layout === 'list' ? '100%' : undefined,
           cursor: 'pointer',
           transition: 'transform 0.15s ease',
-          boxShadow: isSelected ? '0 8px 16px rgba(0,0,0,0.12)' : 'none'
+          boxShadow: isSelected ? '0 8px 16px rgba(0,0,0,0.18)' : 'none'
         }}
       >
-        <span
-          style={{
-            display: 'inline-flex',
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            backgroundColor: isSelected ? '#ffffff' : tag.color
-          }}
-        />
         <span style={{ fontWeight: 500 }}>{tag.name}</span>
+        {layout === 'list' && (
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)' }}>
+            {tag.vehicleCount} zonas
+          </span>
+        )}
       </button>
     )
   }
