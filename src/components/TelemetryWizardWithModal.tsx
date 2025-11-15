@@ -3514,8 +3514,6 @@ useEffect(() => {
                           placeholder="Seleccionar etiquetas"
                           hasError={showZoneScopeError}
                           title="Etiquetas de zona"
-                          layout="list"
-                          hideHeader
                         />
                       </div>
                     </div>
@@ -3798,8 +3796,6 @@ useEffect(() => {
                 onSelectionChange={handleZoneTagsChange}
                 hasError={zoneSelectionHasError}
                 title="Etiquetas de zona"
-                layout="list"
-                hideHeader
               />
             </div>
           </div>

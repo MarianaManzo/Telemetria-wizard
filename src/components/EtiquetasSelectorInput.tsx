@@ -118,41 +118,27 @@ export function EtiquetasSelectorInput({
           border: `1px solid ${borderColor}`,
           background,
           color,
-          borderRadius: layout === 'list' ? 8 : 999,
-          padding: layout === 'list' ? '10px 12px' : '6px 12px',
+          borderRadius: layout === 'list' ? 999 : 999,
+          padding: '6px 12px',
           fontSize: 12,
           display: 'inline-flex',
           alignItems: 'center',
           gap: 8,
           cursor: 'pointer',
           transition: 'transform 0.15s ease',
-          boxShadow: isSelected ? '0 8px 16px rgba(0,0,0,0.12)' : 'none',
-          width: layout === 'list' ? '100%' : undefined,
-          justifyContent: 'space-between'
+          boxShadow: isSelected ? '0 8px 16px rgba(0,0,0,0.12)' : 'none'
         }}
       >
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span
-            style={{
-              display: 'inline-flex',
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              backgroundColor: isSelected ? '#ffffff' : tag.color
-            }}
-          />
-          <span style={{ fontWeight: 500 }}>{tag.name}</span>
-        </span>
-        {layout === 'list' && (
-          <span
-            style={{
-              fontSize: 10,
-              color: isSelected ? 'rgba(255,255,255,0.9)' : '#6b7280'
-            }}
-          >
-            {tag.vehicleCount} zonas
-          </span>
-        )}
+        <span
+          style={{
+            display: 'inline-flex',
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            backgroundColor: isSelected ? '#ffffff' : tag.color
+          }}
+        />
+        <span style={{ fontWeight: 500 }}>{tag.name}</span>
       </button>
     )
   }
