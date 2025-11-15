@@ -3513,6 +3513,7 @@ useEffect(() => {
                           onSelectionChange={setSelectedZoneTags}
                           placeholder="Seleccionar etiquetas"
                           hasError={showZoneScopeError}
+                          title="Etiquetas de zona"
                         />
                       </div>
                     </div>
