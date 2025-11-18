@@ -31,7 +31,6 @@ import {
   Thermometer,
   Radio,
   AlertOctagon,
-  CheckCircle,
   Paperclip,
   Download
 } from "lucide-react"
@@ -42,7 +41,6 @@ import { Rule, Event, RuleConditionGroup, RuleSchedule, RuleAttachment, RuleNote
 import { userEmailTemplates } from "../constants/emailTemplates"
 import { DeleteRuleModal } from "./DeleteRuleModal"
 import { RenameRuleModal } from "./RenameRuleModal"
-import { ChangeStatusModal } from "./ChangeStatusModal"
 import exampleImage from 'figma:asset/25905393c492af8c8e0b3cf142e20c9dc3cbe9e4.png'
 import markerBody from "../assets/event.svg?raw"
 import markerLabel from "../assets/Label event.svg?raw"
@@ -868,9 +866,6 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
   const [notesSort, setNotesSort] = useState<'recent' | 'oldest'>('recent')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
-  const [selectedEventForModal, setSelectedEventForModal] = useState<Event | null>(null)
-  const [showChangeStatusModal, setShowChangeStatusModal] = useState(false)
-  const [statusModalMode, setStatusModalMode] = useState<'close' | 'reopen'>('close')
   const [eventsPage, setEventsPage] = useState(1)
   const relatedEvents = useMemo(() => {
     return events.filter((event) => event.ruleId === rule.id)
@@ -921,7 +916,6 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
     eventsToDisplay.length === 0
       ? []
       : eventsToDisplay.slice((eventsPage - 1) * EVENTS_PAGE_SIZE, eventsPage * EVENTS_PAGE_SIZE)
-  const requireCloseNote = rule.closePolicy.type === 'manual'
   const sortedNotes = useMemo(() => {
     const notesCopy = [...notes]
     return notesCopy.sort((a, b) => {
@@ -1056,52 +1050,6 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
           </span>
         )
       }
-    },
-    {
-      id: 'actions',
-      label: 'Acciones',
-      headerClassName: 'px-6 py-3 text-left text-[14px] font-medium text-gray-500 sticky right-0 bg-gray-50 shadow-[-4px_0_8px_rgba(0,0,0,0.08)] z-20 w-20',
-      cellClassName: 'px-6 py-4 whitespace-nowrap text-[14px] text-gray-500 sticky right-0 bg-white shadow-[-4px_0_8px_rgba(0,0,0,0.15)] z-10',
-      render: (event) => (
-        <div className="flex justify-center items-center">
-          {event.status === 'open' ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleOpenChangeStatus(event, 'close')
-                  }}
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Cerrar evento</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled
-              className="p-2 text-gray-400 cursor-not-allowed opacity-50"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      )
     }
   ]
 
@@ -1175,22 +1123,6 @@ const COLLAPSE_SECTION_LABELS: Record<CollapseSectionKey, string> = {
       .slice(0, 2)
       .map((part) => part.charAt(0).toUpperCase())
       .join('') || 'NA'
-
-  const handleOpenChangeStatus = (eventData: Event, mode: 'close' | 'reopen' = 'close') => {
-    setSelectedEventForModal(eventData)
-    setStatusModalMode(mode)
-    setShowChangeStatusModal(true)
-  }
-
-  const handleCloseChangeStatusModal = () => {
-    setShowChangeStatusModal(false)
-    setSelectedEventForModal(null)
-  }
-
-  const handleStatusSave = (newStatus: 'open' | 'closed', note?: string) => {
-    console.log('Change event status request:', selectedEventForModal?.id, newStatus, note)
-    handleCloseChangeStatusModal()
-  }
 
   const handleAddNote = () => {
     const content = newNote.trim()
@@ -2080,16 +2012,6 @@ const advancedConfigItems = [
         setShowRenameModal(false)
       }}
     />
-
-    {selectedEventForModal && (
-      <ChangeStatusModal
-        isOpen={showChangeStatusModal}
-        onClose={handleCloseChangeStatusModal}
-        onSave={handleStatusSave}
-        mode={statusModalMode}
-        requireNote={statusModalMode === 'close' && requireCloseNote}
-      />
-    )}
   </div>
 )
 }
